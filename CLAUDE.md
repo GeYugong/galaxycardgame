@@ -108,9 +108,15 @@ Key premake5 options (can be set via command line or environment variables):
 - `-j`: Join host
 - `-k`: Keep application open when finished
 
-### Testing
+### Testing and Debugging
 
 The project includes automated CI builds for Windows, Linux, and macOS via GitHub Actions (`.github/workflows/build.yml`).
+
+**Important Development Rule:**
+- Claude should NOT attempt to compile or build the project during development
+- All code modifications should be made without compilation verification
+- Testing and debugging should be left to the user to perform
+- Focus on code analysis, modification, and providing guidance rather than build verification
 
 ### Platform-Specific Notes
 

@@ -1396,11 +1396,7 @@ void Game::RefreshCategoryDeck(irr::gui::IGUIComboBox* cbCategory, irr::gui::IGU
 	}
 }
 void Game::RefreshDeck(irr::gui::IGUIComboBox* cbCategory, irr::gui::IGUIComboBox* cbDeck) {
-	if(cbCategory != cbDBCategory && cbCategory->getSelected() == 0) {
-		// can't use pack list in duel
-		cbDeck->clear();
-		return;
-	}
+	// 不再有卡包分类限制，所有分类都可以在决斗中使用
 	wchar_t catepath[256];
 	DeckManager::GetCategoryPath(catepath, cbCategory->getSelected(), cbCategory->getText());
 	cbDeck->clear();
