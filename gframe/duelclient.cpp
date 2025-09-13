@@ -149,8 +149,8 @@ void DuelClient::ClientEvent(bufferevent* bev, short events, void* ctx) {
 				BufferIO::CopyCharArray(L"", cscg.pass);
 				cscg.info.rule = 5;
 				cscg.info.mode = 0;
-				cscg.info.start_hand = 5;
-				cscg.info.start_lp = 8000;
+				cscg.info.start_hand = 3;
+				cscg.info.start_lp = 20;
 				cscg.info.draw_count = 1;
 				cscg.info.time_limit = 0;
 				cscg.info.lflist = 0;

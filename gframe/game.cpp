@@ -307,19 +307,22 @@ bool Game::Initialize() {
 	chkNoCheckDeck = env->addCheckBox(false, irr::core::rect<irr::s32>(20, 210, 170, 230), wCreateHost, -1, dataManager.GetSysString(1229));
 	chkNoShuffleDeck = env->addCheckBox(false, irr::core::rect<irr::s32>(180, 210, 360, 230), wCreateHost, -1, dataManager.GetSysString(1230));
 	env->addStaticText(dataManager.GetSysString(1231), irr::core::rect<irr::s32>(20, 240, 320, 260), false, false, wCreateHost);
-	myswprintf(strbuf, L"%d", 8000);
+	myswprintf(strbuf, L"%d", 20);
 	ebStartLP = env->addEditBox(strbuf, irr::core::rect<irr::s32>(140, 235, 220, 260), true, wCreateHost);
 	ebStartLP->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
+	ebStartLP->setEnabled(false);  // 禁用编辑
 	editbox_list.push_back(ebStartLP);
 	env->addStaticText(dataManager.GetSysString(1232), irr::core::rect<irr::s32>(20, 270, 320, 290), false, false, wCreateHost);
-	myswprintf(strbuf, L"%d", 5);
+	myswprintf(strbuf, L"%d", 3);
 	ebStartHand = env->addEditBox(strbuf, irr::core::rect<irr::s32>(140, 265, 220, 290), true, wCreateHost);
 	ebStartHand->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
+	ebStartHand->setEnabled(false);  // 禁用编辑
 	editbox_list.push_back(ebStartHand);
 	env->addStaticText(dataManager.GetSysString(1233), irr::core::rect<irr::s32>(20, 300, 320, 320), false, false, wCreateHost);
 	myswprintf(strbuf, L"%d", 1);
 	ebDrawCount = env->addEditBox(strbuf, irr::core::rect<irr::s32>(140, 295, 220, 320), true, wCreateHost);
 	ebDrawCount->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
+	ebDrawCount->setEnabled(false);  // 禁用编辑
 	editbox_list.push_back(ebDrawCount);
 	env->addStaticText(dataManager.GetSysString(1234), irr::core::rect<irr::s32>(10, 360, 220, 380), false, false, wCreateHost);
 	ebServerName = env->addEditBox(gameConf.gamename, irr::core::rect<irr::s32>(110, 355, 250, 380), true, wCreateHost);
