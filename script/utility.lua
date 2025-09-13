@@ -1982,3 +1982,59 @@ function Auxiliary.MonsterEffectPropertyFilter(flag)
 		return e:IsHasProperty(flag) and not e:IsHasRange(LOCATION_PZONE)
 	end
 end
+
+--===============================
+--Galaxy Card Game Rules 
+--===============================
+
+--Galaxy规则通过单张卡片脚本调用的方式实现- Individual Card Approach
+if not Galaxy then
+	Galaxy = {}
+end
+
+--基础配置
+Galaxy.ENABLED = true
+Galaxy.NO_COVER_SUMMON = true
+Galaxy.NO_SET_SPELL_TRAP = true
+
+--检查是否为Galaxy规则对战
+function Galaxy.IsGalaxyDuel()
+	return Galaxy.ENABLED
+end
+
+--为单张怪兽卡添加禁止覆盖召唤效果
+function Galaxy.AddNoCoverSummonToCard(c)
+	if not Galaxy.IsGalaxyDuel() or not Galaxy.NO_COVER_SUMMON then return end
+	if not c or not c:IsType(TYPE_MONSTER) then return end
+	
+	--添加不能覆盖召唤的效果
+	local e1=Effect.CreateEffect(c)
+	e1:SetType(EFFECT_TYPE_SINGLE)
+	e1:SetCode(EFFECT_CANNOT_MSET)
+	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
+	c:RegisterEffect(e1)
+end
+
+--为单张魔法/陷阱卡添加禁止覆盖放置效果
+function Galaxy.AddNoCoverSetToCard(c)
+	if not Galaxy.IsGalaxyDuel() or not Galaxy.NO_SET_SPELL_TRAP then return end
+	if not c or not (c:IsType(TYPE_SPELL) or c:IsType(TYPE_TRAP)) then return end
+	
+	--添加不能覆盖放置的效果
+	local e1=Effect.CreateEffect(c)
+	e1:SetType(EFFECT_TYPE_SINGLE)
+	e1:SetCode(EFFECT_CANNOT_SSET)
+	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
+	c:RegisterEffect(e1)
+end
+
+--通用函数：为卡片添加Galaxy规则
+function Galaxy.ApplyRulesToCard(c)
+	if not c or not Galaxy.IsGalaxyDuel() then return end
+	
+	if c:IsType(TYPE_MONSTER) then
+		Galaxy.AddNoCoverSummonToCard(c)
+	elseif c:IsType(TYPE_SPELL) or c:IsType(TYPE_TRAP) then
+		Galaxy.AddNoCoverSetToCard(c)
+	end
+end
