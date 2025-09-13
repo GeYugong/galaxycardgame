@@ -161,8 +161,11 @@ void DuelClient::ClientEvent(bufferevent* bev, short events, void* ctx) {
 			else {
 				BufferIO::CopyCharArray(mainGame->ebServerName->getText(), cscg.name);
 				BufferIO::CopyCharArray(mainGame->ebServerPass->getText(), cscg.pass);
-				cscg.info.rule = mainGame->cbRule->getSelected();
-				cscg.info.mode = mainGame->cbMatchMode->getSelected();
+				// GCG固定使用"所有卡片"规则(索引5)
+				cscg.info.rule = 5;
+				// 映射模式：索引0=单人对战(MODE_SINGLE=0)，索引1=双人对战(MODE_TAG=2)
+				int selected_mode = mainGame->cbMatchMode->getSelected();
+				cscg.info.mode = (selected_mode == 0) ? MODE_SINGLE : MODE_TAG;
 				cscg.info.start_hand = std::wcstol(mainGame->ebStartHand->getText(),nullptr,10);
 				cscg.info.start_lp = std::wcstol(mainGame->ebStartLP->getText(),nullptr,10);
 				cscg.info.draw_count = std::wcstol(mainGame->ebDrawCount->getText(),nullptr,10);
@@ -562,7 +565,9 @@ void DuelClient::HandleSTOCPacketLan(unsigned char* data, int len) {
 		str.append(msgbuf);
 		myswprintf(msgbuf, L"%ls%ls\n", dataManager.GetSysString(1225), dataManager.GetSysString(1481 + pkt->info.rule));
 		str.append(msgbuf);
-		myswprintf(msgbuf, L"%ls%ls\n", dataManager.GetSysString(1227), dataManager.GetSysString(1244 + pkt->info.mode));
+		// 映射模式显示：MODE_SINGLE(0)->1244, MODE_TAG(2)->1246, 跳过MODE_MATCH(1)->1245
+		int mode_string = (pkt->info.mode == MODE_SINGLE) ? 1244 : (pkt->info.mode == MODE_TAG) ? 1246 : 1244;
+		myswprintf(msgbuf, L"%ls%ls\n", dataManager.GetSysString(1227), dataManager.GetSysString(mode_string));
 		str.append(msgbuf);
 		if(pkt->info.time_limit) {
 			myswprintf(msgbuf, L"%ls%d\n", dataManager.GetSysString(1237), pkt->info.time_limit);
@@ -4422,7 +4427,9 @@ void DuelClient::BroadcastReply(evutil_socket_t fd, short events, void * arg) {
 			hoststr.append(L"][");
 			hoststr.append(dataManager.GetSysString(pHP->host.rule + 1481));
 			hoststr.append(L"][");
-			hoststr.append(dataManager.GetSysString(pHP->host.mode + 1244));
+			// 映射模式显示：MODE_SINGLE(0)->1244, MODE_TAG(2)->1246, 跳过MODE_MATCH(1)->1245
+			int mode_string = (pHP->host.mode == MODE_SINGLE) ? 1244 : (pHP->host.mode == MODE_TAG) ? 1246 : 1244;
+			hoststr.append(dataManager.GetSysString(mode_string));
 			hoststr.append(L"][");
 			if(pHP->host.draw_count == 1 && pHP->host.start_hand == 5 && pHP->host.start_lp == 8000
 			        && !pHP->host.no_check_deck && !pHP->host.no_shuffle_deck

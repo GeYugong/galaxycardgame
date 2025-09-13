@@ -262,33 +262,19 @@ bool Game::Initialize() {
 	env->addStaticText(dataManager.GetSysString(1225), irr::core::rect<irr::s32>(20, 60, 220, 80), false, false, wCreateHost);
 	cbRule = env->addComboBox(irr::core::rect<irr::s32>(140, 55, 300, 80), wCreateHost);
 	cbRule->setMaxSelectionRows(10);
-	cbRule->addItem(dataManager.GetSysString(1481));
-	cbRule->addItem(dataManager.GetSysString(1482));
-	cbRule->addItem(dataManager.GetSysString(1483));
-	cbRule->addItem(dataManager.GetSysString(1484));
-	cbRule->addItem(dataManager.GetSysString(1485));
-	cbRule->addItem(dataManager.GetSysString(1486));
-	switch(gameConf.defaultOT) {
-	case 1:
-		cbRule->setSelected(0);
-		break;
-	case 2:
-		cbRule->setSelected(1);
-		break;
-	case 4:
-		cbRule->setSelected(3);
-		break;
-	case 8:
-		cbRule->setSelected(2);
-		break;
-	default:
-		cbRule->setSelected(5);
-		break;
-	}	
+	// 注释掉YGO相关规则，GCG只使用所有卡片规则
+	// cbRule->addItem(dataManager.GetSysString(1481)); // OCG
+	// cbRule->addItem(dataManager.GetSysString(1482)); // TCG  
+	// cbRule->addItem(dataManager.GetSysString(1483)); // 简体中文
+	// cbRule->addItem(dataManager.GetSysString(1484)); // 自定义卡片
+	// cbRule->addItem(dataManager.GetSysString(1485)); // 无独有卡
+	cbRule->addItem(dataManager.GetSysString(1486)); // 所有卡片
+	// GCG固定选择"所有卡片"规则（唯一选项，索引0）
+	cbRule->setSelected(0);	
 	env->addStaticText(dataManager.GetSysString(1227), irr::core::rect<irr::s32>(20, 90, 220, 110), false, false, wCreateHost);
 	cbMatchMode = env->addComboBox(irr::core::rect<irr::s32>(140, 85, 300, 110), wCreateHost);
 	cbMatchMode->addItem(dataManager.GetSysString(1244));
-	cbMatchMode->addItem(dataManager.GetSysString(1245));
+	// cbMatchMode->addItem(dataManager.GetSysString(1245)); // 移除比赛模式
 	cbMatchMode->addItem(dataManager.GetSysString(1246));
 	env->addStaticText(dataManager.GetSysString(1237), irr::core::rect<irr::s32>(20, 120, 320, 140), false, false, wCreateHost);
 	myswprintf(strbuf, L"%d", 180);

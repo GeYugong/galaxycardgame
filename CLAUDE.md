@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is GCG (Yu-Gi-Oh! game client), a cross-platform Yu-Gi-Oh! trading card game simulator built with C++ and Irrlicht engine. The project supports Windows, Linux, and macOS platforms.
+This is Galaxy Card Game (GCG), a cross-platform trading card game client built with C++ and Irrlicht engine. This project is based on YGOPro but has been modified to create a custom galaxy-themed card game. The project supports Windows, Linux, and macOS platforms.
 
 ## Build System
 
@@ -59,8 +59,8 @@ Key premake5 options (can be set via command line or environment variables):
 
 ### Core Components
 
-**ocgcore/**: Yu-Gi-Oh! card game core logic
-- Card game rules engine written in C++
+**ocgcore/**: Galaxy card game core logic
+- Card game rules engine written in C++ (based on YGOPro engine)
 - Lua scripting for card effects (script/ directory)
 - Database operations for card data
 

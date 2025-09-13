@@ -1149,7 +1149,7 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 			else if(hovered_pos == 2)
 				pushed = push_extra(draging_pointer, hovered_seq + is_lastcard);
 			else if(hovered_pos == 3)
-				pushed = push_side(draging_pointer, hovered_seq + is_lastcard);
+				pushed = false; // 禁用副卡组操作
 			else if(hovered_pos == 4 && !mainGame->is_siding)
 				pushed = true;
 			if(!pushed) {
@@ -1210,7 +1210,7 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 				} else if(hovered_pos == 2) {
 					pop_extra(hovered_seq);
 				} else if(hovered_pos == 3) {
-					pop_side(hovered_seq);
+					// 禁用副卡组操作
 				} else {
 					auto pointer = _datas.find(hovered_code);
 					if (pointer == _datas.end())
@@ -1255,16 +1255,17 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 			soundManager.PlaySoundEffect(SOUND_CARD_PICK);
 			if (hovered_pos == 1) {
 				if(!push_main(pointer))
-					push_side(pointer);
+					push_extra(pointer); // 禁用副卡组，改为尝试添加到额外卡组
 			} else if (hovered_pos == 2) {
 				if(!push_extra(pointer))
-					push_side(pointer);
+					push_main(pointer); // 禁用副卡组，改为添加到主卡组
 			} else if (hovered_pos == 3) {
-				if(!push_side(pointer) && !push_extra(pointer))
+				// 禁用副卡组操作，尝试添加到额外卡组或主卡组
+				if(!push_extra(pointer))
 					push_main(pointer);
 			} else {
-				if(!push_extra(pointer) && !push_main(pointer))
-					push_side(pointer);
+				if(!push_extra(pointer))
+					push_main(pointer); // 禁用副卡组操作
 			}
 			break;
 		}
@@ -1276,8 +1277,9 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 					pop_main(hovered_seq);
 				else if(hovered_pos == 2)
 					pop_extra(hovered_seq);
-				else if(hovered_pos == 3)
-					pop_side(hovered_seq);
+				else if(hovered_pos == 3) {
+					// 禁用副卡组操作
+				}
 				is_starting_dragging = false;
 			}
 			mouse_pos.set(event.MouseInput.X, event.MouseInput.Y);
@@ -1389,7 +1391,7 @@ void DeckBuilder::GetHoveredCard() {
 				if(x >= 772)
 					is_lastcard = 1;
 			}
-		} else if (y >= 564 && y <= 628) {
+		} else if (false && y >= 564 && y <= 628) { // 禁用副卡组交互
 			int lx = deckManager.current_deck.side.size();
 			hovered_pos = 3;
 			if(lx < 10)
