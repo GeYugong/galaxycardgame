@@ -1,5 +1,4 @@
-## YGOPro
-A script engine for "yu-gi-oh!" and sample gui
+## GCG
 
 [中文说明](https://github.com/Fluorohydride/ygopro/wiki/%E4%B8%AD%E6%96%87%E8%AF%B4%E6%98%8E)
 
