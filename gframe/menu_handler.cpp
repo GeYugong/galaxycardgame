@@ -657,9 +657,9 @@ bool MenuHandler::OnEvent(const irr::SEvent& event) {
 			}
 			case COMBOBOX_HP_CATEGORY: {
 				int catesel = mainGame->cbCategorySelect->getSelected();
-				if(catesel == 3) {
-					catesel = 2;
-					mainGame->cbCategorySelect->setSelected(2);
+				if(catesel == 1) {
+					catesel = 0;
+					mainGame->cbCategorySelect->setSelected(0);
 				}
 				if(catesel >= 0) {
 					mainGame->RefreshDeck(mainGame->cbCategorySelect, mainGame->cbDeckSelect);
@@ -669,9 +669,9 @@ bool MenuHandler::OnEvent(const irr::SEvent& event) {
 			}
 			case COMBOBOX_BOT_DECKCATEGORY: {
 				int catesel = mainGame->cbBotDeckCategory->getSelected();
-				if(catesel == 3) {
-					catesel = 2;
-					mainGame->cbBotDeckCategory->setSelected(2);
+				if(catesel == 1) {
+					catesel = 0;
+					mainGame->cbBotDeckCategory->setSelected(0);
 				}
 				if(catesel >= 0) {
 					mainGame->RefreshDeck(mainGame->cbBotDeckCategory, mainGame->cbBotDeck);

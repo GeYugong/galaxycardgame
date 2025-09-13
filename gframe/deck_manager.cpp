@@ -244,15 +244,15 @@ bool DeckManager::LoadSide(Deck& deck, uint32_t dbuf[], int mainc, int sidec) {
 void DeckManager::GetCategoryPath(wchar_t* ret, int index, const wchar_t* text) {
 	wchar_t catepath[256];
 	switch(index) {
-	case DECK_CATEGORY_PACK:
-		myswprintf(catepath, L"./pack");
-		break;
-	case DECK_CATEGORY_BOT:
-		BufferIO::CopyWideString(mainGame->gameConf.bot_deck_path, catepath);
-		break;
+	// case DECK_CATEGORY_PACK:
+	//	myswprintf(catepath, L"./pack");
+	//	break;
+	// case DECK_CATEGORY_BOT:
+	//	BufferIO::CopyWideString(mainGame->gameConf.bot_deck_path, catepath);
+	//	break;
 	case -1:
-	case DECK_CATEGORY_NONE:
-	case DECK_CATEGORY_SEPARATOR:
+	case 0:  // 现在1452是索引0
+	case 1:  // 现在1453分隔符是索引1
 		myswprintf(catepath, L"./deck");
 		break;
 	default:

@@ -1367,8 +1367,8 @@ std::vector<std::string> Game::GetExpansionsListU(const char* suffix) {
 }
 void Game::RefreshCategoryDeck(irr::gui::IGUIComboBox* cbCategory, irr::gui::IGUIComboBox* cbDeck, bool selectlastused) {
 	cbCategory->clear();
-	cbCategory->addItem(dataManager.GetSysString(1450));
-	cbCategory->addItem(dataManager.GetSysString(1451));
+	// cbCategory->addItem(dataManager.GetSysString(1450));
+	// cbCategory->addItem(dataManager.GetSysString(1451));
 	cbCategory->addItem(dataManager.GetSysString(1452));
 	cbCategory->addItem(dataManager.GetSysString(1453));
 	FileSystem::TraversalDir(L"./deck", [cbCategory](const wchar_t* name, bool isdir) {
@@ -1376,7 +1376,7 @@ void Game::RefreshCategoryDeck(irr::gui::IGUIComboBox* cbCategory, irr::gui::IGU
 			cbCategory->addItem(name);
 		}
 	});
-	cbCategory->setSelected(2);
+	cbCategory->setSelected(0);
 	if(selectlastused) {
 		for(size_t i = 0; i < cbCategory->getItemCount(); ++i) {
 			if(!std::wcscmp(cbCategory->getItem(i), gameConf.lastcategory)) {
