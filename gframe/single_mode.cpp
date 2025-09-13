@@ -155,21 +155,9 @@ int SingleMode::SinglePlayThread() {
 	wchar_t timetext[40];
 	std::wcsftime(timetext, sizeof timetext / sizeof timetext[0], L"%Y-%m-%d %H-%M-%S", std::localtime(&nowtime));
 	mainGame->ebRSName->setText(timetext);
-	if(!mainGame->chkAutoSaveReplay->isChecked()) {
-		mainGame->wReplaySave->setText(dataManager.GetSysString(1340));
-		mainGame->PopupElement(mainGame->wReplaySave);
-		mainGame->gMutex.unlock();
-		mainGame->replaySignal.Reset();
-		mainGame->replaySignal.Wait();
-	} else {
-		mainGame->actionParam = 1;
-		wchar_t msgbuf[256];
-		myswprintf(msgbuf, dataManager.GetSysString(1367), timetext);
-		mainGame->SetStaticText(mainGame->stACMessage, 310, mainGame->guiFont, msgbuf);
-		mainGame->PopupElement(mainGame->wACMessage, 20);
-		mainGame->gMutex.unlock();
-		mainGame->WaitFrameSignal(30);
-	}
+	// 完全禁用录像功能
+	mainGame->actionParam = 0;  // 设置为0表示不保存录像
+	mainGame->gMutex.unlock();
 	if(mainGame->actionParam)
 		last_replay.SaveReplay(mainGame->ebRSName->getText());
 	end_duel(pduel);

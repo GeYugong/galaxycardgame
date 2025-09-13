@@ -856,33 +856,19 @@ void DuelClient::HandleSTOCPacketLan(unsigned char* data, int len) {
 		wchar_t timetext[40];
 		std::wcsftime(timetext, sizeof timetext / sizeof timetext[0], L"%Y-%m-%d %H-%M-%S", std::localtime(&starttime));
 		mainGame->ebRSName->setText(timetext);
-		if(!mainGame->chkAutoSaveReplay->isChecked()) {
-			if (!auto_watch_mode) {
-				mainGame->wReplaySave->setText(dataManager.GetSysString(1340));
-				mainGame->PopupElement(mainGame->wReplaySave);
-				mainGame->gMutex.unlock();
-				mainGame->replaySignal.Reset();
-				mainGame->replaySignal.Wait();
-			}
-		}
-		else {
-			mainGame->actionParam = 1;
-			wchar_t msgbuf[256];
-			myswprintf(msgbuf, dataManager.GetSysString(1367), timetext);
-			mainGame->SetStaticText(mainGame->stACMessage, 310, mainGame->guiFont, msgbuf);
-			mainGame->PopupElement(mainGame->wACMessage, 20);
-			mainGame->gMutex.unlock();
-			mainGame->WaitFrameSignal(30);
-		}
-		if(mainGame->actionParam || !is_host) {
-			prep += sizeof new_replay.pheader;
-			std::memcpy(new_replay.comp_data, prep, len - sizeof new_replay.pheader - 1);
-			new_replay.comp_size = len - sizeof new_replay.pheader - 1;
-			if(mainGame->actionParam)
-				new_replay.SaveReplay(mainGame->ebRSName->getText());
-			else
-				new_replay.SaveReplay(L"_LastReplay");
-		}
+		// 完全禁用录像功能
+		mainGame->actionParam = 0;  // 设置为0表示不保存录像
+		mainGame->gMutex.unlock();
+		// 完全禁用录像保存，包括_LastReplay
+		// if(mainGame->actionParam || !is_host) {
+		//	prep += sizeof new_replay.pheader;
+		//	std::memcpy(new_replay.comp_data, prep, len - sizeof new_replay.pheader - 1);
+		//	new_replay.comp_size = len - sizeof new_replay.pheader - 1;
+		//	if(mainGame->actionParam)
+		//		new_replay.SaveReplay(mainGame->ebRSName->getText());
+		//	else
+		//		new_replay.SaveReplay(L"_LastReplay");
+		// }
 		break;
 	}
 	case STOC_TIME_LIMIT: {

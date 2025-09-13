@@ -14,17 +14,21 @@ Replay::~Replay() {
 	delete[] comp_data;
 }
 void Replay::BeginRecord() {
-	if(!FileSystem::IsDirExists(L"./replay") && !FileSystem::MakeDir(L"./replay"))
-		return;
-	if(is_recording)
-		std::fclose(fp);
-	fp = myfopen("./replay/_LastReplay.yrp", "wb");
-	if(!fp)
-		return;
+	// 完全禁用录像录制功能
+	// if(!FileSystem::IsDirExists(L"./replay") && !FileSystem::MakeDir(L"./replay"))
+	//	return;
+	// if(is_recording)
+	//	std::fclose(fp);
+	// fp = myfopen("./replay/_LastReplay.yrp", "wb");
+	// if(!fp)
+	//	return;
 	Reset();
-	is_recording = true;
+	// is_recording = true;
+	is_recording = false;  // 强制设置为不录制
 }
 void Replay::WriteHeader(ExtendedReplayHeader& header) {
+	if(!is_recording)
+		return;
 	pheader = header;
 	std::fwrite(&header, sizeof header, 1, fp);
 	std::fflush(fp);
@@ -36,20 +40,21 @@ void Replay::WriteData(const void* data, size_t length, bool flush) {
 		return;
 	std::memcpy(replay_data + replay_size, data, length);
 	replay_size += length;
-	std::fwrite(data, length, 1, fp);
-	if(flush)
+	if(fp)
+		std::fwrite(data, length, 1, fp);
+	if(flush && fp)
 		std::fflush(fp);
 }
 void Replay::WriteInt32(int32_t data, bool flush) {
 	Write<int32_t>(data, flush);
 }
 void Replay::Flush() {
-	if(!is_recording)
+	if(!is_recording || !fp)
 		return;
 	std::fflush(fp);
 }
 void Replay::EndRecord() {
-	if(!is_recording)
+	if(!is_recording || !fp)
 		return;
 	std::fclose(fp);
 	pheader.base.datasize = replay_size;
