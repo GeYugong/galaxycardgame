@@ -45,10 +45,7 @@ mat_submodules:
   tags: 
     - linux
   script:
-    - rm -rf ocgcore script
-    - mkdir ocgcore script
-    - git config --global --add safe.directory $CI_PROJECT_DIR
-    - git submodule update --init
+    - echo "ocgcore and script are now included as local files"
   artifacts:
     paths:
       - ocgcore
