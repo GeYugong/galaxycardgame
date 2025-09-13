@@ -72,6 +72,7 @@ build
 /ygopro
 /ygopro_*
 /ygopro.exe
+/GCG.exe
 /ygopro_*.exe
 /ygopro.app
 /ygopro_*.app

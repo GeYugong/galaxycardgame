@@ -14,7 +14,7 @@
 #include <regex>
 #include <thread>
 
-unsigned short PRO_VERSION = 0x1362;
+unsigned short PRO_VERSION = 0x1000;
 
 namespace ygo {
 
@@ -204,7 +204,7 @@ bool Game::Initialize() {
 	lpcFont = irr::gui::CGUITTFont::createTTFont(env, gameConf.numfont, 48);
 	guiFont = irr::gui::CGUITTFont::createTTFont(env, gameConf.textfont, gameConf.textfontsize);
 	smgr = device->getSceneManager();
-	device->setWindowCaption(L"KoishiPro");
+	device->setWindowCaption(L"GalaxyCardGame");
 	device->setResizable(true);
 	if(gameConf.window_maximized)
 		device->maximizeWindow();
@@ -218,11 +218,11 @@ bool Game::Initialize() {
 	SetWindowsIcon();
 	//main menu
 	wchar_t strbuf[256];
-	myswprintf(strbuf, L"KoishiPro %X.0%X.%X Memes", (PRO_VERSION & 0xf000U) >> 12, (PRO_VERSION & 0x0ff0U) >> 4, PRO_VERSION & 0x000fU);
+	myswprintf(strbuf, L"GalaxyCardGame %X.0%X.%X Beta", (PRO_VERSION & 0xf000U) >> 12, (PRO_VERSION & 0x0ff0U) >> 4, PRO_VERSION & 0x000fU);
 	wMainMenu = env->addWindow(irr::core::rect<irr::s32>(370, 200, 650, 415), false, strbuf);
 	wMainMenu->getCloseButton()->setVisible(false);
 	btnLanMode = env->addButton(irr::core::rect<irr::s32>(10, 30, 270, 60), wMainMenu, BUTTON_LAN_MODE, dataManager.GetSysString(1200));
-	btnSingleMode = env->addButton(irr::core::rect<irr::s32>(10, 65, 270, 95), wMainMenu, BUTTON_SINGLE_MODE, dataManager.GetSysString(1201));
+	btnSingleMode = env->addButton(irr::core::rect<irr::s32>(10, 65, 270, 95), wMainMenu, BUTTON_SINGLE_MODE, dataManager.GetSysString(1201)); //单人模式
 	btnReplayMode = env->addButton(irr::core::rect<irr::s32>(10, 100, 270, 130), wMainMenu, BUTTON_REPLAY_MODE, dataManager.GetSysString(1202));
 //	btnTestMode = env->addButton(irr::core::rect<irr::s32>(10, 135, 270, 165), wMainMenu, BUTTON_TEST_MODE, dataManager.GetSysString(1203));
 	btnDeckEdit = env->addButton(irr::core::rect<irr::s32>(10, 135, 270, 165), wMainMenu, BUTTON_DECK_EDIT, dataManager.GetSysString(1204));
@@ -1137,7 +1137,7 @@ void Game::MainLoop() {
 		if(cur_time < fps * 17 - 20)
 			std::this_thread::sleep_for(std::chrono::milliseconds(20));
 		if(cur_time >= 1000) {
-			myswprintf(cap, L"KoishiPro FPS: %d", fps);
+			myswprintf(cap, L"GalaxyCardGame FPS: %d", fps);
 			device->setWindowCaption(cap);
 			fps = 0;
 			cur_time -= 1000;
