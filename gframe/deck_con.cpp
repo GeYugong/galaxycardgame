@@ -950,7 +950,7 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 				mainGame->ebAttack->setText(L"");
 				mainGame->ebDefense->setText(L"");
 				mainGame->ebStar->setText(L"");
-				mainGame->ebScale->setText(L"");
+				// mainGame->ebScale->setText(L""); // 隐藏刻度筛选
 				switch(mainGame->cbCardType->getSelected()) {
 				case 0: {
 					mainGame->cbCardType2->setEnabled(false);
@@ -960,7 +960,7 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 					mainGame->ebAttack->setEnabled(false);
 					mainGame->ebDefense->setEnabled(false);
 					mainGame->ebStar->setEnabled(false);
-					mainGame->ebScale->setEnabled(false);
+					// mainGame->ebScale->setEnabled(false); // 隐藏刻度筛选
 					break;
 				}
 				case 1: {
@@ -973,7 +973,7 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 					mainGame->ebAttack->setEnabled(true);
 					mainGame->ebDefense->setEnabled(true);
 					mainGame->ebStar->setEnabled(true);
-					mainGame->ebScale->setEnabled(true);
+					// mainGame->ebScale->setEnabled(true); // 隐藏刻度筛选
 					mainGame->cbCardType2->clear();
 					mainGame->cbCardType2->addItem(dataManager.GetSysString(1080), 0);
 					mainGame->cbCardType2->addItem(dataManager.GetSysString(1054), TYPE_MONSTER + TYPE_NORMAL);
@@ -1006,7 +1006,7 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 					mainGame->ebAttack->setEnabled(false);
 					mainGame->ebDefense->setEnabled(false);
 					mainGame->ebStar->setEnabled(false);
-					mainGame->ebScale->setEnabled(false);
+					// mainGame->ebScale->setEnabled(false); // 隐藏刻度筛选
 					mainGame->cbCardType2->clear();
 					mainGame->cbCardType2->addItem(dataManager.GetSysString(1080), 0);
 					mainGame->cbCardType2->addItem(dataManager.GetSysString(1054), TYPE_SPELL);
@@ -1024,7 +1024,7 @@ bool DeckBuilder::OnEvent(const irr::SEvent& event) {
 					mainGame->ebAttack->setEnabled(false);
 					mainGame->ebDefense->setEnabled(false);
 					mainGame->ebStar->setEnabled(false);
-					mainGame->ebScale->setEnabled(false);
+					// mainGame->ebScale->setEnabled(false); // 隐藏刻度筛选
 					mainGame->cbCardType2->clear();
 					mainGame->cbCardType2->addItem(dataManager.GetSysString(1080), 0);
 					mainGame->cbCardType2->addItem(dataManager.GetSysString(1054), TYPE_TRAP);
@@ -1441,7 +1441,8 @@ void DeckBuilder::StartFilter() {
 		filter_atk = parse_filter(mainGame->ebAttack->getText(), &filter_atktype);
 		filter_def = parse_filter(mainGame->ebDefense->getText(), &filter_deftype);
 		filter_lv = parse_filter(mainGame->ebStar->getText(), &filter_lvtype);
-		filter_scl = parse_filter(mainGame->ebScale->getText(), &filter_scltype);
+		// filter_scl = parse_filter(mainGame->ebScale->getText(), &filter_scltype); // 隐藏刻度筛选
+		filter_scl = 0; filter_scltype = 1; // 禁用刻度筛选
 	}
 	FilterCards();
 }
@@ -1650,7 +1651,7 @@ void DeckBuilder::ClearSearch() {
 	mainGame->ebAttack->setEnabled(false);
 	mainGame->ebDefense->setEnabled(false);
 	mainGame->ebStar->setEnabled(false);
-	mainGame->ebScale->setEnabled(false);
+	// mainGame->ebScale->setEnabled(false); // 隐藏刻度筛选
 	mainGame->ebCardName->setText(L"");
 	mainGame->scrFilter->setVisible(false);
 	mainGame->scrFilter->setPos(0);
@@ -1665,7 +1666,7 @@ void DeckBuilder::ClearFilter() {
 	mainGame->ebAttack->setText(L"");
 	mainGame->ebDefense->setText(L"");
 	mainGame->ebStar->setText(L"");
-	mainGame->ebScale->setText(L"");
+	// mainGame->ebScale->setText(L""); // 隐藏刻度筛选
 	filter_effect = 0;
 	for(int i = 0; i < 32; ++i)
 		mainGame->chkCategory[i]->setChecked(false);

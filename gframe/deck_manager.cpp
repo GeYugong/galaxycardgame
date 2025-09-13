@@ -46,7 +46,7 @@ void DeckManager::LoadLFList() {
 	LoadLFListSingle("specials/lflist.conf");
 	LoadLFListSingle("lflist.conf");
 	LFList nolimit;
-	nolimit.listName = L"N/A";
+	nolimit.listName = L"不适用";
 	nolimit.hash = 0;
 	_lfList.push_back(nolimit);
 }
@@ -365,9 +365,29 @@ int DeckManager::TypeCount(std::vector<code_pointer> list, unsigned int ctype) {
 	return res;
 }
 bool DeckManager::LoadDeckFromCode(Deck& deck, const unsigned char *code, int len) {
+	// 检查并去除盐值
+	const char* prefix = "FOGMOE";
+	const char* suffix = "GCG";
+	int prefix_len = 6; // FOGMOE长度
+	int suffix_len = 3; // GCG长度
+	
+	// 检查长度和前缀后缀
+	if(len < prefix_len + suffix_len + 8) // 至少要有前缀+后缀+最小Base64长度
+		return false;
+	
+	if(memcmp(code, prefix, prefix_len) != 0)
+		return false;
+	
+	if(memcmp(code + len - suffix_len, suffix, suffix_len) != 0)
+		return false;
+	
+	// 提取中间的Base64部分
+	const unsigned char* base64_code = code + prefix_len;
+	int base64_len = len - prefix_len - suffix_len;
+	
 	unsigned char data[1024], *pdeck = data, *data_ = data;
-	int decoded_len = Base64::DecodedLength(code, len);
-	if(decoded_len > 1024 || decoded_len < 8 || !Base64::Decode(code, len, data_, decoded_len))
+	int decoded_len = Base64::DecodedLength(base64_code, base64_len);
+	if(decoded_len > 1024 || decoded_len < 8 || !Base64::Decode(base64_code, base64_len, data_, decoded_len))
 		return false;
 	int mainc = BufferIO::Read<int32_t>(pdeck);
 	int sidec = BufferIO::Read<int32_t>(pdeck);
@@ -386,8 +406,21 @@ int DeckManager::SaveDeckToCode(Deck& deck, unsigned char* code) {
 		BufferIO::Write<int32_t>(pdeck, deck.side[i]->first);
 	int len = pdeck - deckbuf;
 	int encoded_len = Base64::EncodedLength(len);
-	Base64::Encode(deckbuf, len, code, encoded_len+1);
-	return encoded_len;
+	unsigned char temp_code[1024];
+	Base64::Encode(deckbuf, len, temp_code, encoded_len+1);
+	
+	// 添加盐值：前缀FOGMOE + Base64码 + 后缀GCG
+	const char* prefix = "FOGMOE";
+	const char* suffix = "GCG";
+	int prefix_len = 6; // FOGMOE长度
+	int suffix_len = 3; // GCG长度
+	
+	memcpy(code, prefix, prefix_len);
+	memcpy(code + prefix_len, temp_code, encoded_len);
+	memcpy(code + prefix_len + encoded_len, suffix, suffix_len);
+	code[prefix_len + encoded_len + suffix_len] = '\0';
+	
+	return prefix_len + encoded_len + suffix_len;
 }
 bool DeckManager::CreateCategory(const wchar_t* name) {
 	if(!FileSystem::IsDirExists(L"./deck") && !FileSystem::MakeDir(L"./deck"))

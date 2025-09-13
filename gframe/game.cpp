@@ -831,9 +831,12 @@ bool Game::Initialize() {
 	ebStar = env->addEditBox(L"", irr::core::rect<irr::s32>(60, 60 + 100 / 6, 100, 80 + 100 / 6), true, wFilter, EDITBOX_INPUTS);
 	editbox_list.push_back(ebStar);
 	ebStar->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
+	// 创建但隐藏刻度筛选功能 - GCG不使用游戏王的刻度机制
 	stScale = env->addStaticText(dataManager.GetSysString(1336), irr::core::rect<irr::s32>(101, 62 + 100 / 6, 150, 82 + 100 / 6), false, false, wFilter);
+	stScale->setVisible(false); // 隐藏不显示
 	ebScale = env->addEditBox(L"", irr::core::rect<irr::s32>(150, 60 + 100 / 6, 195, 80 + 100 / 6), true, wFilter, EDITBOX_INPUTS);
 	ebScale->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
+	ebScale->setVisible(false); // 隐藏不显示
 	editbox_list.push_back(ebScale);
 	stSearch = env->addStaticText(dataManager.GetSysString(1325), irr::core::rect<irr::s32>(205, 62 + 100 / 6, 280, 82 + 100 / 6), false, false, wFilter);
 	ebCardName = env->addEditBox(L"", irr::core::rect<irr::s32>(260, 60 + 100 / 6, 390, 80 + 100 / 6), true, wFilter, EDITBOX_KEYWORD);
@@ -863,6 +866,7 @@ bool Game::Initialize() {
 	wCategories->setRelativePosition(irr::core::rect<irr::s32>(1000 - wcatewidth, 60, 1000, 305));
 	btnCategoryOK->setRelativePosition(irr::core::recti(wcatewidth / 2 - 50, 210, wcatewidth / 2 + 50, 235));
 	btnMarksFilter = env->addButton(irr::core::rect<irr::s32>(60, 80 + 125 / 6, 195, 100 + 125 / 6), wFilter, BUTTON_MARKS_FILTER, dataManager.GetSysString(1374));
+	btnMarksFilter->setVisible(false); // 隐藏连接标记按钮 - GCG不使用游戏王的连接标记
 	wLinkMarks = env->addWindow(irr::core::rect<irr::s32>(700, 30, 820, 150), false, L"");
 	wLinkMarks->getCloseButton()->setVisible(false);
 	wLinkMarks->setDrawTitlebar(false);
@@ -1936,12 +1940,12 @@ void Game::ShowCardInfo(int code, bool resize) {
 		irr::core::dimension2d<unsigned int> dtxt = guiFont->getDimension(formatBuffer);
 		if(dtxt.Width > (300 * xScale - 13) - 15)
 			offset_info = 15;
-		const wchar_t* form = L"\u2605";
+		const wchar_t* form = L"等级";
 		wchar_t adBuffer[64]{};
 		wchar_t scaleBuffer[16]{};
 		if(!(cd.type & TYPE_LINK)) {
 			if(cd.type & TYPE_XYZ)
-				form = L"\u2606";
+				form = L"阶级";
 			if(cd.attack < 0 && cd.defense < 0)
 				myswprintf(adBuffer, L"?/?");
 			else if(cd.attack < 0)
@@ -2292,7 +2296,7 @@ void Game::OnResize() {
 	cbAttribute->setRelativePosition(Resize(60, 20 + 50 / 6, 195, 40 + 50 / 6));
 	cbLimit->setRelativePosition(Resize(260, 25 / 6, 390, 20 + 25 / 6));
 	ebStar->setRelativePosition(Resize(60, 60 + 100 / 6, 95, 80 + 100 / 6));
-	ebScale->setRelativePosition(Resize(155, 60 + 100 / 6, 195, 80 + 100 / 6));
+	ebScale->setRelativePosition(Resize(155, 60 + 100 / 6, 195, 80 + 100 / 6)); // 隐藏的刻度筛选
 	ebAttack->setRelativePosition(Resize(260, 20 + 50 / 6, 340, 40 + 50 / 6));
 	ebDefense->setRelativePosition(Resize(260, 40 + 75 / 6, 340, 60 + 75 / 6));
 	ebCardName->setRelativePosition(Resize(260, 60 + 100 / 6, 390, 80 + 100 / 6));
@@ -2320,7 +2324,7 @@ void Game::OnResize() {
 	stDefense->setRelativePosition(Resize(205, 42 + 75 / 6, 280, 62 + 75 / 6));
 	stStar->setRelativePosition(Resize(10, 62 + 100 / 6, 70, 82 + 100 / 6));
 	stSearch->setRelativePosition(Resize(205, 62 + 100 / 6, 280, 82 + 100 / 6));
-	stScale->setRelativePosition(Resize(105, 62 + 100 / 6, 165, 82 + 100 / 6));
+	stScale->setRelativePosition(Resize(105, 62 + 100 / 6, 165, 82 + 100 / 6)); // 隐藏的刻度筛选
 	btnSideOK->setRelativePosition(Resize(400, 40, 710, 80));
 	btnSideShuffle->setRelativePosition(Resize(310, 100, 370, 130));
 	btnSideSort->setRelativePosition(Resize(375, 100, 435, 130));
