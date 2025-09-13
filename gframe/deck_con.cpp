@@ -1441,8 +1441,7 @@ void DeckBuilder::StartFilter() {
 		filter_atk = parse_filter(mainGame->ebAttack->getText(), &filter_atktype);
 		filter_def = parse_filter(mainGame->ebDefense->getText(), &filter_deftype);
 		filter_lv = parse_filter(mainGame->ebStar->getText(), &filter_lvtype);
-		// filter_scl = parse_filter(mainGame->ebScale->getText(), &filter_scltype); // 隐藏刻度筛选
-		filter_scl = 0; filter_scltype = 1; // 禁用刻度筛选
+		filter_scl = parse_filter(mainGame->ebScale->getText(), &filter_scltype);
 	}
 	FilterCards();
 }
