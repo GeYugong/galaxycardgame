@@ -149,7 +149,7 @@ The project includes automated CI builds for Windows, Linux, and macOS via GitHu
 
 **1. 始终以原版卡片为参考**
 - 实现任何效果前，必须先询问用户相关的原版卡片ID
-- 深入研究参考卡片的完整实现（`script/c[cardid].lua`）
+- 深入研究参考卡片的完整实现（`.\ai\examples\script\c[cardid].lua`）
 - 学习并复制原版的API用法、代码结构和实现模式
 - 在原版基础上修改，绝不从零自创
 
