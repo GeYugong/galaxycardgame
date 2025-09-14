@@ -802,11 +802,12 @@ bool Game::Initialize() {
 	cbLimit->addItem(dataManager.GetSysString(1316));
 	cbLimit->addItem(dataManager.GetSysString(1317));
 	cbLimit->addItem(dataManager.GetSysString(1318));
-	cbLimit->addItem(dataManager.GetSysString(1481));
-	cbLimit->addItem(dataManager.GetSysString(1482));
-	cbLimit->addItem(dataManager.GetSysString(1483));
-	cbLimit->addItem(dataManager.GetSysString(1484));
-	cbLimit->addItem(dataManager.GetSysString(1485));
+	// 隐藏以下选项: OCG、TCG、简体中文、自定义卡片、无独有卡
+	// cbLimit->addItem(dataManager.GetSysString(1481));
+	// cbLimit->addItem(dataManager.GetSysString(1482));
+	// cbLimit->addItem(dataManager.GetSysString(1483));
+	// cbLimit->addItem(dataManager.GetSysString(1484));
+	// cbLimit->addItem(dataManager.GetSysString(1485));
 	stAttribute = env->addStaticText(dataManager.GetSysString(1319), irr::core::rect<irr::s32>(10, 22 + 50 / 6, 70, 42 + 50 / 6), false, false, wFilter);
 	cbAttribute = env->addComboBox(irr::core::rect<irr::s32>(60, 20 + 50 / 6, 195, 40 + 50 / 6), wFilter, COMBOBOX_ATTRIBUTE);
 	cbAttribute->setMaxSelectionRows(10);
@@ -843,6 +844,7 @@ bool Game::Initialize() {
 	ebCardName->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
 	editbox_list.push_back(ebCardName);
 	btnEffectFilter = env->addButton(irr::core::rect<irr::s32>(345, 20 + 50 / 6, 390, 60 + 75 / 6), wFilter, BUTTON_EFFECT_FILTER, dataManager.GetSysString(1326));
+	btnEffectFilter->setVisible(false); // 隐藏效果按钮
 	btnStartFilter = env->addButton(irr::core::rect<irr::s32>(205, 80 + 125 / 6, 390, 100 + 125 / 6), wFilter, BUTTON_START_FILTER, dataManager.GetSysString(1327));
 	if(gameConf.separate_clear_button) {
 		btnStartFilter->setRelativePosition(irr::core::rect<irr::s32>(260, 80 + 125 / 6, 390, 100 + 125 / 6));
@@ -2301,6 +2303,7 @@ void Game::OnResize() {
 	ebDefense->setRelativePosition(Resize(260, 40 + 75 / 6, 340, 60 + 75 / 6));
 	ebCardName->setRelativePosition(Resize(260, 60 + 100 / 6, 390, 80 + 100 / 6));
 	btnEffectFilter->setRelativePosition(Resize(345, 20 + 50 / 6, 390, 60 + 75 / 6));
+	btnEffectFilter->setVisible(false); // 确保效果按钮保持隐藏
 	btnStartFilter->setRelativePosition(Resize(260, 80 + 125 / 6, 390, 100 + 125 / 6));
 	if(btnClearFilter)
 		btnClearFilter->setRelativePosition(Resize(205, 80 + 125 / 6, 255, 100 + 125 / 6));

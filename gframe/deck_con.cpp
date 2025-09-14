@@ -1673,6 +1673,7 @@ void DeckBuilder::ClearFilter() {
 	for(int i = 0; i < 8; i++)
 		mainGame->btnMark[i]->setPressed(false);
 	mainGame->btnEffectFilter->setPressed(false);
+	mainGame->btnEffectFilter->setVisible(false); // 确保效果按钮保持隐藏
 	mainGame->btnMarksFilter->setPressed(false);
 }
 void DeckBuilder::SortList() {
