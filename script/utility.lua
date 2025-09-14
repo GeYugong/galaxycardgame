@@ -2249,12 +2249,12 @@ function Galaxy.AddDefenseAsHPToCard(c)
 	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
 	c:RegisterEffect(e1)
 
-	--伤害步骤结束时处理守备力减少
+	--伤害步骤结束时处理守备力减少（仅怪兽对怪兽战斗）
 	local e3=Effect.CreateEffect(c)
 	e3:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_F)
 	e3:SetCode(EVENT_DAMAGE_STEP_END)
 	e3:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
-	e3:SetCondition(aux.dsercon)
+	e3:SetCondition(Galaxy.DefenseHPReductionCondition)
 	e3:SetOperation(Galaxy.ReduceDefenseHP)
 	c:RegisterEffect(e3)
 
@@ -2275,9 +2275,6 @@ function Galaxy.ReduceDefenseHP(e,tp,eg,ep,ev,re,r,rp)
 
 	local attacker = Duel.GetAttacker()
 	local target = Duel.GetAttackTarget()
-
-	if not attacker or not target then return end
-	if not attacker:IsType(TYPE_MONSTER) or not target:IsType(TYPE_MONSTER) then return end
 
 	local opponent
 	local opponent_atk
@@ -2303,6 +2300,24 @@ function Galaxy.ReduceDefenseHP(e,tp,eg,ep,ev,re,r,rp)
 	e1:SetReset(RESET_EVENT+RESETS_STANDARD)
 	c:RegisterEffect(e1)
 
+end
+
+--守备力减少的触发条件（仅怪兽对怪兽战斗时）
+function Galaxy.DefenseHPReductionCondition(e,tp,eg,ep,ev,re,r,rp)
+	--首先检查基本的伤害步骤条件
+	if not aux.dsercon(e,tp,eg,ep,ev,re,r,rp) then return false end
+	
+	--检查是否为怪兽对怪兽战斗
+	local attacker = Duel.GetAttacker()
+	local target = Duel.GetAttackTarget()
+	
+	--如果是直接攻击玩家，target为nil，不触发守备力减少
+	if not attacker or not target then return false end
+	if not attacker:IsType(TYPE_MONSTER) or not target:IsType(TYPE_MONSTER) then return false end
+	
+	--确认当前怪兽参与了战斗
+	local c = e:GetHandler()
+	return c == attacker or c == target
 end
 
 --守备力为0时的自动破坏条件
