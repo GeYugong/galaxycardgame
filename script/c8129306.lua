@@ -3,6 +3,10 @@ function c8129306.initial_effect(c)
 	if Galaxy and Galaxy.ApplyRulesToCard then
         Galaxy.ApplyRulesToCard(c)
     end
+	    --设置召唤代价为基本分
+    if Galaxy and Galaxy.SetSummonCost then
+        Galaxy.SetSummonCost(c, 2)
+    end
 	--spsummon
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(8129306,0))

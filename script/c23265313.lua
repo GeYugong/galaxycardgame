@@ -1,14 +1,24 @@
 --コストダウン
 function c23265313.initial_effect(c)
+	--应用Galaxy规则
+	if Galaxy and Galaxy.ApplyRulesToCard then
+		Galaxy.ApplyRulesToCard(c)
+	end
+
+	--设置发动代价（例：200基本分）
+	if Galaxy and Galaxy.SetActivateCost then
+		Galaxy.SetActivateCost(c, 1)
+	end
+
 	--Activate
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_ACTIVATE)
 	e1:SetCode(EVENT_FREE_CHAIN)
-	e1:SetCost(c23265313.cost)
+	e1:SetCost(Galaxy and Galaxy.WrapCost and Galaxy.WrapCost(c, c23265313.original_cost) or c23265313.original_cost)
 	e1:SetOperation(c23265313.activate)
 	c:RegisterEffect(e1)
 end
-function c23265313.cost(e,tp,eg,ep,ev,re,r,rp,chk)
+function c23265313.original_cost(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsExistingMatchingCard(Card.IsDiscardable,tp,LOCATION_HAND,0,1,e:GetHandler()) end
 	Duel.DiscardHand(tp,Card.IsDiscardable,1,1,REASON_COST+REASON_DISCARD)
 end

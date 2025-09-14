@@ -1999,9 +1999,160 @@ Galaxy.NO_SET_SPELL_TRAP = true
 Galaxy.DEFENSE_AS_HP = true
 Galaxy.NO_MONSTER_BATTLE_DAMAGE = true
 
+--基本分代价系统配置
+Galaxy.USE_COST_SYSTEM = true
+Galaxy.MONSTER_SUMMON_COST = true     --怪兽召唤需要代价
+Galaxy.SPELL_TRAP_COST = true         --魔法陷阱发动需要代价
+
+--特殊召唤系统配置
+Galaxy.SPECIAL_SUMMON_ONLY = true     --禁止通常召唤，改为特殊召唤（无次数限制）
+
 --检查是否为Galaxy规则对战
 function Galaxy.IsGalaxyDuel()
 	return Galaxy.ENABLED
+end
+
+--代价系统基础函数
+Galaxy.DEFAULT_SUMMON_COST = 0     --怪兽召唤/特殊召唤默认代价
+Galaxy.DEFAULT_ACTIVATE_COST = 0   --魔法/陷阱发动默认代价
+
+--检查玩家是否有足够的基本分支付代价
+function Galaxy.CheckCost(tp, cost)
+	if cost <= 0 then return true end  --无代价直接通过
+	return Duel.CheckLPCost(tp, cost)
+end
+
+--支付基本分代价
+function Galaxy.PayCost(tp, cost)
+	if cost <= 0 then return end  --无代价无需支付
+	Duel.PayLPCost(tp, cost)
+end
+
+--代价存储的Flag ID
+Galaxy.SUMMON_COST_FLAG = 99990001    --召唤代价Flag
+Galaxy.ACTIVATE_COST_FLAG = 99990002  --发动代价Flag
+
+--获取卡片的召唤代价（从Flag读取）
+function Galaxy.GetSummonCost(c)
+	--检查卡片是否有自定义代价Flag
+	if c:GetFlagEffect(Galaxy.SUMMON_COST_FLAG) > 0 then
+		return c:GetFlagEffectLabel(Galaxy.SUMMON_COST_FLAG)
+	end
+	--默认无代价
+	return Galaxy.DEFAULT_SUMMON_COST
+end
+
+--获取卡片的发动代价（从Flag读取）
+function Galaxy.GetActivateCost(c)
+	--检查卡片是否有自定义代价Flag
+	if c:GetFlagEffect(Galaxy.ACTIVATE_COST_FLAG) > 0 then
+		return c:GetFlagEffectLabel(Galaxy.ACTIVATE_COST_FLAG)
+	end
+	--默认无代价
+	return Galaxy.DEFAULT_ACTIVATE_COST
+end
+
+--为卡片设置召唤代价的便捷函数
+function Galaxy.SetSummonCost(c, cost)
+	--使用RegisterFlagEffect存储代价信息
+	c:RegisterFlagEffect(Galaxy.SUMMON_COST_FLAG, 0, 0, 0, cost)
+end
+
+--为卡片设置发动代价的便捷函数
+function Galaxy.SetActivateCost(c, cost)
+	--使用RegisterFlagEffect存储代价信息
+	c:RegisterFlagEffect(Galaxy.ACTIVATE_COST_FLAG, 0, 0, 0, cost)
+end
+
+--为怪兽卡添加特殊召唤替代系统
+function Galaxy.AddSpecialSummonOnlyToCard(c)
+	if not Galaxy.IsGalaxyDuel() or not Galaxy.SPECIAL_SUMMON_ONLY then return end
+	if not c or not c:IsType(TYPE_MONSTER) then return end
+
+	--禁止通常召唤
+	local e1=Effect.CreateEffect(c)
+	e1:SetType(EFFECT_TYPE_SINGLE)
+	e1:SetCode(EFFECT_CANNOT_SUMMON)
+	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
+	c:RegisterEffect(e1)
+
+	--添加特殊召唤手续（强制攻击表示，包含代价检查）
+	local e2=Effect.CreateEffect(c)
+	e2:SetType(EFFECT_TYPE_FIELD)
+	e2:SetCode(EFFECT_SPSUMMON_PROC)
+	e2:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE+EFFECT_FLAG_SPSUM_PARAM)
+	e2:SetRange(LOCATION_HAND)
+	e2:SetTargetRange(POS_FACEUP_ATTACK,0)
+	e2:SetCondition(Galaxy.SpecialSummonCondition)
+	e2:SetOperation(Galaxy.SpecialSummonOperation)  --在这里支付代价
+	c:RegisterEffect(e2)
+end
+
+--特殊召唤条件：检查场地和代价是否足够
+function Galaxy.SpecialSummonCondition(e,c)
+	if c==nil then return true end
+	local tp=c:GetControler()
+	local cost = Galaxy.GetSummonCost(c)
+	--检查场地和代价，代价在Operation中支付
+	return Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and Galaxy.CheckCost(tp, cost)
+end
+
+--特殊召唤操作：在召唤过程中支付代价
+function Galaxy.SpecialSummonOperation(e,tp,eg,ep,ev,re,r,rp,c)
+	local cost = Galaxy.GetSummonCost(c)
+	if cost > 0 then
+		Galaxy.PayCost(tp, cost)
+	end
+end
+
+--为魔法/陷阱卡添加发动代价效果（通用代价包装）
+function Galaxy.AddActivateCostToCard(c)
+	if not Galaxy.IsGalaxyDuel() or not Galaxy.USE_COST_SYSTEM or not Galaxy.SPELL_TRAP_COST then return end
+	if not c or not (c:IsType(TYPE_SPELL) or c:IsType(TYPE_TRAP)) then return end
+
+	--此函数现在主要用于标记卡片需要代价
+	--实际代价处理通过Galaxy.WrapCost函数进行，在各卡片脚本中调用
+	--使用方式: e1:SetCost(Galaxy.WrapCost(c, original_cost_function))
+end
+
+--通用的代价包装函数：将Galaxy代价与原始代价组合
+function Galaxy.WrapCost(c, original_cost)
+	return function(e,tp,eg,ep,ev,re,r,rp,chk)
+		local galaxy_cost = Galaxy.GetActivateCost and Galaxy.GetActivateCost(c) or 0
+
+		if chk==0 then
+			--检查Galaxy代价
+			local galaxy_ok = true
+			if galaxy_cost > 0 then
+				galaxy_ok = Galaxy.CheckCost and Galaxy.CheckCost(tp, galaxy_cost) or false
+			end
+			--检查原始代价
+			local original_ok = not original_cost or original_cost(e,tp,eg,ep,ev,re,r,rp,chk)
+			return galaxy_ok and original_ok
+		else
+			--支付Galaxy代价
+			if galaxy_cost > 0 and Galaxy.PayCost then
+				Galaxy.PayCost(tp, galaxy_cost)
+			end
+			--支付原始代价
+			if original_cost then
+				original_cost(e,tp,eg,ep,ev,re,r,rp,chk)
+			end
+		end
+	end
+end
+
+--简化版本：无原始代价的包装函数
+function Galaxy.SimpleCost(c)
+	return Galaxy.WrapCost(c, nil)
+end
+
+
+--发动代价支付操作
+function Galaxy.ActivateCostOperation(e,tp,eg,ep,ev,re,r,rp)
+	local c = e:GetHandler()
+	local cost = Galaxy.GetActivateCost(c)
+	Galaxy.PayCost(tp, cost)
 end
 
 --为怪兽卡添加禁止覆盖召唤效果
@@ -2203,7 +2354,9 @@ function Galaxy.ApplyRulesToCard(c)
 		Galaxy.AddNoBattleDamageToCard(c) --不进行战斗伤害
 		Galaxy.AddCannotChangeToDefenseToCard(c) --不能变为守备表示
 		Galaxy.AddSummonTurnCannotAttackToCard(c) --召唤回合不能攻击
+		Galaxy.AddSpecialSummonOnlyToCard(c) --添加特殊召唤替代系统
 	elseif c:IsType(TYPE_SPELL) or c:IsType(TYPE_TRAP) then
-		Galaxy.AddNoCoverSetToCard(c)
+		Galaxy.AddNoCoverSetToCard(c) --禁止覆盖放置
+		Galaxy.AddActivateCostToCard(c) --添加发动代价
 	end
 end
