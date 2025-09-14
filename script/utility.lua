@@ -1996,18 +1996,19 @@ end
 Galaxy.ENABLED = true
 Galaxy.NO_COVER_SUMMON = true
 Galaxy.NO_SET_SPELL_TRAP = true
+Galaxy.DEFENSE_AS_HP = true
+Galaxy.NO_MONSTER_BATTLE_DAMAGE = true
 
 --检查是否为Galaxy规则对战
 function Galaxy.IsGalaxyDuel()
 	return Galaxy.ENABLED
 end
 
---为单张怪兽卡添加禁止覆盖召唤效果
+--为怪兽卡添加禁止覆盖召唤效果
 function Galaxy.AddNoCoverSummonToCard(c)
 	if not Galaxy.IsGalaxyDuel() or not Galaxy.NO_COVER_SUMMON then return end
 	if not c or not c:IsType(TYPE_MONSTER) then return end
-	
-	--添加不能覆盖召唤的效果
+
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_SINGLE)
 	e1:SetCode(EFFECT_CANNOT_MSET)
@@ -2015,12 +2016,61 @@ function Galaxy.AddNoCoverSummonToCard(c)
 	c:RegisterEffect(e1)
 end
 
---为单张魔法/陷阱卡添加禁止覆盖放置效果
+--为怪兽卡添加不能变为守备表示效果
+function Galaxy.AddCannotChangeToDefenseToCard(c)
+	if not Galaxy.IsGalaxyDuel() then return end
+	if not c or not c:IsType(TYPE_MONSTER) then return end
+
+	local e1=Effect.CreateEffect(c)
+	e1:SetType(EFFECT_TYPE_SINGLE)
+	e1:SetCode(EFFECT_CANNOT_CHANGE_POSITION)
+	e1:SetCondition(Galaxy.AttackPositionCondition)
+	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
+	c:RegisterEffect(e1)
+end
+
+--条件：仅在攻击表示时不能变换表示形式
+function Galaxy.AttackPositionCondition(e)
+	return e:GetHandler():IsPosition(POS_FACEUP_ATTACK)
+end
+
+--为怪兽卡添加召唤回合不能攻击效果
+function Galaxy.AddSummonTurnCannotAttackToCard(c)
+	if not Galaxy.IsGalaxyDuel() then return end
+	if not c or not c:IsType(TYPE_MONSTER) then return end
+
+	--通常召唤成功时不能攻击
+	local e1=Effect.CreateEffect(c)
+	e1:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_CONTINUOUS)
+	e1:SetCode(EVENT_SUMMON_SUCCESS)
+	e1:SetOperation(Galaxy.SummonAttackLimit)
+	c:RegisterEffect(e1)
+
+	--翻转召唤成功时不能攻击
+	local e2=e1:Clone()
+	e2:SetCode(EVENT_FLIP_SUMMON_SUCCESS)
+	c:RegisterEffect(e2)
+
+	--特殊召唤成功时不能攻击
+	local e3=e1:Clone()
+	e3:SetCode(EVENT_SPSUMMON_SUCCESS)
+	c:RegisterEffect(e3)
+end
+
+--召唤成功时添加攻击限制
+function Galaxy.SummonAttackLimit(e,tp,eg,ep,ev,re,r,rp)
+	local e1=Effect.CreateEffect(e:GetHandler())
+	e1:SetType(EFFECT_TYPE_SINGLE)
+	e1:SetCode(EFFECT_CANNOT_ATTACK)
+	e1:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END)
+	e:GetHandler():RegisterEffect(e1)
+end
+
+--为魔法/陷阱卡添加禁止覆盖放置效果
 function Galaxy.AddNoCoverSetToCard(c)
 	if not Galaxy.IsGalaxyDuel() or not Galaxy.NO_SET_SPELL_TRAP then return end
 	if not c or not (c:IsType(TYPE_SPELL) or c:IsType(TYPE_TRAP)) then return end
-	
-	--添加不能覆盖放置的效果
+
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_SINGLE)
 	e1:SetCode(EFFECT_CANNOT_SSET)
@@ -2028,12 +2078,129 @@ function Galaxy.AddNoCoverSetToCard(c)
 	c:RegisterEffect(e1)
 end
 
+--为怪兽卡添加守备力作为生命值系统
+function Galaxy.AddDefenseAsHPToCard(c)
+	if not Galaxy.IsGalaxyDuel() or not Galaxy.DEFENSE_AS_HP then return end
+	if not c or not c:IsType(TYPE_MONSTER) then return end
+
+	--完全禁止战斗破坏
+	local e1=Effect.CreateEffect(c)
+	e1:SetType(EFFECT_TYPE_SINGLE)
+	e1:SetCode(EFFECT_INDESTRUCTABLE_BATTLE)
+	e1:SetValue(1)
+	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
+	c:RegisterEffect(e1)
+
+	--伤害步骤结束时处理守备力减少
+	local e3=Effect.CreateEffect(c)
+	e3:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_F)
+	e3:SetCode(EVENT_DAMAGE_STEP_END)
+	e3:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
+	e3:SetCondition(aux.dsercon)
+	e3:SetOperation(Galaxy.ReduceDefenseHP)
+	c:RegisterEffect(e3)
+
+	--守备力为0时自动破坏
+	local e4=Effect.CreateEffect(c)
+	e4:SetType(EFFECT_TYPE_SINGLE)
+	e4:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
+	e4:SetRange(LOCATION_MZONE)
+	e4:SetCode(EFFECT_SELF_DESTROY)
+	e4:SetCondition(Galaxy.DefenseZeroCondition)
+	c:RegisterEffect(e4)
+end
+
+--伤害步骤结束时处理守备力减少
+function Galaxy.ReduceDefenseHP(e,tp,eg,ep,ev,re,r,rp)
+	local c = e:GetHandler()
+	if not c:IsRelateToEffect(e) or not c:IsLocation(LOCATION_MZONE) then return end
+
+	local attacker = Duel.GetAttacker()
+	local target = Duel.GetAttackTarget()
+
+	if not attacker or not target then return end
+	if not attacker:IsType(TYPE_MONSTER) or not target:IsType(TYPE_MONSTER) then return end
+
+	local opponent
+	local opponent_atk
+
+	--判断自己是攻击方还是被攻击方，获取对方的攻击力
+	if c == attacker then
+		opponent = target
+		opponent_atk = target:GetAttack()
+	elseif c == target then
+		opponent = attacker
+		opponent_atk = attacker:GetAttack()
+	else
+		return
+	end
+
+	local damage = -opponent_atk  -- 负数表示减少
+
+	--使用UPDATE_DEFENSE减少守备力
+	local e1=Effect.CreateEffect(c)
+	e1:SetType(EFFECT_TYPE_SINGLE)
+	e1:SetCode(EFFECT_UPDATE_DEFENSE)
+	e1:SetValue(damage)
+	e1:SetReset(RESET_EVENT+RESETS_STANDARD)
+	c:RegisterEffect(e1)
+
+end
+
+--守备力为0时的自动破坏条件
+function Galaxy.DefenseZeroCondition(e)
+	local c = e:GetHandler()
+	return c:GetDefense() <= 0
+end
+
+
+--为怪兽卡添加条件性无战斗伤害效果（仅怪兽对怪兽）
+function Galaxy.AddNoBattleDamageToCard(c)
+	if not Galaxy.IsGalaxyDuel() then return end
+	if not c or not c:IsType(TYPE_MONSTER) then return end
+
+	--条件性效果：仅在怪兽对怪兽战斗时不造成战斗伤害
+	local e1=Effect.CreateEffect(c)
+	e1:SetType(EFFECT_TYPE_SINGLE)
+	e1:SetCode(EFFECT_NO_BATTLE_DAMAGE)
+	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
+	e1:SetCondition(Galaxy.MonsterVsMonsterCondition)
+	c:RegisterEffect(e1)
+
+	--条件性效果：仅在怪兽对怪兽战斗时避免战斗伤害
+	local e2=Effect.CreateEffect(c)
+	e2:SetType(EFFECT_TYPE_SINGLE)
+	e2:SetCode(EFFECT_AVOID_BATTLE_DAMAGE)
+	e2:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
+	e2:SetCondition(Galaxy.MonsterVsMonsterCondition)
+	e2:SetValue(1)
+	c:RegisterEffect(e2)
+end
+
+--条件：仅在怪兽对怪兽战斗时生效
+function Galaxy.MonsterVsMonsterCondition(e)
+	local c = e:GetHandler()
+	local attacker = Duel.GetAttacker()
+	local target = Duel.GetAttackTarget()
+
+	-- 如果没有攻击目标，说明是直接攻击玩家，不阻止伤害
+	if not target then return false end
+
+	-- 只有在怪兽对怪兽战斗时才阻止伤害
+	return (c == attacker or c == target) and target:IsType(TYPE_MONSTER)
+end
+
+
 --通用函数：为卡片添加Galaxy规则
 function Galaxy.ApplyRulesToCard(c)
 	if not c or not Galaxy.IsGalaxyDuel() then return end
-	
+
 	if c:IsType(TYPE_MONSTER) then
-		Galaxy.AddNoCoverSummonToCard(c)
+		Galaxy.AddNoCoverSummonToCard(c) --禁止覆盖召唤
+		Galaxy.AddDefenseAsHPToCard(c) --守备力作为生命值
+		Galaxy.AddNoBattleDamageToCard(c) --不进行战斗伤害
+		Galaxy.AddCannotChangeToDefenseToCard(c) --不能变为守备表示
+		Galaxy.AddSummonTurnCannotAttackToCard(c) --召唤回合不能攻击
 	elseif c:IsType(TYPE_SPELL) or c:IsType(TYPE_TRAP) then
 		Galaxy.AddNoCoverSetToCard(c)
 	end

@@ -1,5 +1,8 @@
 --霞の谷のファルコン
 function c82199284.initial_effect(c)
+	if Galaxy and Galaxy.ApplyRulesToCard then
+        Galaxy.ApplyRulesToCard(c)
+    end
 	--attack cost
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_SINGLE)
