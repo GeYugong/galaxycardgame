@@ -1,5 +1,13 @@
 # Galaxy Card Game Rules - Lua脚本实现
 
+## ⚠️ 重要更新说明
+
+**最新修改 (2025年9月14日)**: 
+- **魔法陷阱发动代价系统已暂时禁用** 
+- 当前魔法陷阱卡发动不需要支付任何Galaxy代价
+- 怪兽召唤代价系统保持正常运行（默认代价=星级）
+- 此修改是为了简化测试和调试过程
+
 ## 概述
 
 此实现通过**单张卡片脚本调用**的方式在原YGOPro引擎基础上实现Galaxy Card Game规则，无需修改核心引擎代码。所有规则变更通过Lua效果系统实现。
@@ -86,11 +94,11 @@
 - **实现状态**: **已删除** - YGO传统游戏中本来就不能在对方有怪兽时直接攻击玩家
 - **说明**: 此规则在原YGOPro引擎中已经存在，无需额外实现
 
-### 6. 基本分代价系统 ✅
+### 6. 基本分代价系统 ⚠️ (部分实现)
 - **实现方式**: 使用`EFFECT_SUMMON_COST`、`EFFECT_SPSUMMON_COST`和`EFFECT_ACTIVATE_COST`为卡片添加基本分支付代价
 - **功能**:
-  - **怪兽召唤/特殊召唤**: 需要支付基本分才能召唤
-  - **魔法/陷阱发动**: 需要支付基本分才能发动
+  - **怪兽召唤/特殊召唤**: 需要支付基本分才能召唤（已实现，默认为星级代价）
+  - **魔法/陷阱发动**: ⚠️ **暂时禁用** - 魔法陷阱卡发动暂时不需要支付代价
   - **个性化代价设定**: 每张卡片可单独设定代价
 - **技术实现**:
   - 参考c1845204的代价支付模式（魔法卡）
@@ -98,10 +106,12 @@
   - 使用`Duel.PayLPCost()`扣除基本分
   - 使用`RegisterFlagEffect`存储卡片代价信息
 - **代价设定**:
-  - 所有卡片默认代价：0基本分（无代价）
-  - 每张卡片可在脚本中单独设定自定义代价
-  - 支持怪兽召唤代价和魔法/陷阱发动代价
-- **测试状态**: ✅ 已验证通过
+  - **怪兽卡**: 默认代价为星级值，可单独设定自定义代价
+  - **魔法/陷阱卡**: ⚠️ **暂时无代价** - 发动代价功能已暂时禁用
+  - 支持怪兽召唤代价设定
+- **当前状态**: 
+  - ✅ 怪兽召唤代价系统已验证通过
+  - ⚠️ 魔法陷阱发动代价系统已暂时禁用
 - **关键函数**: `Galaxy.SetSummonCost()`, `Galaxy.SetActivateCost()`, `Galaxy.GetSummonCost()`, `Galaxy.GetActivateCost()`
 
 ### 7. 特殊召唤替代系统 ✅ (NEW)
@@ -159,8 +169,10 @@ function Galaxy.ApplyRulesToCard(c)
         Galaxy.AddNoBattleDamageToCard(c)
         Galaxy.AddCannotChangeToDefenseToCard(c)
         Galaxy.AddSummonTurnCannotAttackToCard(c)
+        Galaxy.AddSpecialSummonOnlyToCard(c)
     elseif c:IsType(TYPE_SPELL) or c:IsType(TYPE_TRAP) then
         Galaxy.AddNoCoverSetToCard(c)
+        --Galaxy.AddActivateCostToCard(c) --发动代价已暂时禁用
     end
 end
 ```
@@ -241,9 +253,17 @@ function cXXXXXX.initial_effect(c)
 end
 ```
 
-#### 魔法/陷阱卡发动代价设置
+#### 魔法/陷阱卡发动代价设置 ⚠️ (暂时禁用)
 
-**方法1: 无原始代价的卡片（推荐）**
+**⚠️ 重要说明**: 魔法陷阱卡的发动代价功能已暂时禁用，当前魔法陷阱卡发动不需要支付任何Galaxy代价。
+
+**暂时禁用的原因**: 为了简化测试和调试过程，暂时移除了魔法陷阱卡的代价要求。
+
+**如需重新启用**:
+1. 在 `utility.lua` 中修改: `Galaxy.SPELL_TRAP_COST = true`
+2. 在 `Galaxy.ApplyRulesToCard()` 中取消注释: `Galaxy.AddActivateCostToCard(c)`
+
+**之前的使用方法** (暂时不生效):
 ```lua
 function cXXXXXX.initial_effect(c)
     --应用Galaxy规则
@@ -251,49 +271,35 @@ function cXXXXXX.initial_effect(c)
         Galaxy.ApplyRulesToCard(c)
     end
 
-    --设置发动代价（例：500基本分）
-    if Galaxy and Galaxy.SetActivateCost then
-        Galaxy.SetActivateCost(c, 500)
-    end
+    --设置发动代价（暂时无效）
+    --if Galaxy and Galaxy.SetActivateCost then
+    --    Galaxy.SetActivateCost(c, 500)
+    --end
 
-    --Activate效果
+    --Activate效果（暂时无需Galaxy代价）
     local e1=Effect.CreateEffect(c)
     e1:SetType(EFFECT_TYPE_ACTIVATE)
     e1:SetCode(EVENT_FREE_CHAIN)
-    e1:SetCost(Galaxy and Galaxy.SimpleCost and Galaxy.SimpleCost(c) or nil)  --使用通用代价包装
+    --e1:SetCost(Galaxy and Galaxy.SimpleCost and Galaxy.SimpleCost(c) or nil)  --暂时禁用
     e1:SetTarget(cXXXXXX.target)
     e1:SetOperation(cXXXXXX.activate)
     c:RegisterEffect(e1)
 end
 ```
-
-**方法2: 有原始代价的卡片（组合代价）**
-```lua
-function cXXXXXX.initial_effect(c)
-    --应用Galaxy规则和设置代价（同上）
-
-    --Activate效果
-    local e1=Effect.CreateEffect(c)
-    e1:SetType(EFFECT_TYPE_ACTIVATE)
-    e1:SetCode(EVENT_FREE_CHAIN)
-    e1:SetCost(Galaxy and Galaxy.WrapCost and Galaxy.WrapCost(c, cXXXXXX.original_cost) or cXXXXXX.original_cost)
-    e1:SetTarget(cXXXXXX.target)
-    e1:SetOperation(cXXXXXX.activate)
-    c:RegisterEffect(e1)
-end
-
-function cXXXXXX.original_cost(e,tp,eg,ep,ev,re,r,rp,chk)
-    --原始的代价处理（如丢弃手牌等）
     if chk==0 then return Duel.IsExistingMatchingCard(Card.IsDiscardable,tp,LOCATION_HAND,0,1,nil) end
     Duel.DiscardHand(tp,Card.IsDiscardable,1,1,REASON_COST)
 end
 ```
 
 #### 代价设定规则
-- **代价为0**: 无需支付任何基本分（默认）
-- **代价>0**: 需要支付指定数量的基本分
-- **代价设定时机**: 必须在`Galaxy.ApplyRulesToCard(c)`之后调用
-- **自动生效**: 设定后自动应用到召唤/发动过程中
+- **怪兽卡代价**: 
+  - 默认代价为星级值（1星=1基本分，4星=4基本分，等等）
+  - 可通过`Galaxy.SetSummonCost(c, cost)`设置自定义代价
+  - 代价设定时机: 必须在`Galaxy.ApplyRulesToCard(c)`之后调用
+- **魔法/陷阱卡代价**: ⚠️ **暂时无代价** - 发动代价功能已暂时禁用
+  - 当前魔法陷阱卡发动不需要支付任何Galaxy代价
+  - 原有的卡片发动代价（如丢弃手牌）仍然有效
+- **重新启用**: 修改`Galaxy.SPELL_TRAP_COST = true`可重新启用魔法陷阱代价
 
 ### 启用/禁用Galaxy规则
 修改 `utility.lua` 中的配置：
@@ -307,7 +313,7 @@ Galaxy.NO_MONSTER_BATTLE_DAMAGE = true   -- 禁止怪兽战斗对玩家造成伤
 --基本分代价系统配置
 Galaxy.USE_COST_SYSTEM = true           -- 代价系统总开关
 Galaxy.MONSTER_SUMMON_COST = true       -- 怪兽召唤需要代价
-Galaxy.SPELL_TRAP_COST = true           -- 魔法陷阱发动需要代价
+Galaxy.SPELL_TRAP_COST = false          -- 魔法陷阱发动代价（暂时禁用）
 
 --特殊召唤系统配置
 Galaxy.SPECIAL_SUMMON_ONLY = true       -- 禁止通常召唤，改为特殊召唤（无次数限制）
@@ -462,14 +468,15 @@ Galaxy.SPECIAL_SUMMON_ONLY = true       -- 禁止通常召唤，改为特殊召�
 4. **不能变为守备表示** - 已验证通过
 5. **召唤回合不能攻击** - 已验证通过
 6. **强制目标攻击** - 原生支持，无需实现
-7. **基本分代价系统** - ✅ **已完全验证通过**（怪兽+魔法卡）
+7. **基本分代价系统** - ⚠️ **部分验证通过**（怪兽✅，魔法陷阱暂时禁用⚠️）
 8. **特殊召唤替代系统** - 🔧 **已修复技术问题，待最终验证**
 
 ### 📊 实现统计
 - **总规则数**: 7个核心规则 + 1个原生规则
 - **已实现**: 8个规则 (100%)
-- **已验证**: 7个规则 (88%)
+- **已验证**: 6个规则 (75%) + 1个部分验证的规则
 - **待最终验证**: 1个规则 (特殊召唤替代系统)
+- **暂时禁用**: 1个子系统 (魔法陷阱发动代价)
 - **代码行数**: ~280行核心Galaxy规则代码（包含通用代价系统）
 - **核心函数**: 22个专用函数 + 2个通用包装函数
 

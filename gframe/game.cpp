@@ -1942,7 +1942,7 @@ void Game::ShowCardInfo(int code, bool resize) {
 		irr::core::dimension2d<unsigned int> dtxt = guiFont->getDimension(formatBuffer);
 		if(dtxt.Width > (300 * xScale - 13) - 15)
 			offset_info = 15;
-		const wchar_t* form = L"等级";
+		const wchar_t* form = L"补给";
 		wchar_t adBuffer[64]{};
 		wchar_t scaleBuffer[16]{};
 		if(!(cd.type & TYPE_LINK)) {

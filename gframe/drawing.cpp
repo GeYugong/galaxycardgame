@@ -1419,12 +1419,12 @@ void Game::DrawDeckBd() {
 		if(ptr->second.type & TYPE_MONSTER) {
 			myswprintf(textBuffer, L"%ls", dataManager.GetName(ptr->first));
 			DrawShadowText(textFont, textBuffer, Resize(860, 165 + i * 66, 955, 185 + i * 66), Resize(1, 1, 0, 0));
-			const wchar_t* form = L"\u2605";
+			const wchar_t* form = L"补给";
 			wchar_t adBuffer[32]{};
 			wchar_t scaleBuffer[16]{};
 			if(!(ptr->second.type & TYPE_LINK)) {
 				if(ptr->second.type & TYPE_XYZ)
-					form = L"\u2606";
+					form = L"阶级";
 				if(ptr->second.attack < 0 && ptr->second.defense < 0)
 					myswprintf(adBuffer, L"?/?");
 				else if(ptr->second.attack < 0)

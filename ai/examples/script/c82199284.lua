@@ -3,11 +3,6 @@ function c82199284.initial_effect(c)
 	if Galaxy and Galaxy.ApplyRulesToCard then
         Galaxy.ApplyRulesToCard(c)
     end
-
-	    --设置召唤代价为1基本分
-    if Galaxy and Galaxy.SetSummonCost then
-        Galaxy.SetSummonCost(c, 1)
-    end
 	--attack cost
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_SINGLE)

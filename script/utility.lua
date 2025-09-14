@@ -2002,7 +2002,8 @@ Galaxy.NO_MONSTER_BATTLE_DAMAGE = true
 --基本分代价系统配置
 Galaxy.USE_COST_SYSTEM = true
 Galaxy.MONSTER_SUMMON_COST = true     --怪兽召唤需要代价
-Galaxy.SPELL_TRAP_COST = true         --魔法陷阱发动需要代价
+--Galaxy.SPELL_TRAP_COST = true         --魔法陷阱发动需要代价（暂时禁用）
+Galaxy.SPELL_TRAP_COST = false        --魔法陷阱发动暂时不需要代价
 
 --特殊召唤系统配置
 Galaxy.SPECIAL_SUMMON_ONLY = true     --禁止通常召唤，改为特殊召唤（无次数限制）
@@ -2013,7 +2014,7 @@ function Galaxy.IsGalaxyDuel()
 end
 
 --代价系统基础函数
-Galaxy.DEFAULT_SUMMON_COST = 0     --怪兽召唤/特殊召唤默认代价
+Galaxy.DEFAULT_SUMMON_COST = 0     --怪兽召唤/特殊召唤默认代价（实际使用星级）
 Galaxy.DEFAULT_ACTIVATE_COST = 0   --魔法/陷阱发动默认代价
 
 --检查玩家是否有足够的基本分支付代价
@@ -2032,13 +2033,16 @@ end
 Galaxy.SUMMON_COST_FLAG = 99990001    --召唤代价Flag
 Galaxy.ACTIVATE_COST_FLAG = 99990002  --发动代价Flag
 
---获取卡片的召唤代价（从Flag读取）
+--获取卡片的召唤代价（从Flag读取，怪兽默认为星级）
 function Galaxy.GetSummonCost(c)
 	--检查卡片是否有自定义代价Flag
 	if c:GetFlagEffect(Galaxy.SUMMON_COST_FLAG) > 0 then
 		return c:GetFlagEffectLabel(Galaxy.SUMMON_COST_FLAG)
 	end
-	--默认无代价
+	--怪兽卡默认代价为星级，其他卡片默认为0
+	if c:IsType(TYPE_MONSTER) then
+		return c:GetLevel()
+	end
 	return Galaxy.DEFAULT_SUMMON_COST
 end
 
@@ -2106,6 +2110,7 @@ function Galaxy.SpecialSummonOperation(e,tp,eg,ep,ev,re,r,rp,c)
 end
 
 --为魔法/陷阱卡添加发动代价效果（通用代价包装）
+--注意：此功能已暂时禁用，魔法陷阱卡发动暂时不需要支付代价
 function Galaxy.AddActivateCostToCard(c)
 	if not Galaxy.IsGalaxyDuel() or not Galaxy.USE_COST_SYSTEM or not Galaxy.SPELL_TRAP_COST then return end
 	if not c or not (c:IsType(TYPE_SPELL) or c:IsType(TYPE_TRAP)) then return end
@@ -2357,6 +2362,6 @@ function Galaxy.ApplyRulesToCard(c)
 		Galaxy.AddSpecialSummonOnlyToCard(c) --添加特殊召唤替代系统
 	elseif c:IsType(TYPE_SPELL) or c:IsType(TYPE_TRAP) then
 		Galaxy.AddNoCoverSetToCard(c) --禁止覆盖放置
-		Galaxy.AddActivateCostToCard(c) --添加发动代价
+		--Galaxy.AddActivateCostToCard(c) --添加发动代价（暂时禁用）
 	end
 end
