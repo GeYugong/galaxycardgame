@@ -144,6 +144,7 @@ The project includes automated CI builds for Windows, Linux, and macOS via GitHu
 **必读资料**: `.\ai\luatips\` 目录下的json文件
 - `tips.json`: 完整的API文档和使用说明
 - `snippets.json`: 常用代码片段和实现模式
+- 可以通过sqlite数据库查询cards.cdb获取卡片信息
 
 ### 🎯 核心开发原则
 
