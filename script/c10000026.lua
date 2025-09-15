@@ -3,7 +3,7 @@ function s.initial_effect(c)
 	if Galaxy and Galaxy.ApplyRulesToCard then
         Galaxy.ApplyRulesToCard(c)
     end
-    --魔法卡，把1只水属性的，融合怪兽从额外卡组特殊召唤。支付那只怪兽等级的lp作为代价。
+    --魔法卡，把1只水属性的，融合怪兽从额外卡组特殊召唤。支付那只怪兽等级的lp*2作为代价。
     local e1=Effect.CreateEffect(c)
     e1:SetCategory(CATEGORY_SPECIAL_SUMMON)
     e1:SetType(EFFECT_TYPE_ACTIVATE)
@@ -17,7 +17,7 @@ function s.filter(c,e,tp)
     return c:IsType(TYPE_FUSION) and c:IsAttribute(ATTRIBUTE_WATER)
         and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
         and Duel.GetLocationCountFromEx(tp,tp,nil,c)>0
-        and Duel.CheckLPCost(tp,c:GetLevel())
+        and Duel.CheckLPCost(tp,c:GetLevel()*2)
 end
 
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
@@ -32,7 +32,7 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
     if not tc then return end
 
     --支付等级对应的LP
-    local cost=tc:GetLevel()
+    local cost=tc:GetLevel()*2
     Duel.PayLPCost(tp,cost)
 
     --直接特殊召唤，不按融合处理
