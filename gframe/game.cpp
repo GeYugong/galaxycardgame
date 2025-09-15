@@ -446,9 +446,11 @@ bool Game::Initialize() {
 	posY += 30;
 	chkAskMSet = env->addCheckBox(false, irr::core::rect<irr::s32>(posX, posY, posX + 260, posY + 25), tabHelper, CHECKBOX_ASK_MSET, dataManager.GetSysString(1268));
 	chkAskMSet->setChecked(gameConf.ask_mset != 0);
+	chkAskMSet->setVisible(false); // 隐藏"盖放单位前询问"选择框
 	posY += 30;
 	chkAutoSaveReplay = env->addCheckBox(false, irr::core::rect<irr::s32>(posX, posY, posX + 260, posY + 25), tabHelper, -1, dataManager.GetSysString(1366));
 	chkAutoSaveReplay->setChecked(gameConf.auto_save_replay != 0);
+	chkAutoSaveReplay->setVisible(false); // 隐藏"自动保存录像"选择框
 	elmTabHelperLast = chkAutoSaveReplay;
 	//system
 	irr::gui::IGUITab* _tabSystem = wInfos->addTab(dataManager.GetSysString(1273));
@@ -522,6 +524,7 @@ bool Game::Initialize() {
 	posY += 30;
 	chkEnablePScale = env->addCheckBox(false, irr::core::rect<irr::s32>(posX, posY, posX + 260, posY + 25), tabSystem, -1, dataManager.GetSysString(1269));
 	chkEnablePScale->setChecked(gameConf.chkEnablePScale != 0);
+	chkEnablePScale->setVisible(false); // 隐藏"数字灵摆图片"选择框
 	posY += 30;
 	env->addStaticText(dataManager.GetSysString(1267), irr::core::rect<irr::s32>(posX + 23, posY + 3, posX + 160, posY + 28), false, false, tabSystem);
 	cbLocale = env->addComboBox(irr::core::rect<irr::s32>(posX + 150, posY + 4, posX + 250, posY + 21), tabSystem, COMBOBOX_LOCALE);
