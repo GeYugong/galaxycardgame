@@ -2027,7 +2027,12 @@ end
 --支付基本分代价
 function Galaxy.PayCost(tp, cost)
 	if cost <= 0 then return end  --无代价无需支付
+	--再次检查LP是否足够，避免支付时LP不足导致游戏结束
+	if not Duel.CheckLPCost(tp, cost) then
+		return false  --LP不足，放弃支付
+	end --
 	Duel.PayLPCost(tp, cost)
+	return true --
 end
 
 --代价存储的Flag ID
@@ -2106,8 +2111,13 @@ end
 function Galaxy.SpecialSummonOperation(e,tp,eg,ep,ev,re,r,rp,c)
 	local cost = Galaxy.GetSummonCost(c)
 	if cost > 0 then
-		Galaxy.PayCost(tp, cost)
+		local success = Galaxy.PayCost(tp, cost) --
+		if not success then
+			--LP不足，召唤失败
+			return false
+		end
 	end
+	return true --
 end
 
 --为魔法/陷阱卡添加发动代价效果（通用代价包装）
