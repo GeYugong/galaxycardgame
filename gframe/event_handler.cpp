@@ -1902,7 +1902,7 @@ bool ClientField::OnCommonEvent(const irr::SEvent& event) {
 				break;
 			}
 			case BUTTON_WINDOW_RESIZE_XL: {
-				mainGame->SetWindowsScale(1.5f);
+				mainGame->SetWindowsScale(1.5625f);
 				return true;
 				break;
 			}

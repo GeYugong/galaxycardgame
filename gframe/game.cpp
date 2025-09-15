@@ -272,7 +272,7 @@ bool Game::Initialize() {
 	// GCG固定选择"所有卡片"规则（唯一选项，索引0）
 	cbRule->setSelected(0);	
 	env->addStaticText(dataManager.GetSysString(1227), irr::core::rect<irr::s32>(20, 90, 220, 110), false, false, wCreateHost);
-	cbMatchMode = env->addComboBox(irr::core::rect<irr::s32>(140, 85, 300, 110), wCreateHost);
+	cbMatchMode = env->addComboBox(irr::core::rect<irr::s32>(140, 85, 300, 110), wCreateHost, COMBOBOX_MATCH_MODE);
 	cbMatchMode->addItem(dataManager.GetSysString(1244));
 	// cbMatchMode->addItem(dataManager.GetSysString(1245)); // 移除比赛模式
 	cbMatchMode->addItem(dataManager.GetSysString(1246));

@@ -651,6 +651,15 @@ bool MenuHandler::OnEvent(const irr::SEvent& event) {
 		}
 		case irr::gui::EGET_COMBO_BOX_CHANGED: {
 			switch(id) {
+			case COMBOBOX_MATCH_MODE: {
+				// 根据选择的模式更新默认LP值：单人模式=20，双人模式=40
+				int selected_mode = mainGame->cbMatchMode->getSelected();
+				int default_lp = (selected_mode == 0) ? 20 : 40; // 0=单人，1=双人
+				wchar_t lp_str[16];
+				myswprintf(lp_str, L"%d", default_lp);
+				mainGame->ebStartLP->setText(lp_str);
+				break;
+			}
 			case COMBOBOX_BOT_RULE: {
 				mainGame->RefreshBot();
 				break;
