@@ -990,22 +990,22 @@ void Game::DrawSpec() {
 				lstr = L"Draw Game";
 				break;
 			case 4:
-				lstr = L"Draw Phase";
+				lstr = L"资源补给阶段";
 				break;
 			case 5:
-				lstr = L"Standby Phase";
+				lstr = L"战备准备阶段";
 				break;
 			case 6:
-				lstr = L"Main Phase 1";
+				lstr = L"单位部署阶段";
 				break;
 			case 7:
-				lstr = L"Battle Phase";
+				lstr = L"星际交战阶段";
 				break;
 			case 8:
-				lstr = L"Main Phase 2";
+				lstr = L"战后整备阶段";
 				break;
 			case 9:
-				lstr = L"End Phase";
+				lstr = L"回合休整阶段";
 				break;
 			case 10:
 				lstr = L"Next Players Turn";

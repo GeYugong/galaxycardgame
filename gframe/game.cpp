@@ -376,11 +376,11 @@ bool Game::Initialize() {
 	btnPhaseStatus->setIsPushButton(true);
 	btnPhaseStatus->setPressed(true);
 	btnPhaseStatus->setVisible(false);
-	btnBP = env->addButton(irr::core::rect<irr::s32>(160, 0, 210, 20), wPhase, BUTTON_BP, L"\xff22\xff30");
+	btnBP = env->addButton(irr::core::rect<irr::s32>(160, 0, 210, 20), wPhase, BUTTON_BP, L"交战");
 	btnBP->setVisible(false);
-	btnM2 = env->addButton(irr::core::rect<irr::s32>(160, 0, 210, 20), wPhase, BUTTON_M2, L"\xff2d\xff12");
+	btnM2 = env->addButton(irr::core::rect<irr::s32>(160, 0, 210, 20), wPhase, BUTTON_M2, L"整备");
 	btnM2->setVisible(false);
-	btnEP = env->addButton(irr::core::rect<irr::s32>(320, 0, 370, 20), wPhase, BUTTON_EP, L"\xff25\xff30");
+	btnEP = env->addButton(irr::core::rect<irr::s32>(320, 0, 370, 20), wPhase, BUTTON_EP, L"休整");
 	btnEP->setVisible(false);
 	//tab
 	wInfos = env->addTabControl(irr::core::rect<irr::s32>(1, 275, 301, 639), 0, true);

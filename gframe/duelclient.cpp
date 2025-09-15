@@ -2764,27 +2764,27 @@ bool DuelClient::ClientAnalyze(unsigned char* msg, int len) {
 		mainGame->dField.RefreshCardCountDisplay();
 		switch (phase) {
 		case PHASE_DRAW:
-			mainGame->btnPhaseStatus->setText(L"\xff24\xff30");
+			mainGame->btnPhaseStatus->setText(L"补给");
 			mainGame->showcardcode = 4;
 			break;
 		case PHASE_STANDBY:
-			mainGame->btnPhaseStatus->setText(L"\xff33\xff30");
+			mainGame->btnPhaseStatus->setText(L"战备");
 			mainGame->showcardcode = 5;
 			break;
 		case PHASE_MAIN1:
-			mainGame->btnPhaseStatus->setText(L"\xff2d\xff11");
+			mainGame->btnPhaseStatus->setText(L"部署");
 			mainGame->showcardcode = 6;
 			break;
 		case PHASE_BATTLE_START:
-			mainGame->btnPhaseStatus->setText(L"\xff22\xff30");
+			mainGame->btnPhaseStatus->setText(L"交战");
 			mainGame->showcardcode = 7;
 			break;
 		case PHASE_MAIN2:
-			mainGame->btnPhaseStatus->setText(L"\xff2d\xff12");
+			mainGame->btnPhaseStatus->setText(L"整备");
 			mainGame->showcardcode = 8;
 			break;
 		case PHASE_END:
-			mainGame->btnPhaseStatus->setText(L"\xff25\xff30");
+			mainGame->btnPhaseStatus->setText(L"休整");
 			mainGame->showcardcode = 9;
 			break;
 		}
