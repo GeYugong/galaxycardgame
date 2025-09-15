@@ -1998,6 +1998,7 @@ Galaxy.NO_COVER_SUMMON = true
 Galaxy.NO_SET_SPELL_TRAP = true
 Galaxy.DEFENSE_AS_HP = true
 Galaxy.NO_MONSTER_BATTLE_DAMAGE = true
+Galaxy.SUMMON_TURN_CANNOT_ATTACK = true  --召唤回合不能攻击
 
 --基本分代价系统配置
 Galaxy.USE_COST_SYSTEM = true
@@ -2373,7 +2374,9 @@ function Galaxy.ApplyRulesToCard(c)
 		Galaxy.AddDefenseAsHPToCard(c) --守备力作为生命值
 		Galaxy.AddNoBattleDamageToCard(c) --不进行战斗伤害
 		Galaxy.AddCannotChangeToDefenseToCard(c) --不能变为守备表示
-		Galaxy.AddSummonTurnCannotAttackToCard(c) --召唤回合不能攻击
+		if Galaxy.SUMMON_TURN_CANNOT_ATTACK then
+			Galaxy.AddSummonTurnCannotAttackToCard(c) --召唤回合不能攻击
+		end
 		Galaxy.AddSpecialSummonOnlyToCard(c) --添加特殊召唤替代系统
 	elseif c:IsType(TYPE_SPELL) or c:IsType(TYPE_TRAP) then
 		Galaxy.AddNoCoverSetToCard(c) --禁止覆盖放置
