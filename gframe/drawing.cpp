@@ -1322,18 +1322,15 @@ void Game::DrawDeckBd() {
 		//main deck type count 2DRectangle
 		driver->draw2DRectangle(Resize(638, 137, 797, 157), 0x400000ff, 0x400000ff, 0x40000000, 0x40000000);
 		driver->draw2DRectangleOutline(Resize(637, 136, 797, 157));
-		//monster count
-		if(imageManager.tCardType)
-			driver->draw2DImage(imageManager.tCardType, ResizeCardHint(645, 136, 645+14+3/8, 156), irr::core::recti(0, 0, 23, 32), 0, 0, true);
-		DrawShadowText(numFont, dataManager.GetNumString(deckManager.TypeCount(deckManager.current_deck.main, TYPE_MONSTER)), Resize(670, 138, 690, 158), Resize(0, 1, 1, 0), 0xffffffff, 0xff000000, true, false);
-		//spell count
-		if(imageManager.tCardType)
-			driver->draw2DImage(imageManager.tCardType, ResizeCardHint(695, 136, 695+14+3/8, 156), irr::core::recti(23, 0, 46, 32), 0, 0, true);
-		DrawShadowText(numFont, dataManager.GetNumString(deckManager.TypeCount(deckManager.current_deck.main, TYPE_SPELL)), Resize(720, 138, 740, 158), Resize(0, 1, 1, 0), 0xffffffff, 0xff000000, true, false);
-			//trap count
-		if(imageManager.tCardType)
-			driver->draw2DImage(imageManager.tCardType, ResizeCardHint(745, 136, 745+14+3/8, 156), irr::core::recti(46, 0, 69, 32), 0, 0, true);
-		DrawShadowText(numFont, dataManager.GetNumString(deckManager.TypeCount(deckManager.current_deck.main, TYPE_TRAP)), Resize(770, 138, 790, 158), Resize(0, 1, 1, 0), 0xffffffff, 0xff000000, true, false);
+		//monster count (单)
+		DrawShadowText(textFont, L"单", Resize(645, 138, 660, 158), Resize(1, 1, 1, 1), 0xffffffff, 0xff000000, false, true);
+		DrawShadowText(numFont, dataManager.GetNumString(deckManager.TypeCount(deckManager.current_deck.main, TYPE_MONSTER)), Resize(665, 138, 685, 158), Resize(0, 1, 1, 0), 0xffffffff, 0xff000000, true, false);
+		//spell count (支)
+		DrawShadowText(textFont, L"支", Resize(690, 138, 705, 158), Resize(1, 1, 1, 1), 0xffffffff, 0xff000000, false, true);
+		DrawShadowText(numFont, dataManager.GetNumString(deckManager.TypeCount(deckManager.current_deck.main, TYPE_SPELL)), Resize(710, 138, 730, 158), Resize(0, 1, 1, 0), 0xffffffff, 0xff000000, true, false);
+		//trap count (战)
+		DrawShadowText(textFont, L"战", Resize(735, 138, 750, 158), Resize(1, 1, 1, 1), 0xffffffff, 0xff000000, false, true);
+		DrawShadowText(numFont, dataManager.GetNumString(deckManager.TypeCount(deckManager.current_deck.main, TYPE_TRAP)), Resize(755, 138, 775, 158), Resize(0, 1, 1, 0), 0xffffffff, 0xff000000, true, false);
 
 		//extra deck
 		driver->draw2DRectangle(Resize(310, 440, 410, 460), 0x400000ff, 0x400000ff, 0x40000000, 0x40000000);
