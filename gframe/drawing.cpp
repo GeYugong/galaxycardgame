@@ -1029,10 +1029,10 @@ void Game::DrawSpec() {
 				lstr = L"回合休整阶段";
 				break;
 			case 10:
-				lstr = L"Next Players Turn";
+				lstr = L"下名玩家行动";
 				break;
 			case 11:
-				lstr = L"Duel Start";
+				lstr = L"战斗开始";
 				break;
 			case 12:
 				lstr = L"Duel1 Start";
