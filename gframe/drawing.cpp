@@ -135,6 +135,10 @@ void Game::DrawBackGround() {
 		}
 		filter = 0x100;
 		for (int i = 0; i < 8; ++i, filter <<= 1) {
+			// 在大师规割2中隐藏灵摆区域（sequence 6和7）
+			if(dInfo.duel_rule == 2 && (i == 6 || i == 7)) {
+				continue;
+			}
 			if (dField.selectable_field & filter)
 				DrawSelectionLine(matManager.vFieldSzone[0][i][rule], !(dField.selected_field & filter), 2, cv);
 		}
@@ -145,6 +149,10 @@ void Game::DrawBackGround() {
 		}
 		filter = 0x1000000;
 		for (int i = 0; i < 8; ++i, filter <<= 1) {
+			// 在大师规割2中隐藏灵摆区域（sequence 6和7）
+			if(dInfo.duel_rule == 2 && (i == 6 || i == 7)) {
+				continue;
+			}
 			if (dField.selectable_field & filter)
 				DrawSelectionLine(matManager.vFieldSzone[1][i][rule], !(dField.selected_field & filter), 2, cv);
 		}
@@ -161,6 +169,10 @@ void Game::DrawBackGround() {
 		}
 		filter = 0x100;
 		for (int i = 0; i < 8; ++i, filter <<= 1) {
+			// 在大师规割2中隐藏灵摆区域（sequence 6和7）
+			if(dInfo.duel_rule == 2 && (i == 6 || i == 7)) {
+				continue;
+			}
 			if (dField.disabled_field & filter) {
 				driver->draw3DLine(matManager.vFieldSzone[0][i][rule][0].Pos, matManager.vFieldSzone[0][i][rule][3].Pos, 0xffffffff);
 				driver->draw3DLine(matManager.vFieldSzone[0][i][rule][1].Pos, matManager.vFieldSzone[0][i][rule][2].Pos, 0xffffffff);
@@ -175,6 +187,10 @@ void Game::DrawBackGround() {
 		}
 		filter = 0x1000000;
 		for (int i = 0; i < 8; ++i, filter <<= 1) {
+			// 在大师规割2中隐藏灵摆区域（sequence 6和7）
+			if(dInfo.duel_rule == 2 && (i == 6 || i == 7)) {
+				continue;
+			}
 			if (dField.disabled_field & filter) {
 				driver->draw3DLine(matManager.vFieldSzone[1][i][rule][0].Pos, matManager.vFieldSzone[1][i][rule][3].Pos, 0xffffffff);
 				driver->draw3DLine(matManager.vFieldSzone[1][i][rule][1].Pos, matManager.vFieldSzone[1][i][rule][2].Pos, 0xffffffff);
@@ -184,7 +200,8 @@ void Game::DrawBackGround() {
 	//current sel
 	if (dField.hovered_location != 0 && dField.hovered_location != 2 && dField.hovered_location != POSITION_HINT
 		&& !(dInfo.duel_rule < 4 && dField.hovered_location == LOCATION_MZONE && dField.hovered_sequence > 4)
-		&& !(dInfo.duel_rule >= 4 && dField.hovered_location == LOCATION_SZONE && dField.hovered_sequence > 5)) {
+		&& !(dInfo.duel_rule >= 4 && dField.hovered_location == LOCATION_SZONE && dField.hovered_sequence > 5)
+		&& !(dInfo.duel_rule == 2 && dField.hovered_location == LOCATION_SZONE && (dField.hovered_sequence == 6 || dField.hovered_sequence == 7))) {
 		irr::video::S3DVertex* vertex = 0;
 		if (dField.hovered_location == LOCATION_DECK)
 			vertex = matManager.vFieldDeck[dField.hovered_controler];
@@ -328,8 +345,12 @@ void Game::DrawCards() {
 			if(*it)
 				DrawCard(*it);
 		for(auto it = dField.szone[p].begin(); it != dField.szone[p].end(); ++it)
-			if(*it)
+			if(*it) {
+				// 在大师规则2中隐藏灵摆区域（sequence 6和7）
+				if(dInfo.duel_rule == 2 && ((*it)->sequence == 6 || (*it)->sequence == 7))
+					continue;
 				DrawCard(*it);
+			}
 		for(auto it = dField.deck[p].begin(); it != dField.deck[p].end(); ++it)
 			DrawCard(*it);
 		for(auto it = dField.hand[p].begin(); it != dField.hand[p].end(); ++it)

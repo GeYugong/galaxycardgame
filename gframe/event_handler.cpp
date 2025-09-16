@@ -2364,6 +2364,12 @@ void ClientField::GetHoverField(int x, int y) {
 			}
 		}
 	}
+	// 在大师规则2中阻止鼠标悬停在灵摆区域
+	if(mainGame->dInfo.duel_rule == 2 && hovered_location == LOCATION_SZONE && (hovered_sequence == 6 || hovered_sequence == 7)) {
+		hovered_location = 0;
+		hovered_controler = 0;
+		hovered_sequence = 0;
+	}
 }
 void ClientField::ShowMenu(int flag, int x, int y) {
 	if(!flag) {
