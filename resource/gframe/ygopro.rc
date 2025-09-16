@@ -79,7 +79,7 @@ BEGIN
             VALUE "FileVersion", "Beta"
             VALUE "InternalName", "GalaxyCardGame"
             VALUE "LegalCopyright", "Copyright (C) 2025 FOGMOE"
-            VALUE "OriginalFilename", "ygopro.exe"
+            VALUE "OriginalFilename", "GCG.exe"
             VALUE "ProductName", "GalaxyCardGame"
             VALUE "ProductVersion", "Beta"
         END
