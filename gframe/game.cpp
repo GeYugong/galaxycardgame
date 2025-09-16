@@ -37,6 +37,10 @@ void DuelInfo::Clear() {
 	lp[0] = 0;
 	lp[1] = 0;
 	start_lp = 0;
+	supply[0] = 1;      // 初始补给为1
+	supply[1] = 1;
+	max_supply[0] = 1;  // 初始最大补给为1
+	max_supply[1] = 1;
 	duel_rule = 0;
 	turn = 0;
 	curMsg = 0;
@@ -46,6 +50,10 @@ void DuelInfo::Clear() {
 	clientname_tag[0] = 0;
 	strLP[0][0] = 0;
 	strLP[1][0] = 0;
+	str_supply[0][0] = 0;
+	str_supply[1][0] = 0;
+	supply_color[0] = 0xffffff40;
+	supply_color[1] = 0xffffff40;
 	player_type = 0;
 	time_player = 0;
 	time_limit = 0;
@@ -2704,6 +2712,41 @@ void Game::InjectEnvToRegistry(intptr_t pduel) {
 		}
 	}
 #endif
+}
+
+// 补给管理方法实现
+void Game::SetSupply(int player, int current, int maximum) {
+	if(player < 0 || player >= 2) return;
+	dInfo.supply[player] = current;
+	dInfo.max_supply[player] = maximum;
+	// 照搬LP模式，直接更新字符串
+	myswprintf(dInfo.str_supply[player], L"%d/%d", dInfo.supply[player], dInfo.max_supply[player]);
+	dInfo.supply_color[player] = dInfo.supply[player] >= dInfo.max_supply[player] ? 0xff40ff40 : 0xffffff40;
+}
+
+void Game::AddSupply(int player, int amount) {
+	if(player < 0 || player >= 2) return;
+	dInfo.supply[player] = std::min(dInfo.supply[player] + amount, dInfo.max_supply[player]);
+	// 照搬LP模式，直接更新字符串
+	myswprintf(dInfo.str_supply[player], L"%d/%d", dInfo.supply[player], dInfo.max_supply[player]);
+	dInfo.supply_color[player] = dInfo.supply[player] >= dInfo.max_supply[player] ? 0xff40ff40 : 0xffffff40;
+}
+
+void Game::SpendSupply(int player, int amount) {
+	if(player < 0 || player >= 2) return;
+	dInfo.supply[player] = std::max(0, dInfo.supply[player] - amount);
+	// 照搬LP模式，直接更新字符串
+	myswprintf(dInfo.str_supply[player], L"%d/%d", dInfo.supply[player], dInfo.max_supply[player]);
+	dInfo.supply_color[player] = dInfo.supply[player] >= dInfo.max_supply[player] ? 0xff40ff40 : 0xffffff40;
+}
+
+void Game::IncrementMaxSupply(int player) {
+	if(player < 0 || player >= 2) return;
+	dInfo.max_supply[player] = std::min(10, dInfo.max_supply[player] + 1);  // 最大补给上限为10
+	dInfo.supply[player] = dInfo.max_supply[player];  // 每回合补给满额
+	// 照搬LP模式，直接更新字符串
+	myswprintf(dInfo.str_supply[player], L"%d/%d", dInfo.supply[player], dInfo.max_supply[player]);
+	dInfo.supply_color[player] = dInfo.supply[player] >= dInfo.max_supply[player] ? 0xff40ff40 : 0xffffff40;
 }
 
 }

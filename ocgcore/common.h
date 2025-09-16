@@ -326,7 +326,7 @@ enum LuaParamType : int32_t {
 #define MSG_RECOVER				92
 #define MSG_EQUIP				93
 #define MSG_LPUPDATE			94
-//#define MSG_UNEQUIP			95
+#define MSG_SUPPLY_UPDATE		98
 #define MSG_CARD_TARGET			96
 #define MSG_CANCEL_TARGET		97
 #define MSG_PAY_LPCOST			100

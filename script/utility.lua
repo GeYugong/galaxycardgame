@@ -2000,7 +2000,7 @@ Galaxy.DEFENSE_AS_HP = true
 Galaxy.NO_MONSTER_BATTLE_DAMAGE = true
 Galaxy.SUMMON_TURN_CANNOT_ATTACK = true  --召唤回合不能攻击
 
---基本分代价系统配置
+--补给代价系统配置
 Galaxy.USE_COST_SYSTEM = true
 Galaxy.MONSTER_SUMMON_COST = true     --怪兽召唤需要代价
 --Galaxy.SPELL_TRAP_COST = true         --魔法陷阱发动需要代价（暂时禁用）
@@ -2014,25 +2014,19 @@ function Galaxy.IsGalaxyDuel()
 	return Galaxy.ENABLED
 end
 
---代价系统基础函数
+--补给代价系统基础函数
 Galaxy.DEFAULT_SUMMON_COST = 0     --怪兽召唤/特殊召唤默认代价（实际使用星级）
 Galaxy.DEFAULT_ACTIVATE_COST = 0   --魔法/陷阱发动默认代价
 
---检查玩家是否有足够的基本分支付代价
+--检查玩家是否有足够的补给支付代价
 function Galaxy.CheckCost(tp, cost)
-	if cost <= 0 then return true end  --无代价直接通过
-	return Duel.CheckLPCost(tp, cost)
+	return Duel.CheckSupplyCost(tp, cost)  --使用新的API检查补给代价
 end
 
---支付基本分代价
+--支付补给代价
 function Galaxy.PayCost(tp, cost)
-	if cost <= 0 then return end  --无代价无需支付
-	--再次检查LP是否足够，避免支付时LP不足导致游戏结束
-	if not Duel.CheckLPCost(tp, cost) then
-		return false  --LP不足，放弃支付
-	end --
-	Duel.PayLPCost(tp, cost)
-	return true --
+	Duel.PaySupplyCost(tp, cost)  --使用新的API支付补给代价
+	return true
 end
 
 --代价存储的Flag ID
@@ -2148,7 +2142,7 @@ function Galaxy.AddActivateCostToCard(c)
 	--使用方式: e1:SetCost(Galaxy.WrapCost(c, original_cost_function))
 end
 
---通用的代价包装函数：将Galaxy代价与原始代价组合
+--通用的补给代价包装函数：将Galaxy补给代价与原始代价组合
 function Galaxy.WrapCost(c, original_cost)
 	return function(e,tp,eg,ep,ev,re,r,rp,chk)
 		local galaxy_cost = Galaxy.GetActivateCost and Galaxy.GetActivateCost(c) or 0
@@ -2181,7 +2175,7 @@ function Galaxy.SimpleCost(c)
 end
 
 
---发动代价支付操作
+--发动补给代价支付操作
 function Galaxy.ActivateCostOperation(e,tp,eg,ep,ev,re,r,rp)
 	local c = e:GetHandler()
 	local cost = Galaxy.GetActivateCost(c)

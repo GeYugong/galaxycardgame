@@ -415,6 +415,130 @@ int32_t scriptlib::duel_set_lp(lua_State *L) {
 	pduel->write_buffer32(lp);
 	return 0;
 }
+int32_t scriptlib::duel_get_supply(lua_State *L) {
+	check_param_count(L, 1);
+	int32_t p = (int32_t)lua_tointeger(L, 1);
+	if(p != 0 && p != 1)
+		return 0;
+	duel* pduel = interpreter::get_duel_info(L);
+	if(!pduel || !pduel->game_field)
+		return 0;
+	lua_pushinteger(L, pduel->game_field->player[p].supply);
+	return 1;
+}
+int32_t scriptlib::duel_set_supply(lua_State *L) {
+	check_param_count(L, 3);
+	int32_t p = (int32_t)lua_tointeger(L, 1);
+	int32_t current = (int32_t)lua_tonumber(L, 2);
+	int32_t maximum = (int32_t)lua_tonumber(L, 3);
+	if(current < 0) current = 0;
+	if(maximum < 0) maximum = 0;
+	if(maximum > 10) maximum = 10;
+	if(current > maximum) current = maximum;
+	if(p != 0 && p != 1)
+		return 0;
+	duel* pduel = interpreter::get_duel_info(L);
+	if(!pduel || !pduel->game_field)
+		return 0;
+	pduel->game_field->player[p].supply = current;
+	pduel->game_field->player[p].max_supply = maximum;
+	// 发送补给更新消息到客户端
+	pduel->write_buffer8(MSG_SUPPLY_UPDATE);
+	pduel->write_buffer8(p);
+	pduel->write_buffer32(current);
+	pduel->write_buffer32(maximum);
+	return 0;
+}
+int32_t scriptlib::duel_add_supply(lua_State *L) {
+	check_param_count(L, 2);
+	int32_t p = (int32_t)lua_tointeger(L, 1);
+	int32_t amount = (int32_t)lua_tonumber(L, 2);
+	if(p != 0 && p != 1)
+		return 0;
+	duel* pduel = interpreter::get_duel_info(L);
+	if(!pduel || !pduel->game_field)
+		return 0;
+	int32_t new_supply = pduel->game_field->player[p].supply + amount;
+	if(new_supply < 0) new_supply = 0;
+	if(new_supply > pduel->game_field->player[p].max_supply)
+		new_supply = pduel->game_field->player[p].max_supply;
+	pduel->game_field->player[p].supply = new_supply;
+	// 发送补给更新消息到客户端
+	pduel->write_buffer8(MSG_SUPPLY_UPDATE);
+	pduel->write_buffer8(p);
+	pduel->write_buffer32(new_supply);
+	pduel->write_buffer32(pduel->game_field->player[p].max_supply);
+	return 0;
+}
+int32_t scriptlib::duel_spend_supply(lua_State *L) {
+	check_param_count(L, 2);
+	int32_t p = (int32_t)lua_tointeger(L, 1);
+	int32_t amount = (int32_t)lua_tonumber(L, 2);
+	if(p != 0 && p != 1)
+		return 0;
+	duel* pduel = interpreter::get_duel_info(L);
+	if(!pduel || !pduel->game_field)
+		return 0;
+	int32_t new_supply = pduel->game_field->player[p].supply - amount;
+	if(new_supply < 0) new_supply = 0;
+	pduel->game_field->player[p].supply = new_supply;
+	// 发送补给更新消息到客户端
+	pduel->write_buffer8(MSG_SUPPLY_UPDATE);
+	pduel->write_buffer8(p);
+	pduel->write_buffer32(new_supply);
+	pduel->write_buffer32(pduel->game_field->player[p].max_supply);
+	return 0;
+}
+int32_t scriptlib::duel_get_max_supply(lua_State *L) {
+	check_param_count(L, 1);
+	int32_t p = (int32_t)lua_tointeger(L, 1);
+	if(p != 0 && p != 1)
+		return 0;
+	duel* pduel = interpreter::get_duel_info(L);
+	if(!pduel || !pduel->game_field)
+		return 0;
+	lua_pushinteger(L, pduel->game_field->player[p].max_supply);
+	return 1;
+}
+int32_t scriptlib::duel_check_supply_cost(lua_State *L) {
+	check_param_count(L, 2);
+	int32_t playerid = (int32_t)lua_tointeger(L, 1);
+	if(playerid != 0 && playerid != 1)
+		return 0;
+	int32_t cost = (int32_t)lua_tointeger(L, 2);
+	if(cost <= 0) {
+		lua_pushboolean(L, 1);  // 0成本或负成本总是可以支付
+		return 1;
+	}
+	duel* pduel = interpreter::get_duel_info(L);
+	if(!pduel || !pduel->game_field) {
+		lua_pushboolean(L, 0);
+		return 1;
+	}
+	lua_pushboolean(L, pduel->game_field->player[playerid].supply >= cost);
+	return 1;
+}
+int32_t scriptlib::duel_pay_supply_cost(lua_State *L) {
+	check_param_count(L, 2);
+	int32_t playerid = (int32_t)lua_tointeger(L, 1);
+	if(playerid != 0 && playerid != 1)
+		return 0;
+	int32_t cost = (int32_t)lua_tointeger(L, 2);
+	if(cost <= 0)
+		return 0;  // 不需要支付0或负成本
+	duel* pduel = interpreter::get_duel_info(L);
+	if(!pduel || !pduel->game_field)
+		return 0;
+	int32_t new_supply = pduel->game_field->player[playerid].supply - cost;
+	if(new_supply < 0) new_supply = 0;
+	pduel->game_field->player[playerid].supply = new_supply;
+	// 发送补给更新消息到客户端
+	pduel->write_buffer8(MSG_SUPPLY_UPDATE);
+	pduel->write_buffer8(playerid);
+	pduel->write_buffer32(new_supply);
+	pduel->write_buffer32(pduel->game_field->player[playerid].max_supply);
+	return 0;
+}
 int32_t scriptlib::duel_is_turn_player(lua_State *L) {
 	check_param_count(L, 1);
 	int32_t playerid = (int32_t)lua_tointeger(L, 1);
@@ -5355,6 +5479,13 @@ static const struct luaL_Reg duellib[] = {
 	{ "EnableGlobalFlag", scriptlib::duel_enable_global_flag },
 	{ "GetLP", scriptlib::duel_get_lp },
 	{ "SetLP", scriptlib::duel_set_lp },
+	{ "GetSupply", scriptlib::duel_get_supply },
+	{ "SetSupply", scriptlib::duel_set_supply },
+	{ "AddSupply", scriptlib::duel_add_supply },
+	{ "SpendSupply", scriptlib::duel_spend_supply },
+	{ "GetMaxSupply", scriptlib::duel_get_max_supply },
+	{ "CheckSupplyCost", scriptlib::duel_check_supply_cost },
+	{ "PaySupplyCost", scriptlib::duel_pay_supply_cost },
 	{ "IsTurnPlayer", scriptlib::duel_is_turn_player },
 	{ "GetTurnPlayer", scriptlib::duel_get_turn_player },
 	{ "GetTurnCount", scriptlib::duel_get_turn_count },

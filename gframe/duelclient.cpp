@@ -1427,6 +1427,15 @@ bool DuelClient::ClientAnalyze(unsigned char* msg, int len) {
 		mainGame->dInfo.lp[mainGame->LocalPlayer(1)] = BufferIO::Read<int32_t>(pbuf);
 		myswprintf(mainGame->dInfo.strLP[0], L"%d", mainGame->dInfo.lp[0]);
 		myswprintf(mainGame->dInfo.strLP[1], L"%d", mainGame->dInfo.lp[1]);
+		// 初始化补给系统（重置到初始状态：0/0）
+		mainGame->dInfo.supply[0] = 0;
+		mainGame->dInfo.supply[1] = 0;
+		mainGame->dInfo.max_supply[0] = 0;
+		mainGame->dInfo.max_supply[1] = 0;
+		myswprintf(mainGame->dInfo.str_supply[0], L"%d/%d", mainGame->dInfo.supply[0], mainGame->dInfo.max_supply[0]);
+		myswprintf(mainGame->dInfo.str_supply[1], L"%d/%d", mainGame->dInfo.supply[1], mainGame->dInfo.max_supply[1]);
+		mainGame->dInfo.supply_color[0] = 0xff40ff40;  // 初始状态，绿色
+		mainGame->dInfo.supply_color[1] = 0xff40ff40;
 		int deckc = BufferIO::Read<uint16_t>(pbuf);
 		int extrac = BufferIO::Read<uint16_t>(pbuf);
 		mainGame->dField.Initial(mainGame->LocalPlayer(0), deckc, extrac);
@@ -2711,6 +2720,7 @@ bool DuelClient::ClientAnalyze(unsigned char* msg, int len) {
 		int r_player = BufferIO::Read<uint8_t>(pbuf);
 		int player = mainGame->LocalPlayer(r_player & 0x1);
 		mainGame->dInfo.turn++;
+		// 补给更新现在由服务端的MSG_SUPPLY_UPDATE消息处理
 		if(r_player & 0x2) {
 			mainGame->dInfo.is_swapped = !mainGame->dInfo.is_swapped;
 			return true;
@@ -3519,6 +3529,16 @@ bool DuelClient::ClientAnalyze(unsigned char* msg, int len) {
 		mainGame->gMutex.lock();
 		myswprintf(mainGame->dInfo.strLP[player], L"%d", mainGame->dInfo.lp[player]);
 		mainGame->gMutex.unlock();
+		return true;
+	}
+	case MSG_SUPPLY_UPDATE: {
+		int player = mainGame->LocalPlayer(BufferIO::Read<uint8_t>(pbuf));
+		int current = BufferIO::Read<int32_t>(pbuf);
+		int maximum = BufferIO::Read<int32_t>(pbuf);
+		mainGame->dInfo.supply[player] = current;
+		mainGame->dInfo.max_supply[player] = maximum;
+		myswprintf(mainGame->dInfo.str_supply[player], L"%d/%d", current, maximum);
+		mainGame->dInfo.supply_color[player] = current >= maximum ? 0xff40ff40 : 0xffffff40;
 		return true;
 	}
 	case MSG_UNEQUIP: {

@@ -82,6 +82,8 @@ struct player_info {
 	int32_t lp{ 8000 };
 	int32_t start_count{ 5 };
 	int32_t draw_count{ 1 };
+	int32_t supply{ 0 };        // 当前补给值
+	int32_t max_supply{ 0 };    // 最大补给值
 	uint32_t used_location{ 0 };
 	uint32_t disabled_location{ 0 };
 	uint32_t extra_p_count{ 0 };

@@ -145,6 +145,39 @@ OCGCORE_API void set_player_info(intptr_t pduel, int32_t playerid, int32_t lp, i
 	if(drawcount >= 0)
 		pd->game_field->player[playerid].draw_count = drawcount;
 }
+OCGCORE_API void set_player_supply(intptr_t pduel, int32_t playerid, int32_t current_supply, int32_t max_supply) {
+	if (!check_playerid(playerid))
+		return;
+	duel* pd = (duel*)pduel;
+	if(current_supply >= 0)
+		pd->game_field->player[playerid].supply = current_supply;
+	if(max_supply >= 0)
+		pd->game_field->player[playerid].max_supply = max_supply;
+}
+OCGCORE_API void add_player_supply(intptr_t pduel, int32_t playerid, int32_t amount) {
+	if (!check_playerid(playerid))
+		return;
+	duel* pd = (duel*)pduel;
+	pd->game_field->player[playerid].supply = std::min(pd->game_field->player[playerid].supply + amount, pd->game_field->player[playerid].max_supply);
+}
+OCGCORE_API void spend_player_supply(intptr_t pduel, int32_t playerid, int32_t amount) {
+	if (!check_playerid(playerid))
+		return;
+	duel* pd = (duel*)pduel;
+	pd->game_field->player[playerid].supply = std::max(0, pd->game_field->player[playerid].supply - amount);
+}
+OCGCORE_API int32_t get_player_supply(intptr_t pduel, int32_t playerid) {
+	if (!check_playerid(playerid))
+		return 0;
+	duel* pd = (duel*)pduel;
+	return pd->game_field->player[playerid].supply;
+}
+OCGCORE_API int32_t get_player_max_supply(intptr_t pduel, int32_t playerid) {
+	if (!check_playerid(playerid))
+		return 0;
+	duel* pd = (duel*)pduel;
+	return pd->game_field->player[playerid].max_supply;
+}
 OCGCORE_API void get_log_message(intptr_t pduel, char* buf) {
 	duel* pd = (duel*)pduel;
 	std::strncpy(buf, pd->strbuffer, sizeof pd->strbuffer - 1);
