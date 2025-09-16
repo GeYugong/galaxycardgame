@@ -29,7 +29,7 @@ build
 /CustomTools
 /DataEditorX
 /Magic*
-/pics
+#/pics
 /Printer
 /ygopro-*
 /*-Cards
@@ -52,7 +52,7 @@ build
 # ygopro folders
 /deck
 /pack
-/fonts
+#/fonts
 /replay
 /single
 /screenshots
