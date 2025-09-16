@@ -391,11 +391,11 @@ bool Game::Initialize() {
 	stName = env->addStaticText(L"", irr::core::rect<irr::s32>(10, 10, 287, 32), true, false, tabInfo, -1, false);
 	stName->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
 	stInfo = env->addStaticText(L"", irr::core::rect<irr::s32>(15, 37, 296, 60), false, true, tabInfo, -1, false);
-	stInfo->setOverrideColor(irr::video::SColor(255, 0, 0, 255));
+	stInfo->setOverrideColor(irr::video::SColor(255, 255, 0, 0));
 	stDataInfo = env->addStaticText(L"", irr::core::rect<irr::s32>(15, 60, 296, 83), false, true, tabInfo, -1, false);
-	stDataInfo->setOverrideColor(irr::video::SColor(255, 0, 0, 255));
+	stDataInfo->setOverrideColor(irr::video::SColor(255, 255, 0, 0));
 	stSetName = env->addStaticText(L"", irr::core::rect<irr::s32>(15, 83, 296, 106), false, true, tabInfo, -1, false);
-	stSetName->setOverrideColor(irr::video::SColor(255, 0, 0, 255));
+	stSetName->setOverrideColor(irr::video::SColor(255, 255, 0, 0));
 	stText = env->addStaticText(L"", irr::core::rect<irr::s32>(15, 106, 287, 324), false, true, tabInfo, -1, false);
 	scrCardText = env->addScrollBar(false, irr::core::rect<irr::s32>(267, 106, 287, 324), tabInfo, SCROLL_CARDTEXT);
 	scrCardText->setLargeStep(1);
