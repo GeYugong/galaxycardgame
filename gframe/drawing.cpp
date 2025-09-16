@@ -1343,8 +1343,8 @@ void Game::DrawDeckBd() {
 		driver->draw2DRectangle(Resize(310, 463, 797, 533), 0x400000ff, 0x400000ff, 0x40000000, 0x40000000);
 		driver->draw2DRectangleOutline(Resize(309, 462, 797, 533));
 
-		//type count 2DRectangle
-		driver->draw2DRectangle(Resize(582, 440, 797, 460), 0x400000ff, 0x400000ff, 0x40000000, 0x40000000);
+		//type count 2DRectangle - HIDDEN
+		/*driver->draw2DRectangle(Resize(582, 440, 797, 460), 0x400000ff, 0x400000ff, 0x40000000, 0x40000000);
 		driver->draw2DRectangleOutline(Resize(581, 439, 797, 460));
 		//fusion count
 		if(imageManager.tCardType)
@@ -1361,7 +1361,7 @@ void Game::DrawDeckBd() {
 		//link count
 		if(imageManager.tCardType)
 			driver->draw2DImage(imageManager.tCardType, ResizeCardHint(745, 440, 745+14+3/8, 460), irr::core::recti(0, 64, 23, 96), 0, 0, true);
-		DrawShadowText(numFont, dataManager.GetNumString(deckManager.TypeCount(deckManager.current_deck.extra, TYPE_LINK)), Resize(770, 441, 790, 461), Resize(0, 1, 1, 0), 0xffffffff, 0xff000000, true, false);
+		DrawShadowText(numFont, dataManager.GetNumString(deckManager.TypeCount(deckManager.current_deck.extra, TYPE_LINK)), Resize(770, 441, 790, 461), Resize(0, 1, 1, 0), 0xffffffff, 0xff000000, true, false);*/
 
 		if(deckManager.current_deck.extra.size() <= 10)
 			dx = 436.0f / 9;

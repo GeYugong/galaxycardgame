@@ -13,6 +13,7 @@
 #include <sstream>
 #include <regex>
 #include <thread>
+#include <set>
 
 unsigned short PRO_VERSION = 0x1000;
 
@@ -818,14 +819,39 @@ bool Game::Initialize() {
 	cbAttribute = env->addComboBox(irr::core::rect<irr::s32>(60, 20 + 50 / 6, 195, 40 + 50 / 6), wFilter, COMBOBOX_ATTRIBUTE);
 	cbAttribute->setMaxSelectionRows(10);
 	cbAttribute->addItem(dataManager.GetSysString(1310), 0);
-	for (int filter = 0; filter < ATTRIBUTES_COUNT; ++filter)
-		cbAttribute->addItem(dataManager.FormatAttribute(0x1U << filter).c_str(), 0x1U << filter);
+	for (int filter = 0; filter < ATTRIBUTES_COUNT; ++filter) {
+		unsigned int attributeValue = 0x1U << filter;
+		// 隐藏暗属性(ATTRIBUTE_DARK=0x20)和神属性(ATTRIBUTE_DEVINE=0x40)，但保留以后开启的可能
+		if (attributeValue == 0x20 || attributeValue == 0x40) {
+			// 暗属性和神属性被隐藏 - 取消注释下行即可重新启用
+			// cbAttribute->addItem(dataManager.FormatAttribute(attributeValue).c_str(), attributeValue);
+			continue;
+		}
+		cbAttribute->addItem(dataManager.FormatAttribute(attributeValue).c_str(), attributeValue);
+	}
 	stRace = env->addStaticText(dataManager.GetSysString(1321), irr::core::rect<irr::s32>(10, 42 + 75 / 6, 70, 62 + 75 / 6), false, false, wFilter);
 	cbRace = env->addComboBox(irr::core::rect<irr::s32>(60, 40 + 75 / 6, 195, 60 + 75 / 6), wFilter, COMBOBOX_RACE);
 	cbRace->setMaxSelectionRows(10);
 	cbRace->addItem(dataManager.GetSysString(1310), 0);
-	for (int filter = 0; filter < RACES_COUNT; ++filter)
-		cbRace->addItem(dataManager.FormatRace(0x1U << filter).c_str(), 0x1U << filter);
+	// 允许显示的种族系统字符串ID列表
+	std::set<int> allowedRaceIds = {1020, 1024, 1025, 1028, 1029, 1030, 1031, 1034, 1036, 1038, 1039};
+
+	for (int filter = 0; filter < RACES_COUNT; ++filter) {
+		unsigned int raceValue = 0x1U << filter;
+		// 计算对应的系统字符串ID (种族从1020开始)
+		int raceStringId = 1020 + filter;
+
+		// 只添加允许显示的种族
+		if (allowedRaceIds.find(raceStringId) != allowedRaceIds.end()) {
+			cbRace->addItem(dataManager.FormatRace(raceValue).c_str(), raceValue);
+		}
+		// 被隐藏的种族 - 取消注释下面的行即可重新启用
+		/*
+		else {
+			cbRace->addItem(dataManager.FormatRace(raceValue).c_str(), raceValue);
+		}
+		*/
+	}
 	stAttack = env->addStaticText(dataManager.GetSysString(1322), irr::core::rect<irr::s32>(205, 22 + 50 / 6, 280, 42 + 50 / 6), false, false, wFilter);
 	ebAttack = env->addEditBox(L"", irr::core::rect<irr::s32>(260, 20 + 50 / 6, 340, 40 + 50 / 6), true, wFilter, EDITBOX_INPUTS);
 	ebAttack->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
