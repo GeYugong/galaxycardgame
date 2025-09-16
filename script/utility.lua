@@ -2098,13 +2098,30 @@ function Galaxy.AddSpecialSummonOnlyToCard(c)
 	c:RegisterEffect(e2)
 end
 
+--存储额外特殊召唤条件的全局表
+Galaxy.ExtraSpConditions = Galaxy.ExtraSpConditions or {}
+
+--为卡片设置额外特殊召唤条件
+function Galaxy.SetExtraSpCondition(code, condition_func)
+	Galaxy.ExtraSpConditions[code] = condition_func
+end
+
 --特殊召唤条件：检查场地和代价是否足够
 function Galaxy.SpecialSummonCondition(e,c)
 	if c==nil then return true end
 	local tp=c:GetControler()
 	local cost = Galaxy.GetSummonCost(c)
-	--检查场地和代价，代价在Operation中支付
-	return Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and Galaxy.CheckCost(tp, cost)
+
+	--检查基本条件：场地和代价
+	local basic_condition = Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and Galaxy.CheckCost(tp, cost)
+
+	--检查卡片是否有额外特殊召唤条件
+	local extra_condition = Galaxy.ExtraSpConditions[c:GetCode()]
+	if extra_condition then
+		return basic_condition and extra_condition(e,c,tp)
+	end
+
+	return basic_condition
 end
 
 --特殊召唤操作：在召唤过程中支付代价

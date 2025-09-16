@@ -76,6 +76,51 @@
 - 不按融合处理：使用`Duel.SpecialSummon(tc,0,tp,tp,false,false,POS_FACEUP)`
 - 等级动态代价：`local cost=tc:GetLevel(); Duel.PayLPCost(tp,cost)`
 
+### 11-15. 本次会话新增卡片实现
+
+#### c10000027.lua - 特殊召唤破坏场地卡
+- 参考c82685480海竜神的怒火+c53129443黑洞
+- `EVENT_SPSUMMON_SUCCESS`+`TRIGGER_F`实现强制触发
+- `IsType(TYPE_FIELD)`筛选场地卡+`LOCATION_FZONE`覆盖双方
+
+#### c10000028.lua - 直接LP伤害魔法
+- 参考c73134081火烧之刑的完美LP伤害模式
+- `EFFECT_FLAG_PLAYER_TARGET`+`SetTargetPlayer(1-tp)`指定对手
+- `Duel.Damage(p,d,REASON_EFFECT)`执行伤害
+
+#### c10000029.lua - 支付LP破坏+封锁位置
+- 参考c82685480的位置封锁机制
+- `aux.SequenceToGlobal`获取怪兽位置+`EFFECT_DISABLE_FIELD`封锁
+- `RESET_PHASE+PHASE_END,2`持续到下回合结束
+
+#### c10000030.lua - 全体攻击+LP条件特殊召唤
+- `EFFECT_ATTACK_ALL`实现对全部对手怪兽攻击
+- **重要**: 实现了Galaxy系统的特殊召唤条件扩展接口
+
+#### c10000031.lua - 多怪兽特殊召唤+守备力修改
+- 参考c54447022魂之充能的召唤后扣费模式
+- `SpecialSummonStep`+`EFFECT_SET_DEFENSE`修改守备力
+- 避免LP不足浪费卡片的用户体验问题
+
+#### c10000032.lua - 永续魔法监控特殊召唤抽卡
+- 参考增殖G的监控机制+永续魔法结构
+- `EFFECT_TYPE_FIELD+TRIGGER_O`+`LOCATION_SZONE`持续监控
+- `IsLevelBelow(3)`等级条件筛选
+
+#### c10000033.lua - 手牌怪兽等级下降
+- 参考c23265313代价下降的完整等级修改机制
+- `EFFECT_UPDATE_LEVEL`+双重处理(即时+持续监听)
+- `EVENT_TO_HAND`处理回合内新加入手牌的怪兽
+
+#### c10000034.lua - 手牌陷阱免疫战斗伤害
+- 参考c10045474无限泡影+c12607053和睦の使者
+- `EFFECT_TRAP_ACT_IN_HAND`+`EFFECT_AVOID_BATTLE_DAMAGE`
+
+#### c10000035.lua - 手牌陷阱监控高等级特殊召唤抽卡
+- 参考增殖G的完整监控系统
+- 双重处理:直接抽卡+连锁延迟抽卡
+- `IsLevelAbove(4)`+`FilterCount`统计符合条件怪兽数量
+
 ## 重要技术发现与修复
 
 ### Galaxy攻击限制系统的配置化改进
@@ -92,6 +137,26 @@
 1. 在`Galaxy.PayCost()`中添加二次LP检查
 2. LP不足时返回false，避免强制支付
 3. `SpecialSummonOperation`处理支付失败情况
+
+### 🆕 Galaxy特殊召唤条件扩展接口
+**问题**: 个别卡片需要额外的特殊召唤条件(如LP≥20)，但不能与Galaxy系统冲突
+**解决方案**: 设计了优雅的扩展接口
+```lua
+-- utility.lua中添加
+Galaxy.ExtraSpConditions = {}
+function Galaxy.SetExtraSpCondition(code, condition_func)
+    Galaxy.ExtraSpConditions[code] = condition_func
+end
+
+-- 卡片中使用
+Galaxy.SetExtraSpCondition(id, function(e,c,tp)
+    return Duel.GetLP(tp) >= 20  -- 额外条件
+end)
+```
+**优势**:
+- 向后兼容，不影响其他卡片
+- 避免重复特殊召唤选项
+- 基于卡片ID的高效查找
 
 ## 核心开发模式总结
 
