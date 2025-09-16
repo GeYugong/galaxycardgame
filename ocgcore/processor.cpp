@@ -3763,8 +3763,10 @@ int32_t field::process_turn(uint16_t step, uint8_t turn_player) {
 		infos.turn_player = turn_player;
 		pduel->write_buffer8(MSG_NEW_TURN);
 		pduel->write_buffer8(turn_player);
-		// 每回合增加回合玩家的补给上限（炉石模式）
-		pduel->game_field->player[turn_player].max_supply = std::min(10, pduel->game_field->player[turn_player].max_supply + 1);
+		// 每回合增加回合玩家的补给上限（最多到10）
+		if(pduel->game_field->player[turn_player].max_supply < 10) {
+			pduel->game_field->player[turn_player].max_supply += 1;
+		}
 		pduel->game_field->player[turn_player].supply = pduel->game_field->player[turn_player].max_supply;
 		// 发送补给更新消息到客户端
 		pduel->write_buffer8(MSG_SUPPLY_UPDATE);

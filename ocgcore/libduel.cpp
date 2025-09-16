@@ -539,6 +539,27 @@ int32_t scriptlib::duel_pay_supply_cost(lua_State *L) {
 	pduel->write_buffer32(pduel->game_field->player[playerid].max_supply);
 	return 0;
 }
+int32_t scriptlib::duel_add_max_supply(lua_State *L) {
+	check_param_count(L, 2);
+	int32_t playerid = (int32_t)lua_tointeger(L, 1);
+	if(playerid != 0 && playerid != 1)
+		return 0;
+	int32_t amount = (int32_t)lua_tointeger(L, 2);
+	duel* pduel = interpreter::get_duel_info(L);
+	if(!pduel || !pduel->game_field)
+		return 0;
+	// 增加最大补给上限
+	pduel->game_field->player[playerid].max_supply += amount;
+	// 如果当前补给超过新的上限，调整当前补给
+	if(pduel->game_field->player[playerid].supply > pduel->game_field->player[playerid].max_supply)
+		pduel->game_field->player[playerid].supply = pduel->game_field->player[playerid].max_supply;
+	// 发送补给更新消息到客户端
+	pduel->write_buffer8(MSG_SUPPLY_UPDATE);
+	pduel->write_buffer8(playerid);
+	pduel->write_buffer32(pduel->game_field->player[playerid].supply);
+	pduel->write_buffer32(pduel->game_field->player[playerid].max_supply);
+	return 0;
+}
 int32_t scriptlib::duel_is_turn_player(lua_State *L) {
 	check_param_count(L, 1);
 	int32_t playerid = (int32_t)lua_tointeger(L, 1);
@@ -5486,6 +5507,7 @@ static const struct luaL_Reg duellib[] = {
 	{ "GetMaxSupply", scriptlib::duel_get_max_supply },
 	{ "CheckSupplyCost", scriptlib::duel_check_supply_cost },
 	{ "PaySupplyCost", scriptlib::duel_pay_supply_cost },
+	{ "AddMaxSupply", scriptlib::duel_add_max_supply },
 	{ "IsTurnPlayer", scriptlib::duel_is_turn_player },
 	{ "GetTurnPlayer", scriptlib::duel_get_turn_player },
 	{ "GetTurnCount", scriptlib::duel_get_turn_count },

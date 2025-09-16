@@ -446,6 +446,7 @@ public:
 	static int32_t duel_get_max_supply(lua_State *L);
 	static int32_t duel_check_supply_cost(lua_State *L);
 	static int32_t duel_pay_supply_cost(lua_State *L);
+	static int32_t duel_add_max_supply(lua_State *L);
 	static int32_t duel_is_turn_player(lua_State *L);
 	static int32_t duel_get_turn_player(lua_State *L);
 	static int32_t duel_get_turn_count(lua_State *L);
