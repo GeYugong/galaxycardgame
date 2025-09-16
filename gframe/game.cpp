@@ -277,19 +277,22 @@ bool Game::Initialize() {
 	// cbMatchMode->addItem(dataManager.GetSysString(1245)); // 移除比赛模式
 	cbMatchMode->addItem(dataManager.GetSysString(1246));
 	env->addStaticText(dataManager.GetSysString(1237), irr::core::rect<irr::s32>(20, 120, 320, 140), false, false, wCreateHost);
-	myswprintf(strbuf, L"%d", 180);
+	myswprintf(strbuf, L"%d", 120);
 	ebTimeLimit = env->addEditBox(strbuf, irr::core::rect<irr::s32>(140, 115, 220, 140), true, wCreateHost);
 	ebTimeLimit->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
 	editbox_list.push_back(ebTimeLimit);
 	env->addStaticText(dataManager.GetSysString(1228), irr::core::rect<irr::s32>(20, 150, 320, 170), false, false, wCreateHost);
-	env->addStaticText(dataManager.GetSysString(1236), irr::core::rect<irr::s32>(20, 180, 220, 200), false, false, wCreateHost);
+	stDuelRuleLabel = env->addStaticText(dataManager.GetSysString(1236), irr::core::rect<irr::s32>(20, 180, 220, 200), false, false, wCreateHost);
+	stDuelRuleLabel->setVisible(false);  // 隐藏规则文本
 	cbDuelRule = env->addComboBox(irr::core::rect<irr::s32>(140, 175, 300, 200), wCreateHost);
 	cbDuelRule->addItem(dataManager.GetSysString(1260));
 	cbDuelRule->addItem(dataManager.GetSysString(1261));
 	cbDuelRule->addItem(dataManager.GetSysString(1262));
 	cbDuelRule->addItem(dataManager.GetSysString(1263));
 	cbDuelRule->addItem(dataManager.GetSysString(1264));
-	cbDuelRule->setSelected(gameConf.default_rule - 1);
+	cbDuelRule->setSelected(1);  // 默认选择大师规则２
+	cbDuelRule->setEnabled(false);  // 锁定选择，不允许修改
+	cbDuelRule->setVisible(false);  // 隐藏规则选择框
 	chkNoCheckDeck = env->addCheckBox(false, irr::core::rect<irr::s32>(20, 210, 170, 230), wCreateHost, -1, dataManager.GetSysString(1229));
 	chkNoShuffleDeck = env->addCheckBox(false, irr::core::rect<irr::s32>(180, 210, 360, 230), wCreateHost, -1, dataManager.GetSysString(1230));
 	env->addStaticText(dataManager.GetSysString(1231), irr::core::rect<irr::s32>(20, 240, 320, 260), false, false, wCreateHost);

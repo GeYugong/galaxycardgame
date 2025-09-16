@@ -440,6 +440,7 @@ public:
 	irr::gui::IGUIEditBox* ebServerName;
 	irr::gui::IGUIEditBox* ebServerPass;
 	irr::gui::IGUIComboBox* cbDuelRule;
+	irr::gui::IGUIStaticText* stDuelRuleLabel;
 	irr::gui::IGUICheckBox* chkNoCheckDeck;
 	irr::gui::IGUICheckBox* chkNoShuffleDeck;
 	irr::gui::IGUIButton* btnHostConfirm;
