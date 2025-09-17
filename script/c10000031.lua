@@ -3,7 +3,7 @@ function s.initial_effect(c)
 	if Galaxy and Galaxy.ApplyRulesToCard then
         Galaxy.ApplyRulesToCard(c)
     end
-    --魔法卡，把最多3只水属性、攻击力5以下的，融合怪兽从额外卡组特殊召唤，def设为1。支付那些怪兽等级之和的lp作为代价。
+    --魔法卡，把最多3只水属性、攻击力5以下的，融合怪兽从额外卡组特殊召唤，def设为1。支付那些怪兽等级之和的补给作为代价，如补给不足以消耗，则将那些怪兽送往墓地。
 	local e1=Effect.CreateEffect(c)
 	e1:SetCategory(CATEGORY_SPECIAL_SUMMON)
 	e1:SetType(EFFECT_TYPE_ACTIVATE)
@@ -31,11 +31,13 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 
 	local summon_count=0
 	local lv_sum=0
+	local summoned_monsters=Group.CreateGroup()
 	local tc=g:GetFirst()
 	while tc do
 		if Duel.SpecialSummonStep(tc,0,tp,tp,false,false,POS_FACEUP_ATTACK) then
 			summon_count=summon_count+1
 			lv_sum=lv_sum+tc:GetLevel()
+			summoned_monsters:AddCard(tc)
 			local e1=Effect.CreateEffect(e:GetHandler())
 			e1:SetType(EFFECT_TYPE_SINGLE)
 			e1:SetCode(EFFECT_SET_DEFENSE)
@@ -48,6 +50,13 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 	Duel.SpecialSummonComplete()
 
 	if summon_count>0 then
-		Duel.SetLP(tp,Duel.GetLP(tp)-lv_sum)
+		--支付等级之和对应的补给，如果不足则送墓地
+		if Duel.CheckSupplyCost(tp, lv_sum) then
+			--补给足够，支付代价
+			Duel.PaySupplyCost(tp, lv_sum)
+		else
+			--补给不足，将召唤的怪兽送往墓地
+			Duel.SendtoGrave(summoned_monsters,REASON_EFFECT)
+		end
 	end
 end

@@ -3,7 +3,7 @@ function s.initial_effect(c)
 	if Galaxy and Galaxy.ApplyRulesToCard then
         Galaxy.ApplyRulesToCard(c)
     end
-    --魔法卡，支付2lp作为代价，选自己场上1个怪兽直到结束攻击力上升4点，回合结束时破坏。
+    --魔法卡，支付2补给作为代价，选自己场上1个怪兽直到结束攻击力上升4点，回合结束时破坏。
     local e1=Effect.CreateEffect(c)
     e1:SetCategory(CATEGORY_ATKCHANGE)
     e1:SetType(EFFECT_TYPE_ACTIVATE)
@@ -16,8 +16,8 @@ function s.initial_effect(c)
 end
 
 function s.cost(e,tp,eg,ep,ev,re,r,rp,chk)
-    if chk==0 then return Duel.CheckLPCost(tp,2) end
-    Duel.PayLPCost(tp,2)
+    if chk==0 then return Duel.CheckSupplyCost(tp,2) end
+    Duel.PaySupplyCost(tp,2)
 end
 
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk,chkc)

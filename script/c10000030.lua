@@ -1,7 +1,7 @@
 local s,id,o=GetID()
 function s.initial_effect(c)
     --这张卡可以向对方全部怪兽各做一次攻击。
-	--这张卡在自己lp20以上时才可以特殊召唤
+	--这张卡在自己补给8以上时才可以特殊召唤
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_SINGLE)
 	e1:SetCode(EFFECT_ATTACK_ALL)
@@ -19,6 +19,6 @@ function s.initial_effect(c)
     end
 end
 function s.sp_extra_condition(e,c,tp)
-	--额外条件：LP必须≥20
-	return Duel.GetLP(tp) >= 20
+	--额外条件：补给必须≥8
+	return Duel.GetSupply(tp) >= 8
 end

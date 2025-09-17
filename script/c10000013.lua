@@ -3,7 +3,7 @@ function s.initial_effect(c)
 	if Galaxy and Galaxy.ApplyRulesToCard then
         Galaxy.ApplyRulesToCard(c)
     end
-    --补给是3点以下时才能发动，自己场上的所有单位(monster)战斗力和生命值（atk/def）上升2。
+    --生命值lp是10点以下时才能发动，自己场上的所有单位(monster)战斗力和生命值（atk/def）上升2。
     local e1=Effect.CreateEffect(c)
     e1:SetCategory(CATEGORY_ATKCHANGE+CATEGORY_DEFCHANGE)
     e1:SetType(EFFECT_TYPE_ACTIVATE)
@@ -13,8 +13,7 @@ function s.initial_effect(c)
     c:RegisterEffect(e1)
 end
 function s.condition(e,tp,eg,ep,ev,re,r,rp)
-    return Duel.GetSupply(tp)<=3  --新版：检查当前能源
-    --return Duel.GetLP(tp)<10  --原版：检查影响力
+    return Duel.GetLP(tp)<10  --原版：检查影响力
 end
 function s.filter(c)
     return c:IsFaceup() and c:IsType(TYPE_MONSTER)
