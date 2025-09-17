@@ -460,14 +460,34 @@ int32_t scriptlib::duel_add_supply(lua_State *L) {
 		return 0;
 	int32_t new_supply = pduel->game_field->player[p].supply + amount;
 	if(new_supply < 0) new_supply = 0;
-	if(new_supply > pduel->game_field->player[p].max_supply)
-		new_supply = pduel->game_field->player[p].max_supply;
+	// 移除最大补给限制 - 允许通过卡牌效果临时超过最大补给
+	// if(new_supply > pduel->game_field->player[p].max_supply)
+	//     new_supply = pduel->game_field->player[p].max_supply;
 	pduel->game_field->player[p].supply = new_supply;
 	// 发送补给更新消息到客户端
 	pduel->write_buffer8(MSG_SUPPLY_UPDATE);
 	pduel->write_buffer8(p);
 	pduel->write_buffer32(new_supply);
 	pduel->write_buffer32(pduel->game_field->player[p].max_supply);
+	return 0;
+}
+int32_t scriptlib::duel_clamp_supply(lua_State *L) {
+	check_param_count(L, 1);
+	int32_t p = (int32_t)lua_tointeger(L, 1);
+	if(p != 0 && p != 1)
+		return 0;
+	duel* pduel = interpreter::get_duel_info(L);
+	if(!pduel || !pduel->game_field)
+		return 0;
+	// 将当前补给限制在最大补给范围内
+	if(pduel->game_field->player[p].supply > pduel->game_field->player[p].max_supply) {
+		pduel->game_field->player[p].supply = pduel->game_field->player[p].max_supply;
+		// 发送补给更新消息到客户端
+		pduel->write_buffer8(MSG_SUPPLY_UPDATE);
+		pduel->write_buffer8(p);
+		pduel->write_buffer32(pduel->game_field->player[p].supply);
+		pduel->write_buffer32(pduel->game_field->player[p].max_supply);
+	}
 	return 0;
 }
 int32_t scriptlib::duel_spend_supply(lua_State *L) {
@@ -5503,6 +5523,7 @@ static const struct luaL_Reg duellib[] = {
 	{ "GetSupply", scriptlib::duel_get_supply },
 	{ "SetSupply", scriptlib::duel_set_supply },
 	{ "AddSupply", scriptlib::duel_add_supply },
+	{ "ClampSupply", scriptlib::duel_clamp_supply },
 	{ "SpendSupply", scriptlib::duel_spend_supply },
 	{ "GetMaxSupply", scriptlib::duel_get_max_supply },
 	{ "CheckSupplyCost", scriptlib::duel_check_supply_cost },

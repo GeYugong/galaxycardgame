@@ -3810,7 +3810,13 @@ int32_t field::process_turn(uint16_t step, uint8_t turn_player) {
 		if(pduel->game_field->player[turn_player].max_supply < 10) {
 			pduel->game_field->player[turn_player].max_supply += 1;
 		}
-		pduel->game_field->player[turn_player].supply = pduel->game_field->player[turn_player].max_supply;
+		// 如果当前补给超过了最大补给，重置为最大补给（钳制超出部分）
+		if(pduel->game_field->player[turn_player].supply > pduel->game_field->player[turn_player].max_supply) {
+			pduel->game_field->player[turn_player].supply = pduel->game_field->player[turn_player].max_supply;
+		} else {
+			// 正常情况下，恢复补给到满额
+			pduel->game_field->player[turn_player].supply = pduel->game_field->player[turn_player].max_supply;
+		}
 		// 发送补给更新消息到客户端
 		pduel->write_buffer8(MSG_SUPPLY_UPDATE);
 		pduel->write_buffer8(turn_player);

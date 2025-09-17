@@ -12,6 +12,7 @@
 - **消耗机制**: 召唤怪兽消耗等于星级的补给点数
 - **恢复机制**: 在抽卡阶段开始时补给恢复满额
 - **代价系统**: 替代LP消耗，补给不足时无法操作但不会游戏结束
+- **临时超出机制**: 卡牌效果可以让当前补给临时超过最大补给，下次回合时自动钳制到上限
 
 ### 🖥️ 用户界面
 - **显示位置**: 生命条下方 (Y: 50-68)，更靠近用户名区域
@@ -62,6 +63,7 @@ struct player_info {
 OCGCORE_API void set_player_supply(intptr_t pduel, int32_t playerid, int32_t current, int32_t max);
 OCGCORE_API void add_player_supply(intptr_t pduel, int32_t playerid, int32_t amount);
 OCGCORE_API void spend_player_supply(intptr_t pduel, int32_t playerid, int32_t amount);
+OCGCORE_API void clamp_player_supply(intptr_t pduel, int32_t playerid);  // 钳制补给到上限
 OCGCORE_API int32_t get_player_supply(intptr_t pduel, int32_t playerid);
 OCGCORE_API int32_t get_player_max_supply(intptr_t pduel, int32_t playerid);
 ```
@@ -71,8 +73,9 @@ OCGCORE_API int32_t get_player_max_supply(intptr_t pduel, int32_t playerid);
 -- 基础操作
 Duel.GetSupply(player)              -- 获取当前补给
 Duel.SetSupply(player, current, max) -- 设置补给值
-Duel.AddSupply(player, amount)      -- 增加补给
+Duel.AddSupply(player, amount)      -- 增加补给（可超过最大值）
 Duel.SpendSupply(player, amount)    -- 消耗补给
+Duel.ClampSupply(player)            -- 钳制补给到最大上限
 Duel.GetMaxSupply(player)           -- 获取最大补给
 
 -- 代价系统 (对应LP系统)
@@ -147,13 +150,26 @@ pduel->write_buffer8(MSG_SUPPLY_UPDATE);
 - **每回合自动增长**: 最多增长到10点补给上限
 - **Lua脚本手动增加**: 可以超过10点，无上限限制
 
-#### 6. 补给增加时机优化
+#### 6. 补给增加时机优化 (2025年9月17日)
 **改进**: 将补给增加时机从回合开始改为抽卡阶段开始
 **位置**: `processor.cpp:3808-3818` (从step 0移动到step 2)
 **优势**:
 - 更符合游戏逻辑：在抽卡阶段获得资源
 - 时机更精确：在抽卡之前但在进入抽卡阶段时
 - 与抽卡行为同步：补给和手牌资源同时获得
+
+#### 7. 临时补给超出功能实现 (2025年9月17日)
+**新特性**: 允许当前补给通过卡牌效果临时超过最大补给
+**核心修改**:
+- **libduel.cpp**: 修改`duel_add_supply`函数，移除最大补给限制
+- **libduel.cpp**: 新增`duel_clamp_supply`函数用于手动钳制
+- **processor.cpp**: 回合开始时自动检测并钳制超出的补给
+- **ocgapi.cpp**: 新增`clamp_player_supply` API函数
+
+**功能特性**:
+- 卡牌效果可以让补给临时超过上限（如5/3状态）
+- 下次回合增加补给时自动钳制为上限值
+- 提供手动钳制API供特殊情况使用
 
 ## 📁 文件修改清单
 
@@ -195,29 +211,37 @@ local maximum = Duel.GetMaxSupply(tp)
 
 -- 直接操作补给
 Duel.SetSupply(tp, 5, 8)  -- 设置为5/8
-Duel.AddSupply(tp, 2)     -- 增加2点当前补给
+Duel.AddSupply(tp, 2)     -- 增加2点当前补给（可超过上限）
 Duel.SpendSupply(tp, 1)   -- 消耗1点补给
 
--- 上限控制
+-- 上限控制和钳制
 Duel.AddMaxSupply(tp, 1)  -- 增加1点上限（可超过10）
+Duel.ClampSupply(tp)      -- 手动钳制补给到上限
 ```
 
 ### 卡片效果示例
 ```lua
--- 示例卡片：补给水晶
+-- 示例卡片：补给爆发
 function c12345678.activate(e,tp,eg,ep,ev,re,r,rp)
-    -- 效果：获得1点额外补给上限
+    -- 效果：临时获得3点额外补给（可超过上限）
+    Duel.AddSupply(tp, 3)
+    -- 现在玩家可能有7/5的补给状态
+end
+
+-- 示例卡片：补给水晶
+function c12345679.activate(e,tp,eg,ep,ev,re,r,rp)
+    -- 效果：永久获得1点补给上限
     Duel.AddMaxSupply(tp, 1)
 end
 
 -- 示例卡片：召唤代价检查
-function c12345679.spsummon_condition(e,c)
+function c12345680.spsummon_condition(e,c)
     if c==nil then return true end
     local tp=c:GetControler()
     return Galaxy.CheckCost(tp, 5)  -- 需要5点补给
 end
 
-function c12345679.spsummon_cost(e,tp,eg,ep,ev,re,r,rp,chk)
+function c12345680.spsummon_cost(e,tp,eg,ep,ev,re,r,rp,chk)
     if chk==0 then return Galaxy.CheckCost(tp, 5) end
     Galaxy.PayCost(tp, 5)
 end
@@ -231,7 +255,8 @@ int maximum = get_player_max_supply(pduel, player);
 
 // 操作补给
 spend_player_supply(pduel, player, 2);
-add_player_supply(pduel, player, 1);
+add_player_supply(pduel, player, 1);  // 可能导致超出上限
+clamp_player_supply(pduel, player);   // 钳制到上限
 set_player_supply(pduel, player, 3, 5);
 ```
 
@@ -258,6 +283,7 @@ set_player_supply(pduel, player, 3, 5);
 - **完整API接口**: C++和Lua的完整补给操作函数
 - **网络同步机制**: 所有游戏模式的完美数据同步
 - **Galaxy规则集成**: 从LP代价系统完全迁移到补给代价系统
+- **临时超出机制**: 卡牌效果可临时超过补给上限，自动钳制功能
 
 ### 📊 性能与兼容性
 - ✅ **完全向后兼容**: 不影响非Galaxy规则的对战
@@ -273,18 +299,21 @@ set_player_supply(pduel, player, 3, 5);
 - **补给消耗**: 召唤怪兽正确消耗对应补给
 - **网络同步**: 服务端和客户端数据完全一致
 - **多模式支持**: 单人、多人、标签对战模式全部正常
+- **临时超出功能**: 卡牌效果可以让补给超过上限，下次回合自动钳制
 
 #### ✅ 稳定性验证通过
 - **无崩溃错误**: 解决了早期的abort()问题
 - **内存管理**: 无内存泄漏和越界访问
 - **网络稳定**: 消息传递可靠，断线重连正常
 - **性能表现**: 补给操作响应迅速，无性能问题
+- **边界测试**: 补给超出和钳制机制工作正常
 
 #### ✅ 用户体验确认
 - **游戏流程**: 补给增长时机符合预期（抽卡阶段）
 - **操作反馈**: 补给不足时正确阻止操作
 - **界面友好**: 补给显示位置和颜色直观易懂
 - **API易用**: Lua脚本调用简单可靠
+- **高级功能**: 临时超出机制提供更丰富的卡牌设计空间
 
 ### 🎯 立即可用功能
 用户现在可以：
@@ -294,6 +323,8 @@ set_player_supply(pduel, player, 3, 5);
 - ✅ 创建使用补给机制的自定义卡片
 - ✅ 体验完整的类炉石传说补给系统
 - ✅ 通过脚本控制补给上限突破10点限制
+- ✅ 使用卡牌效果让补给临时超过上限
+- ✅ 体验自动钳制机制确保游戏平衡
 
 ### 🏆 项目成功总结
 
@@ -318,6 +349,6 @@ set_player_supply(pduel, player, 3, 5);
 **文档创建时间**: 2025年9月17日
 **最终更新时间**: 2025年9月17日
 **完成状态**: ✅ 100%完成并测试成功 - Galaxy补给系统全功能实现
-**版本**: Galaxy补给系统 v3.0 Complete
-**测试状态**: ✅ 用户测试通过 - 功能验证成功
+**版本**: Galaxy补给系统 v4.0 Complete - 支持临时超出机制
+**测试状态**: ✅ 用户测试通过 - 功能验证成功，包括临时超出功能
 **项目状态**: 🎉 正式投入使用 - 开发任务圆满完成

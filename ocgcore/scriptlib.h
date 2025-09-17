@@ -443,6 +443,7 @@ public:
 	static int32_t duel_set_supply(lua_State *L);
 	static int32_t duel_add_supply(lua_State *L);
 	static int32_t duel_spend_supply(lua_State *L);
+	static int32_t duel_clamp_supply(lua_State *L);  // 钳制补给到上限
 	static int32_t duel_get_max_supply(lua_State *L);
 	static int32_t duel_check_supply_cost(lua_State *L);
 	static int32_t duel_pay_supply_cost(lua_State *L);

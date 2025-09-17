@@ -56,6 +56,7 @@ OCGCORE_API void set_player_info(intptr_t pduel, int32_t playerid, int32_t lp, i
 OCGCORE_API void set_player_supply(intptr_t pduel, int32_t playerid, int32_t current_supply, int32_t max_supply);
 OCGCORE_API void add_player_supply(intptr_t pduel, int32_t playerid, int32_t amount);
 OCGCORE_API void spend_player_supply(intptr_t pduel, int32_t playerid, int32_t amount);
+OCGCORE_API void clamp_player_supply(intptr_t pduel, int32_t playerid);  // 钳制当前补给到最大补给
 OCGCORE_API int32_t get_player_supply(intptr_t pduel, int32_t playerid);
 OCGCORE_API int32_t get_player_max_supply(intptr_t pduel, int32_t playerid);
 OCGCORE_API void get_log_message(intptr_t pduel, char* buf);

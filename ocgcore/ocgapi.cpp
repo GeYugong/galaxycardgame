@@ -158,13 +158,24 @@ OCGCORE_API void add_player_supply(intptr_t pduel, int32_t playerid, int32_t amo
 	if (!check_playerid(playerid))
 		return;
 	duel* pd = (duel*)pduel;
-	pd->game_field->player[playerid].supply = std::min(pd->game_field->player[playerid].supply + amount, pd->game_field->player[playerid].max_supply);
+	// 允许当前补给临时超过最大补给（用于卡片效果）
+	pd->game_field->player[playerid].supply = pd->game_field->player[playerid].supply + amount;
+	// 移除原来的 std::min 限制：pd->game_field->player[playerid].supply + amount, pd->game_field->player[playerid].max_supply
 }
 OCGCORE_API void spend_player_supply(intptr_t pduel, int32_t playerid, int32_t amount) {
 	if (!check_playerid(playerid))
 		return;
 	duel* pd = (duel*)pduel;
 	pd->game_field->player[playerid].supply = std::max(0, pd->game_field->player[playerid].supply - amount);
+}
+OCGCORE_API void clamp_player_supply(intptr_t pduel, int32_t playerid) {
+	if (!check_playerid(playerid))
+		return;
+	duel* pd = (duel*)pduel;
+	// 将当前补给钳制到最大补给，用于清除临时超出的部分
+	if(pd->game_field->player[playerid].supply > pd->game_field->player[playerid].max_supply) {
+		pd->game_field->player[playerid].supply = pd->game_field->player[playerid].max_supply;
+	}
 }
 OCGCORE_API int32_t get_player_supply(intptr_t pduel, int32_t playerid) {
 	if (!check_playerid(playerid))
