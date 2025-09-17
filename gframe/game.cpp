@@ -228,14 +228,23 @@ bool Game::Initialize() {
 	//main menu
 	wchar_t strbuf[256];
 	myswprintf(strbuf, L"GalaxyCardGame %X.0%X.%X Beta", (PRO_VERSION & 0xf000U) >> 12, (PRO_VERSION & 0x0ff0U) >> 4, PRO_VERSION & 0x000fU);
-	wMainMenu = env->addWindow(irr::core::rect<irr::s32>(370, 200, 650, 415), false, strbuf);
+	// wMainMenu = env->addWindow(irr::core::rect<irr::s32>(370, 200, 650, 415), false, strbuf); // 原窗口大小
+	wMainMenu = env->addWindow(irr::core::rect<irr::s32>(370, 200, 650, 380), false, strbuf); // 减少35像素高度
 	wMainMenu->getCloseButton()->setVisible(false);
 	btnLanMode = env->addButton(irr::core::rect<irr::s32>(10, 30, 270, 60), wMainMenu, BUTTON_LAN_MODE, dataManager.GetSysString(1200));
+	// 原有单人模式按钮（已隐藏）
+	// btnSingleMode = env->addButton(irr::core::rect<irr::s32>(10, 65, 270, 95), wMainMenu, BUTTON_SINGLE_MODE, dataManager.GetSysString(1201)); //单人模式
 	btnSingleMode = env->addButton(irr::core::rect<irr::s32>(10, 65, 270, 95), wMainMenu, BUTTON_SINGLE_MODE, dataManager.GetSysString(1201)); //单人模式
-	btnReplayMode = env->addButton(irr::core::rect<irr::s32>(10, 100, 270, 130), wMainMenu, BUTTON_REPLAY_MODE, dataManager.GetSysString(1202));
+	btnSingleMode->setVisible(false); // 隐藏单人模式按钮
+
+	// 调整后的按钮位置（向上移动填补空位）
+	btnReplayMode = env->addButton(irr::core::rect<irr::s32>(10, 65, 270, 95), wMainMenu, BUTTON_REPLAY_MODE, dataManager.GetSysString(1202)); // 移到单人模式位置
+	// btnReplayMode = env->addButton(irr::core::rect<irr::s32>(10, 100, 270, 130), wMainMenu, BUTTON_REPLAY_MODE, dataManager.GetSysString(1202)); // 原位置
 //	btnTestMode = env->addButton(irr::core::rect<irr::s32>(10, 135, 270, 165), wMainMenu, BUTTON_TEST_MODE, dataManager.GetSysString(1203));
-	btnDeckEdit = env->addButton(irr::core::rect<irr::s32>(10, 135, 270, 165), wMainMenu, BUTTON_DECK_EDIT, dataManager.GetSysString(1204));
-	btnModeExit = env->addButton(irr::core::rect<irr::s32>(10, 170, 270, 200), wMainMenu, BUTTON_MODE_EXIT, dataManager.GetSysString(1210));
+	btnDeckEdit = env->addButton(irr::core::rect<irr::s32>(10, 100, 270, 130), wMainMenu, BUTTON_DECK_EDIT, dataManager.GetSysString(1204)); // 向上移动35像素
+	// btnDeckEdit = env->addButton(irr::core::rect<irr::s32>(10, 135, 270, 165), wMainMenu, BUTTON_DECK_EDIT, dataManager.GetSysString(1204)); // 原位置
+	btnModeExit = env->addButton(irr::core::rect<irr::s32>(10, 135, 270, 165), wMainMenu, BUTTON_MODE_EXIT, dataManager.GetSysString(1210)); // 向上移动35像素
+	// btnModeExit = env->addButton(irr::core::rect<irr::s32>(10, 170, 270, 200), wMainMenu, BUTTON_MODE_EXIT, dataManager.GetSysString(1210)); // 原位置
 	//lan mode
 	wLanWindow = env->addWindow(irr::core::rect<irr::s32>(220, 100, 800, 520), false, dataManager.GetSysString(1200));
 	wLanWindow->getCloseButton()->setVisible(false);
@@ -2314,7 +2323,8 @@ void Game::OnResize() {
 	imageManager.ClearTexture();
 	imageManager.ResizeTexture();
 
-	wMainMenu->setRelativePosition(ResizeWin(370, 200, 650, 415));
+	// wMainMenu->setRelativePosition(ResizeWin(370, 200, 650, 415)); // 原窗口大小
+	wMainMenu->setRelativePosition(ResizeWin(370, 200, 650, 380)); // 减少35像素高度
 	wDeckEdit->setRelativePosition(Resize(309, 5, 605, 130));
 	cbDBDecks->setRelativePosition(Resize(80, 35, 220, 60));
 	btnClearDeck->setRelativePosition(Resize(115, 99, 165, 120));
