@@ -3,23 +3,24 @@ function s.initial_effect(c)
 	if Galaxy and Galaxy.ApplyRulesToCard then
         Galaxy.ApplyRulesToCard(c)
     end
-    --回复5补给
+    --回复2补给
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_ACTIVATE)
-	e1:SetCategory(CATEGORY_RECOVER)
-	e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
+	--e1:SetCategory(CATEGORY_RECOVER)  --原版：回复影响力用
+	--e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET)  --原版：回复影响力用
 	e1:SetCode(EVENT_FREE_CHAIN)
-	e1:SetTarget(s.rectg)
-	e1:SetOperation(s.recop)
+	e1:SetTarget(s.suptg)
+	e1:SetOperation(s.supop)
 	c:RegisterEffect(e1)
 end
-function s.rectg(e,tp,eg,ep,ev,re,r,rp,chk)
+function s.suptg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return true end
 	Duel.SetTargetPlayer(tp)
-	Duel.SetTargetParam(5)
-	Duel.SetOperationInfo(0,CATEGORY_RECOVER,nil,0,tp,5)
+	Duel.SetTargetParam(2)
+	--Duel.SetOperationInfo(0,CATEGORY_RECOVER,nil,0,tp,5)  --原版：回复影响力用
 end
-function s.recop(e,tp,eg,ep,ev,re,r,rp)
+function s.supop(e,tp,eg,ep,ev,re,r,rp)
 	local p,d=Duel.GetChainInfo(0,CHAININFO_TARGET_PLAYER,CHAININFO_TARGET_PARAM)
-	Duel.Recover(p,d,REASON_EFFECT)
+	Duel.AddSupply(p,d)  --新版：回复能源
+	--Duel.Recover(p,d,REASON_EFFECT)  --原版：回复影响力
 end
