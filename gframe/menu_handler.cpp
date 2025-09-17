@@ -9,6 +9,11 @@
 #include "image_manager.h"
 #include "sound_manager.h"
 #include "game.h"
+#ifdef _WIN32
+#include <shellapi.h>
+#else
+#include <cstdlib>
+#endif
 
 namespace ygo {
 
@@ -200,11 +205,21 @@ bool MenuHandler::OnEvent(const irr::SEvent& event) {
 				break;
 			}
 			case BUTTON_REPLAY_MODE: {
-				mainGame->HideElement(mainGame->wMainMenu);
-				mainGame->ShowElement(mainGame->wReplay);
-				mainGame->ebRepStartTurn->setText(L"1");
-				mainGame->stReplayInfo->setText(L"");
-				mainGame->RefreshReplay();
+				// 原有录像功能代码（已注释）
+				// mainGame->HideElement(mainGame->wMainMenu);
+				// mainGame->ShowElement(mainGame->wReplay);
+				// mainGame->ebRepStartTurn->setText(L"1");
+				// mainGame->stReplayInfo->setText(L"");
+				// mainGame->RefreshReplay();
+
+				// 新功能：打开官网 https://gcg.fog.moe/
+#ifdef _WIN32
+				ShellExecuteA(NULL, "open", "https://gcg.fog.moe/", NULL, NULL, SW_SHOWNORMAL);
+#elif defined(__APPLE__)
+				system("open https://gcg.fog.moe/");
+#else
+				system("xdg-open https://gcg.fog.moe/");
+#endif
 				break;
 			}
 			case BUTTON_SINGLE_MODE: {
