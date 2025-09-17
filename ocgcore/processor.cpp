@@ -1238,7 +1238,7 @@ int32_t field::process_phase_event(int16_t step, int32_t phase) {
 			core.units.begin()->step = 24;
 			return FALSE;
 		}
-		int32_t limit = 6;
+		int32_t limit = 8;
 		effect_set eset;
 		filter_player_effect(infos.turn_player, EFFECT_HAND_LIMIT, &eset);
 		if(eset.size())
