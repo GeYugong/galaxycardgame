@@ -13,7 +13,7 @@ function s.initial_effect(c)
     c:RegisterEffect(e1)
 end
 function s.condition(e,tp,eg,ep,ev,re,r,rp)
-    return Duel.GetLP(tp)<10  --原版：检查影响力
+    return Duel.GetLP(tp)<=10  --原版：检查影响力
 end
 function s.filter(c)
     return c:IsFaceup() and c:IsType(TYPE_MONSTER)
