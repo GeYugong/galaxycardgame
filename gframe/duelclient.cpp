@@ -617,6 +617,15 @@ void DuelClient::HandleSTOCPacketLan(unsigned char* data, int len) {
 		mainGame->dInfo.time_left[0] = 0;
 		mainGame->dInfo.time_left[1] = 0;
 		mainGame->RefreshTimeDisplay();
+		// 重置补给显示到初始状态
+		mainGame->dInfo.supply[0] = 0;
+		mainGame->dInfo.supply[1] = 0;
+		mainGame->dInfo.max_supply[0] = 0;
+		mainGame->dInfo.max_supply[1] = 0;
+		myswprintf(mainGame->dInfo.str_supply[0], L"0/0");
+		myswprintf(mainGame->dInfo.str_supply[1], L"0/0");
+		mainGame->dInfo.supply_color[0] = 0xff40ff40;
+		mainGame->dInfo.supply_color[1] = 0xff40ff40;
 		mainGame->deckBuilder.filterList = deckManager.GetLFList(pkt->info.lflist);
 		if(mainGame->deckBuilder.filterList == nullptr)
 			mainGame->deckBuilder.filterList = &deckManager._lfList[0];
