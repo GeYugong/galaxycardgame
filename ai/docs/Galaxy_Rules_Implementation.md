@@ -94,25 +94,33 @@
 - **实现状态**: **已删除** - YGO传统游戏中本来就不能在对方有怪兽时直接攻击玩家
 - **说明**: 此规则在原YGOPro引擎中已经存在，无需额外实现
 
-### 6. 基本分代价系统 ⚠️ (部分实现)
-- **实现方式**: 使用`EFFECT_SUMMON_COST`、`EFFECT_SPSUMMON_COST`和`EFFECT_ACTIVATE_COST`为卡片添加基本分支付代价
+### 6. 补给代价系统 ✅ (完整实现 - 基于Galaxy补给系统)
+- **实现方式**: 基于Galaxy补给系统的代价支付机制，使用`EFFECT_SPSUMMON_PROC`和代价包装函数
 - **功能**:
-  - **怪兽召唤/特殊召唤**: 需要支付基本分才能召唤（已实现，默认为星级代价）
+  - **怪兽召唤/特殊召唤**: 需要支付补给才能召唤（已实现，默认为星级代价）
   - **魔法/陷阱发动**: ⚠️ **暂时禁用** - 魔法陷阱卡发动暂时不需要支付代价
   - **个性化代价设定**: 每张卡片可单独设定代价
+  - **完整补给系统**: 支持补给上限增长、补给恢复、UI显示等
 - **技术实现**:
-  - 参考c1845204的代价支付模式（魔法卡）
-  - 使用`Duel.CheckLPCost()`检查基本分充足性
-  - 使用`Duel.PayLPCost()`扣除基本分
+  - 基于完整的Galaxy补给系统（详见Galaxy补给系统文档）
+  - 使用`Duel.CheckSupplyCost()`检查补给充足性
+  - 使用`Duel.PaySupplyCost()`扣除补给
   - 使用`RegisterFlagEffect`存储卡片代价信息
+  - 支持`Galaxy.WrapCost()`和`Galaxy.SimpleCost()`通用代价包装
+- **补给系统特性**:
+  - **初始状态**: 游戏开始时0/0补给
+  - **每回合增长**: 抽卡阶段开始时增长补给上限（最多到10）
+  - **完整UI**: 生命条下方显示"{当前}/{最大}"格式
+  - **网络同步**: 支持多人对战和重放模式
 - **代价设定**:
   - **怪兽卡**: 默认代价为星级值，可单独设定自定义代价
   - **魔法/陷阱卡**: ⚠️ **暂时无代价** - 发动代价功能已暂时禁用
-  - 支持怪兽召唤代价设定
+  - 支持怪兽召唤代价设定和脚本控制补给上限
 - **当前状态**: 
   - ✅ 怪兽召唤代价系统已验证通过
+  - ✅ 完整补给系统已实现并测试成功
   - ⚠️ 魔法陷阱发动代价系统已暂时禁用
-- **关键函数**: `Galaxy.SetSummonCost()`, `Galaxy.SetActivateCost()`, `Galaxy.GetSummonCost()`, `Galaxy.GetActivateCost()`
+- **关键函数**: `Galaxy.CheckCost()`, `Galaxy.PayCost()`, `Galaxy.SetSummonCost()`, `Galaxy.SetActivateCost()`, `Galaxy.WrapCost()`, `Galaxy.SimpleCost()`
 
 ### 7. 特殊召唤替代系统 ✅ (NEW)
 - **实现方式**: 禁止通常召唤，改为使用`EFFECT_SPSUMMON_PROC`特殊召唤手续
@@ -120,7 +128,7 @@
   - **禁止通常召唤**: 所有怪兽不能进行通常召唤
   - **特殊召唤替代**: 从手牌进行特殊召唤来替代通常召唤
   - **无次数限制**: 特殊召唤不受每回合次数限制
-  - **支付代价**: 特殊召唤时仍需支付基本分代价
+  - **支付代价**: 特殊召唤时仍需支付补给代价
 - **技术实现**:
   - 参考c1003028的`EFFECT_SPSUMMON_PROC`实现
   - 使用`EFFECT_CANNOT_SUMMON`禁止通常召唤
@@ -204,15 +212,15 @@ end
 - `Galaxy.AddNoBattleDamageToCard(c)` - 为怪兽添加永续无战斗伤害效果
 - `Galaxy.MonsterVsMonsterCondition(e)` - 判断是否为怪兽间战斗的条件
 
-### 基本分代价系统
+### 补给代价系统
 - `Galaxy.AddSummonCostToCard(c)` - 为怪兽添加召唤/特殊召唤代价检查
 - `Galaxy.AddActivateCostToCard(c)` - 为魔法/陷阱标记需要发动代价（仅标记作用）
 - `Galaxy.GetSummonCost(c)` - 从卡片属性读取召唤代价
 - `Galaxy.GetActivateCost(c)` - 从卡片属性读取发动代价
 - `Galaxy.SetSummonCost(c, cost)` - 为卡片设置召唤代价
 - `Galaxy.SetActivateCost(c, cost)` - 为卡片设置发动代价
-- `Galaxy.CheckCost(tp, cost)` - 检查玩家基本分是否充足
-- `Galaxy.PayCost(tp, cost)` - 支付基本分代价
+- `Galaxy.CheckCost(tp, cost)` - 检查玩家补给是否充足
+- `Galaxy.PayCost(tp, cost)` - 支付补给代价
 - `Galaxy.WrapCost(c, original_cost)` - **通用代价包装函数**（组合Galaxy代价和原始代价）
 - `Galaxy.SimpleCost(c)` - **简化代价包装函数**（仅Galaxy代价，无原始代价）
 
@@ -234,7 +242,7 @@ end
 ```
 
 ### 为卡片设置自定义代价
-在卡片脚本中可以设置自定义的基本分代价：
+在卡片脚本中可以设置自定义的补给代价：
 
 #### 怪兽卡召唤代价设置
 ```lua
@@ -244,7 +252,7 @@ function cXXXXXX.initial_effect(c)
         Galaxy.ApplyRulesToCard(c)
     end
 
-    --设置召唤代价（例：800基本分）
+    --设置召唤代价（例：800补给）
     if Galaxy and Galaxy.SetSummonCost then
         Galaxy.SetSummonCost(c, 800)
     end
@@ -293,7 +301,7 @@ end
 
 #### 代价设定规则
 - **怪兽卡代价**: 
-  - 默认代价为星级值（1星=1基本分，4星=4基本分，等等）
+  - 默认代价为星级值（1星=1补给，4星=4补给，等等）
   - 可通过`Galaxy.SetSummonCost(c, cost)`设置自定义代价
   - 代价设定时机: 必须在`Galaxy.ApplyRulesToCard(c)`之后调用
 - **魔法/陷阱卡代价**: ⚠️ **暂时无代价** - 发动代价功能已暂时禁用
@@ -310,7 +318,7 @@ Galaxy.NO_SET_SPELL_TRAP = true          -- 禁止魔法陷阱覆盖放置
 Galaxy.DEFENSE_AS_HP = true              -- 守备力作为生命值系统
 Galaxy.NO_MONSTER_BATTLE_DAMAGE = true   -- 禁止怪兽战斗对玩家造成伤害
 
---基本分代价系统配置
+--补给代价系统配置
 Galaxy.USE_COST_SYSTEM = true           -- 代价系统总开关
 Galaxy.MONSTER_SUMMON_COST = true       -- 怪兽召唤需要代价
 Galaxy.SPELL_TRAP_COST = false          -- 魔法陷阱发动代价（暂时禁用）
@@ -438,7 +446,7 @@ Galaxy.SPECIAL_SUMMON_ONLY = true       -- 禁止通常召唤，改为特殊召�
 1. **特殊召唤代价支付错误** - "action is not allowed here"
 2. **魔法卡代价支付不生效** - 全局效果方法失效
 3. **多重代价组合困难** - 每张卡需手动编写代价函数
-4. **代价验证逻辑错误** - 基本分不足仍可发动
+4. **代价验证逻辑错误** - 补给不足仍可发动
 
 ### ✅ 完成的技术修复
 1. **特殊召唤系统重构**：
@@ -452,7 +460,7 @@ Galaxy.SPECIAL_SUMMON_ONLY = true       -- 禁止通常召唤，改为特殊召�
 
 3. **代价验证逻辑修复**：
    - 修复 `Galaxy.WrapCost` 中 `or true` 导致的逻辑漏洞
-   - 确保基本分不足时魔法卡无法发动
+   - 确保补给不足时魔法卡无法发动
 
 ### 🎯 新增功能特性
 - **通用代价包装系统**：一行代码解决所有魔法卡代价需求
@@ -468,7 +476,7 @@ Galaxy.SPECIAL_SUMMON_ONLY = true       -- 禁止通常召唤，改为特殊召�
 4. **不能变为守备表示** - 已验证通过
 5. **召唤回合不能攻击** - 已验证通过
 6. **强制目标攻击** - 原生支持，无需实现
-7. **基本分代价系统** - ⚠️ **部分验证通过**（怪兽✅，魔法陷阱暂时禁用⚠️）
+7. **补给代价系统** - ✅ **完整实现并验证**（怪兽✅，基于Galaxy补给系统✅，魔法陷阱暂时禁用⚠️）
 8. **特殊召唤替代系统** - 🔧 **已修复技术问题，待最终验证**
 
 ### 📊 实现统计
