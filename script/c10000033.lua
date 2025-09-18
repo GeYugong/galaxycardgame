@@ -1,9 +1,7 @@
-local s,id,o=GetID()
-function s.initial_effect(c)
-	if Galaxy and Galaxy.ApplyRulesToCard then
-        Galaxy.ApplyRulesToCard(c)
-    end
-    --这个回合，自己手卡中等级3以下的怪兽等级下降2点。
+--战略储备
+local s, id = Import()
+function s.initial(c)
+	--这个回合，自己手卡中等级3以下的怪兽等级下降2点。
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_ACTIVATE)
 	e1:SetCode(EVENT_FREE_CHAIN)

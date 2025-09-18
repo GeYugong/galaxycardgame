@@ -1,6 +1,7 @@
-local s,id,o=GetID()
-function s.initial_effect(c)
-    --这张卡可以向对方全部怪兽各做一次攻击。
+--铁锤团
+local s, id = Import()
+function s.initial(c)
+	--这张卡可以向对方全部怪兽各做一次攻击。
 	--这张卡在自己补给8以上时才可以特殊召唤
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_SINGLE)
@@ -15,8 +16,8 @@ function s.initial_effect(c)
 
 	--应用Galaxy规则
 	if Galaxy and Galaxy.ApplyRulesToCard then
-        Galaxy.ApplyRulesToCard(c)
-    end
+		Galaxy.ApplyRulesToCard(c)
+	end
 end
 function s.sp_extra_condition(e,c,tp)
 	--额外条件：补给必须≥8

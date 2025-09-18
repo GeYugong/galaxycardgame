@@ -1,9 +1,7 @@
-local s,id,o=GetID()
-function s.initial_effect(c)
-	if Galaxy and Galaxy.ApplyRulesToCard then
-        Galaxy.ApplyRulesToCard(c)
-    end
-    --回复2补给
+--运送物资
+local s, id = Import()
+function s.initial(c)
+	--回复2补给
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_ACTIVATE)
 	--e1:SetCategory(CATEGORY_RECOVER)  --原版：回复影响力用

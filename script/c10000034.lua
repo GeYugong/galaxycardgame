@@ -1,9 +1,7 @@
-local s,id,o=GetID()
-function s.initial_effect(c)
-	if Galaxy and Galaxy.ApplyRulesToCard then
-        Galaxy.ApplyRulesToCard(c)
-    end
-    --陷阱卡，可以从手卡发动。这个回合自己不会受到战斗伤害。
+--能量屏障
+local s, id = Import()
+function s.initial(c)
+	--陷阱卡，可以从手卡发动。这个回合自己不会受到战斗伤害。
 	--Activate
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_ACTIVATE)

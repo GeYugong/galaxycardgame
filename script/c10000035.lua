@@ -1,9 +1,7 @@
-local s,id,o=GetID()
-function s.initial_effect(c)
-	if Galaxy and Galaxy.ApplyRulesToCard then
-        Galaxy.ApplyRulesToCard(c)
-    end
-    --陷阱卡，可以从手卡发动。这个回合每次对方把等级4以上的怪兽特殊召唤到场上时，自己抽2张卡。
+--技术交易
+local s, id = Import()
+function s.initial(c)
+	--陷阱卡，可以从手卡发动。这个回合每次对方把等级4以上的怪兽特殊召唤到场上时，自己抽2张卡。
 	--Activate
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_ACTIVATE)

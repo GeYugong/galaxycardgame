@@ -5,9 +5,12 @@ POS_FACEDOWN_DEFENCE=POS_FACEDOWN_DEFENSE
 RACE_CYBERS=RACE_CYBERSE
 NULL_VALUE=-10
 
-function GetID()
-	local offset=self_code<100000000 and 1 or 100
-	return self_table,self_code,offset
+function Import()
+	self_table.initial_effect = function(c)
+		Galaxy.ApplyRulesToCard(c)
+		if c.initial then c.initial(c) end
+	end
+	return self_table, self_code
 end
 
 --the lua version of the bit32 lib, which is deprecated in lua 5.3
@@ -67,7 +70,7 @@ end
 --iterator for getting playerid of current turn player and the other player
 function Auxiliary.TurnPlayers()
 	local i=0
-	return	function()
+	return  function()
 				i=i+1
 				if i==1 then return Duel.GetTurnPlayer() end
 				if i==2 then return 1-Duel.GetTurnPlayer() end
@@ -81,7 +84,7 @@ function Auxiliary.Stringid(code,id)
 end
 function Auxiliary.Next(g)
 	local first=true
-	return	function()
+	return  function()
 				if first then first=false return g:GetFirst()
 				else return g:GetNext() end
 			end
@@ -96,7 +99,7 @@ function Auxiliary.FALSE()
 end
 function Auxiliary.AND(...)
 	local function_list={...}
-	return	function(...)
+	return  function(...)
 				local res=false
 				for i,f in ipairs(function_list) do
 					res=f(...)
@@ -107,7 +110,7 @@ function Auxiliary.AND(...)
 end
 function Auxiliary.OR(...)
 	local function_list={...}
-	return	function(...)
+	return  function(...)
 				local res=false
 				for i,f in ipairs(function_list) do
 					res=f(...)
@@ -117,7 +120,7 @@ function Auxiliary.OR(...)
 			end
 end
 function Auxiliary.NOT(f)
-	return	function(...)
+	return  function(...)
 				return not f(...)
 			end
 end
@@ -243,7 +246,7 @@ function Auxiliary.NeosReturnConditionForced(e,tp,eg,ep,ev,re,r,rp)
 	return not e:GetHandler():IsHasEffect(42015635)
 end
 function Auxiliary.NeosReturnTargetForced(set_category)
-	return	function(e,tp,eg,ep,ev,re,r,rp,chk)
+	return  function(e,tp,eg,ep,ev,re,r,rp,chk)
 				if chk==0 then return true end
 				Duel.SetOperationInfo(0,CATEGORY_TODECK,e:GetHandler(),1,0,0)
 				if set_category then set_category(e,tp,eg,ep,ev,re,r,rp) end
@@ -253,7 +256,7 @@ function Auxiliary.NeosReturnConditionOptional(e,tp,eg,ep,ev,re,r,rp)
 	return e:GetHandler():IsHasEffect(42015635)
 end
 function Auxiliary.NeosReturnTargetOptional(set_category)
-	return	function(e,tp,eg,ep,ev,re,r,rp,chk)
+	return  function(e,tp,eg,ep,ev,re,r,rp,chk)
 				if chk==0 then return e:GetHandler():IsAbleToExtra() end
 				Duel.SetOperationInfo(0,CATEGORY_TODECK,e:GetHandler(),1,0,0)
 				if set_category then set_category(e,tp,eg,ep,ev,re,r,rp) end
@@ -383,18 +386,18 @@ function Auxiliary.EnableUnionAttribute(c,filter)
 	c:RegisterEffect(e4)
 end
 function Auxiliary.UnionEquipFilter(filter)
-	return	function(c,tp)
+	return  function(c,tp)
 				local ct1,ct2=c:GetUnionCount()
 				return c:IsFaceup() and ct2==0 and c:IsControler(tp) and filter(c)
 			end
 end
 function Auxiliary.UnionEquipLimit(filter)
-	return	function(e,c)
+	return  function(e,c)
 				return (c:IsControler(e:GetHandlerPlayer()) and filter(c)) or e:GetHandler():GetEquipTarget()==c
 			end
 end
 function Auxiliary.UnionEquipTarget(equip_filter)
-	return	function(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
+	return  function(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 				local c=e:GetHandler()
 				if chkc then return chkc:IsLocation(LOCATION_MZONE) and equip_filter(chkc,tp) end
 				if chk==0 then return c:GetFlagEffect(FLAG_ID_UNION)==0 and Duel.GetLocationCount(tp,LOCATION_SZONE)>0
@@ -406,7 +409,7 @@ function Auxiliary.UnionEquipTarget(equip_filter)
 			end
 end
 function Auxiliary.UnionEquipOperation(equip_filter)
-	return	function(e,tp,eg,ep,ev,re,r,rp)
+	return  function(e,tp,eg,ep,ev,re,r,rp)
 				local c=e:GetHandler()
 				local tc=Duel.GetFirstTarget()
 				if not c:IsRelateToEffect(e) or c:IsFacedown() then return end
@@ -447,25 +450,25 @@ function Auxiliary.EnableChangeCode(c,code,location,condition)
 end
 function Auxiliary.TargetEqualFunction(f,value,...)
 	local ext_params={...}
-	return	function(effect,target)
+	return  function(effect,target)
 				return f(target,table.unpack(ext_params))==value
 			end
 end
 function Auxiliary.TargetBoolFunction(f,...)
 	local ext_params={...}
-	return	function(effect,target)
+	return  function(effect,target)
 				return f(target,table.unpack(ext_params))
 			end
 end
 function Auxiliary.FilterEqualFunction(f,value,...)
 	local ext_params={...}
-	return	function(target)
+	return  function(target)
 				return f(target,table.unpack(ext_params))==value
 			end
 end
 function Auxiliary.FilterBoolFunction(f,...)
 	local ext_params={...}
-	return	function(target)
+	return  function(target)
 				return f(target,table.unpack(ext_params))
 			end
 end
@@ -724,7 +727,7 @@ function Auxiliary.SZoneSequence(seq)
 end
 --generate the value function of EFFECT_CHANGE_BATTLE_DAMAGE on monsters
 function Auxiliary.ChangeBattleDamage(player,value)
-	return	function(e,damp)
+	return  function(e,damp)
 				if player==0 then
 					if e:GetOwnerPlayer()==damp then
 						return value
@@ -918,7 +921,7 @@ function Auxiliary.evospcon(e,tp,eg,ep,ev,re,r,rp)
 end
 --filter for necro_valley test
 function Auxiliary.NecroValleyFilter(f)
-	return	function(target,...)
+	return  function(target,...)
 				return (not f or f(target,...)) and not target:IsHasEffect(EFFECT_NECRO_VALLEY)
 			end
 end
@@ -1064,7 +1067,7 @@ function Auxiliary.DrytronSpSummonTarget(e,tp,eg,ep,ev,re,r,rp,chk)
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,e:GetHandler(),1,0,0)
 end
 function Auxiliary.DrytronSpSummonOperation(func)
-	return	function(e,tp,eg,ep,ev,re,r,rp)
+	return  function(e,tp,eg,ep,ev,re,r,rp)
 				local c=e:GetHandler()
 				if not c:IsRelateToEffect(e) then return end
 				if Duel.SpecialSummon(c,0,tp,tp,false,true,POS_FACEUP_DEFENSE)~=0 then
@@ -2004,12 +2007,12 @@ Galaxy.TRAP_HAND_ACTIVATE = true  --陷阱卡可以从手卡发动
 
 --补给代价系统配置
 Galaxy.USE_COST_SYSTEM = true
-Galaxy.MONSTER_SUMMON_COST = true     --怪兽召唤需要代价
---Galaxy.SPELL_TRAP_COST = true         --魔法陷阱发动需要代价（暂时禁用）
-Galaxy.SPELL_TRAP_COST = false        --魔法陷阱发动暂时不需要代价
+Galaxy.MONSTER_SUMMON_COST = true	 --怪兽召唤需要代价
+--Galaxy.SPELL_TRAP_COST = true		 --魔法陷阱发动需要代价（暂时禁用）
+Galaxy.SPELL_TRAP_COST = false		--魔法陷阱发动暂时不需要代价
 
 --特殊召唤系统配置
-Galaxy.SPECIAL_SUMMON_ONLY = true     --禁止通常召唤，改为特殊召唤（无次数限制）
+Galaxy.SPECIAL_SUMMON_ONLY = true	 --禁止通常召唤，改为特殊召唤（无次数限制）
 
 --检查是否为Galaxy规则对战
 function Galaxy.IsGalaxyDuel()
@@ -2017,7 +2020,7 @@ function Galaxy.IsGalaxyDuel()
 end
 
 --补给代价系统基础函数
-Galaxy.DEFAULT_SUMMON_COST = 0     --怪兽召唤/特殊召唤默认代价（实际使用星级）
+Galaxy.DEFAULT_SUMMON_COST = 0	 --怪兽召唤/特殊召唤默认代价（实际使用星级）
 Galaxy.DEFAULT_ACTIVATE_COST = 0   --魔法/陷阱发动默认代价
 
 --检查玩家是否有足够的补给支付代价
@@ -2032,7 +2035,7 @@ function Galaxy.PayCost(tp, cost)
 end
 
 --代价存储的Flag ID
-Galaxy.SUMMON_COST_FLAG = 99990001    --召唤代价Flag
+Galaxy.SUMMON_COST_FLAG = 99990001	--召唤代价Flag
 Galaxy.ACTIVATE_COST_FLAG = 99990002  --发动代价Flag
 
 --获取卡片的召唤代价（从Flag读取，怪兽默认为星级）

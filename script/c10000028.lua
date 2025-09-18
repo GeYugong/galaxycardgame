@@ -1,9 +1,7 @@
-local s,id,o=GetID()
-function s.initial_effect(c)
-	if Galaxy and Galaxy.ApplyRulesToCard then
-        Galaxy.ApplyRulesToCard(c)
-    end
-    --对对手直接造成4点lp伤害
+--精确打击
+local s, id = Import()
+function s.initial(c)
+	--对对手直接造成4点lp伤害
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_ACTIVATE)
 	e1:SetCategory(CATEGORY_DAMAGE)

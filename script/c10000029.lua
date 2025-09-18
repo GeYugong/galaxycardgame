@@ -1,9 +1,7 @@
-local s,id,o=GetID()
-function s.initial_effect(c)
-	if Galaxy and Galaxy.ApplyRulesToCard then
-        Galaxy.ApplyRulesToCard(c)
-    end
-    --通常魔法，支付8点补给，最多选择对方场上4个怪兽为对象才能发动，那些怪兽破坏，直到下个回合结束那些怪兽存在的位置不能使用。
+--焦土策略
+local s, id = Import()
+function s.initial(c)
+	--通常魔法，支付8点补给，最多选择对方场上4个怪兽为对象才能发动，那些怪兽破坏，直到下个回合结束那些怪兽存在的位置不能使用。
 	local e1=Effect.CreateEffect(c)
 	e1:SetCategory(CATEGORY_DESTROY)
 	e1:SetType(EFFECT_TYPE_ACTIVATE)

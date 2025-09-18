@@ -1,9 +1,7 @@
-local s,id,o=GetID()
-function s.initial_effect(c)
-	if Galaxy and Galaxy.ApplyRulesToCard then
-        Galaxy.ApplyRulesToCard(c)
-    end
-    --魔法卡，把最多3只水属性、攻击力5以下的，融合怪兽从额外卡组特殊召唤，def设为1。支付那些怪兽等级之和的补给作为代价，如补给不足以消耗，则将那些怪兽送往墓地。
+--舰队总动员
+local s, id = Import()
+function s.initial(c)
+	--魔法卡，把最多3只水属性、攻击力5以下的，融合怪兽从额外卡组特殊召唤，def设为1。支付那些怪兽等级之和的补给作为代价，如补给不足以消耗，则将那些怪兽送往墓地。
 	local e1=Effect.CreateEffect(c)
 	e1:SetCategory(CATEGORY_SPECIAL_SUMMON)
 	e1:SetType(EFFECT_TYPE_ACTIVATE)
