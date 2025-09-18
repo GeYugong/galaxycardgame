@@ -2582,6 +2582,8 @@ end
 -- 为原版YGO Lua函数提供更符合Galaxy规则语义的别名
 -- 使代码更易读和理解，更好地体现Galaxy游戏机制
 
+--special summon = 部署
+
 --卡片生命值系统 (Card HP System)
 --基于Galaxy规则：守备力作为生命值
 if Card then
