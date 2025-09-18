@@ -1,15 +1,13 @@
-local s,id,o=GetID()
-function s.initial_effect(c)
-	if Galaxy and Galaxy.ApplyRulesToCard then
-        Galaxy.ApplyRulesToCard(c)
-    end
-    --手卡中只有这张卡时才能发动，抽1张卡，获得3点补给。
-    local e1=Effect.CreateEffect(c)
+--背水一战
+local s, id = Import()
+function s.initial(c)
+	--手卡中只有这张卡时才能发动，抽1张卡，获得3点补给。
+	local e1=Effect.CreateEffect(c)
 	e1:SetCategory(CATEGORY_DRAW)
 	e1:SetType(EFFECT_TYPE_ACTIVATE)
 	e1:SetCode(EVENT_FREE_CHAIN)
 	e1:SetTarget(s.target)
-    e1:SetCondition(s.condition)
+	e1:SetCondition(s.condition)
 	e1:SetOperation(s.activate)
 	c:RegisterEffect(e1)
 end
@@ -25,5 +23,5 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 	Duel.AddSupply(tp,3)
 end
 function s.condition(e,tp,eg,ep,ev,re,r,rp)
-    return Duel.GetFieldGroupCount(tp,LOCATION_HAND,0)==1
+	return Duel.GetFieldGroupCount(tp,LOCATION_HAND,0)==1
 end

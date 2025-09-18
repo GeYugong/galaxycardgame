@@ -1,9 +1,7 @@
-local s,id,o=GetID()
-function s.initial_effect(c)
-	if Galaxy and Galaxy.ApplyRulesToCard then
-        Galaxy.ApplyRulesToCard(c)
-    end
-    --这张卡特殊召唤成功时发动，破坏场上的全部场地卡。
+--碎星者
+local s, id = Import()
+function s.initial(c)
+	--这张卡特殊召唤成功时发动，破坏场上的全部场地卡。
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetCategory(CATEGORY_DESTROY)
