@@ -1991,36 +1991,38 @@ end
 --===============================
 
 --Galaxy规则通过单张卡片脚本调用的方式实现- Individual Card Approach
-if not Galaxy then
-	Galaxy = {}
-end
+Galaxy = {}
 
---基础配置
-Galaxy.ENABLED = true
-Galaxy.NO_COVER_SUMMON = true
-Galaxy.NO_SET_SPELL_TRAP = true
-Galaxy.DEFENSE_AS_HP = true
-Galaxy.NO_MONSTER_BATTLE_DAMAGE = true
-Galaxy.SUMMON_TURN_CANNOT_ATTACK = true  --召唤回合不能攻击
-Galaxy.TRAP_OPPONENT_TURN_ONLY = true  --陷阱卡只能在对方回合发动
-Galaxy.TRAP_HAND_ACTIVATE = true  --陷阱卡可以从手卡发动
+--==============================================
+-- 待刪除
+--==============================================
 
---补给代价系统配置
-Galaxy.USE_COST_SYSTEM = true
-Galaxy.MONSTER_SUMMON_COST = true	 --怪兽召唤需要代价
---Galaxy.SPELL_TRAP_COST = true		 --魔法陷阱发动需要代价（暂时禁用）
-Galaxy.SPELL_TRAP_COST = false		--魔法陷阱发动暂时不需要代价
+	--基础配置
+	Galaxy.NO_COVER_SUMMON = true
+	Galaxy.NO_SET_SPELL_TRAP = true
+	Galaxy.DEFENSE_AS_HP = true
+	Galaxy.NO_MONSTER_BATTLE_DAMAGE = true
+	--Galaxy.SUMMON_TURN_CANNOT_ATTACK = true  --召唤回合不能攻击
+	Galaxy.TRAP_OPPONENT_TURN_ONLY = true  --陷阱卡只能在对方回合发动
+	Galaxy.TRAP_HAND_ACTIVATE = true  --陷阱卡可以从手卡发动
 
---特殊召唤系统配置
-Galaxy.SPECIAL_SUMMON_ONLY = true	 --禁止通常召唤，改为特殊召唤（无次数限制）
+	--补给代价系统配置
+	Galaxy.USE_COST_SYSTEM = true
+	Galaxy.MONSTER_SUMMON_COST = true   --怪兽召唤需要代价
+	--Galaxy.SPELL_TRAP_COST = true   --魔法陷阱发动需要代价（暂时禁用）
+	Galaxy.SPELL_TRAP_COST = false	--魔法陷阱发动暂时不需要代价
 
---检查是否为Galaxy规则对战
-function Galaxy.IsGalaxyDuel()
-	return Galaxy.ENABLED
-end
+	--特殊召唤系统配置
+	Galaxy.SPECIAL_SUMMON_ONLY = true   --禁止通常召唤，改为特殊召唤（无次数限制）
+
+	--检查是否为Galaxy规则对战
+	function Galaxy.IsGalaxyDuel()
+		return 1
+	end
+--==============================================
 
 --补给代价系统基础函数
-Galaxy.DEFAULT_SUMMON_COST = 0	 --怪兽召唤/特殊召唤默认代价（实际使用星级）
+Galaxy.DEFAULT_SUMMON_COST = 0   --怪兽召唤/特殊召唤默认代价（实际使用星级）
 Galaxy.DEFAULT_ACTIVATE_COST = 0   --魔法/陷阱发动默认代价
 
 --检查玩家是否有足够的补给支付代价
@@ -2035,7 +2037,7 @@ function Galaxy.PayCost(tp, cost)
 end
 
 --代价存储的Flag ID
-Galaxy.SUMMON_COST_FLAG = 99990001	--召唤代价Flag
+Galaxy.SUMMON_COST_FLAG = 99990001  --召唤代价Flag
 Galaxy.ACTIVATE_COST_FLAG = 99990002  --发动代价Flag
 
 --获取卡片的召唤代价（从Flag读取，怪兽默认为星级）
@@ -2187,6 +2189,65 @@ function Galaxy.ActivateCostOperation(e,tp,eg,ep,ev,re,r,rp)
 	Galaxy.PayCost(tp, cost)
 end
 
+--==============================================
+-- Galaxy 全局规则
+--==============================================
+
+--通用函数：为卡片添加 Galaxy 全局规则
+function Galaxy.ApplyRulesToCard(c)
+	if not c or not Galaxy.IsGalaxyDuel() then return end
+
+	if c:IsType(TYPE_MONSTER) then
+		Galaxy.AddDefenseAsHPToCard(c) --守备力作为生命值
+		Galaxy.AddNoBattleDamageToCard(c) --不进行战斗伤害
+		Galaxy.AddCannotChangeToDefenseToCard(c) --不能变为守备表示
+		Galaxy.AddSpecialSummonOnlyToCard(c) --添加特殊召唤替代系统
+	elseif c:IsType(TYPE_SPELL) or c:IsType(TYPE_TRAP) then
+		Galaxy.AddNoCoverSetToCard(c) --禁止覆盖放置
+		--Galaxy.AddActivateCostToCard(c) --添加发动代价（暂时禁用）
+		if c:IsType(TYPE_TRAP) then
+			Galaxy.AddTrapOpponentTurnOnlyToCard(c) --陷阱卡只能在对方回合发动
+			Galaxy.AddTrapHandActivateToCard(c) --陷阱卡可以从手卡发动
+		end
+	end
+
+	if Galaxy.GlobalRule then return end
+	Galaxy.GlobalRule = true
+	Galaxy.SummonTurnCannotAttack(c) --召唤回合不能攻击
+	Galaxy.CannotCoverSummon(c) --禁止覆盖怪兽
+end
+
+--召唤回合不能攻击
+function Galaxy.SummonTurnCannotAttack(c)
+	local e1=Effect.CreateEffect(c)
+	e1:SetType(EFFECT_TYPE_FIELD)
+	e1:SetCode(EFFECT_CANNOT_ATTACK)
+	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
+	e1:SetTargetRange(LOCATION_MZONE,LOCATION_MZONE)
+	e1:SetTarget(Galaxy.SummonThisTurn)
+	Duel.RegisterEffect(e1, 0)
+end
+
+--在本回合召唤
+function Galaxy.SummonThisTurn(e,c)
+	return not c:IsHasEffect(EFFECT_ASSAULT) and (c:IsStatus(STATUS_SUMMON_TURN)
+		or c:IsStatus(STATUS_FLIP_SUMMON_TURN) or c:IsStatus(STATUS_SPSUMMON_TURN))
+end
+
+--禁止覆盖怪兽
+function Galaxy.CannotCoverSummon(c)
+	local e1=Effect.CreateEffect(c)
+	e1:SetType(EFFECT_TYPE_FIELD)
+	e1:SetCode(EFFECT_CANNOT_MSET)
+	e1:SetTargetRange(1,1)
+	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
+	Duel.RegisterEffect(e1, 0)
+end
+
+--==============================================
+-- Galaxy old 全局规则
+--==============================================
+
 --为怪兽卡添加禁止覆盖召唤效果
 function Galaxy.AddNoCoverSummonToCard(c)
 	if not Galaxy.IsGalaxyDuel() or not Galaxy.NO_COVER_SUMMON then return end
@@ -2215,40 +2276,6 @@ end
 --条件：仅在攻击表示时不能变换表示形式
 function Galaxy.AttackPositionCondition(e)
 	return e:GetHandler():IsPosition(POS_FACEUP_ATTACK)
-end
-
---为怪兽卡添加召唤回合不能攻击效果
-function Galaxy.AddSummonTurnCannotAttackToCard(c)
-	if not Galaxy.IsGalaxyDuel() then return end
-	if not c or not c:IsType(TYPE_MONSTER) then return end
-
-	--通常召唤成功时不能攻击
-	local e1=Effect.CreateEffect(c)
-	e1:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_CONTINUOUS)
-	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
-	e1:SetCode(EVENT_SUMMON_SUCCESS)
-	e1:SetOperation(Galaxy.SummonAttackLimit)
-	c:RegisterEffect(e1)
-
-	--翻转召唤成功时不能攻击
-	local e2=e1:Clone()
-	e2:SetCode(EVENT_FLIP_SUMMON_SUCCESS)
-	c:RegisterEffect(e2)
-
-	--特殊召唤成功时不能攻击
-	local e3=e1:Clone()
-	e3:SetCode(EVENT_SPSUMMON_SUCCESS)
-	c:RegisterEffect(e3)
-end
-
---召唤成功时添加攻击限制
-function Galaxy.SummonAttackLimit(e,tp,eg,ep,ev,re,r,rp)
-	local e1=Effect.CreateEffect(e:GetHandler())
-	e1:SetType(EFFECT_TYPE_SINGLE)
-	e1:SetCode(EFFECT_CANNOT_ATTACK)
-	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
-	e1:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END)
-	e:GetHandler():RegisterEffect(e1)
 end
 
 --为魔法/陷阱卡添加禁止覆盖放置效果
@@ -2563,30 +2590,6 @@ function Galaxy.MonsterVsMonsterCondition(e)
 
 	-- 只有在怪兽对怪兽战斗时才阻止伤害
 	return (c == attacker or c == target) and target:IsType(TYPE_MONSTER)
-end
-
-
---通用函数：为卡片添加Galaxy规则
-function Galaxy.ApplyRulesToCard(c)
-	if not c or not Galaxy.IsGalaxyDuel() then return end
-
-	if c:IsType(TYPE_MONSTER) then
-		Galaxy.AddNoCoverSummonToCard(c) --禁止覆盖召唤
-		Galaxy.AddDefenseAsHPToCard(c) --守备力作为生命值
-		Galaxy.AddNoBattleDamageToCard(c) --不进行战斗伤害
-		Galaxy.AddCannotChangeToDefenseToCard(c) --不能变为守备表示
-		if Galaxy.SUMMON_TURN_CANNOT_ATTACK then
-			Galaxy.AddSummonTurnCannotAttackToCard(c) --召唤回合不能攻击
-		end
-		Galaxy.AddSpecialSummonOnlyToCard(c) --添加特殊召唤替代系统
-	elseif c:IsType(TYPE_SPELL) or c:IsType(TYPE_TRAP) then
-		Galaxy.AddNoCoverSetToCard(c) --禁止覆盖放置
-		--Galaxy.AddActivateCostToCard(c) --添加发动代价（暂时禁用）
-		if c:IsType(TYPE_TRAP) then
-			Galaxy.AddTrapOpponentTurnOnlyToCard(c) --陷阱卡只能在对方回合发动
-			Galaxy.AddTrapHandActivateToCard(c) --陷阱卡可以从手卡发动
-		end
-	end
 end
 
 --==============================================
