@@ -2583,6 +2583,7 @@ end
 -- 使代码更易读和理解，更好地体现Galaxy游戏机制
 
 --special summon = 部署
+--lp基本分 = 影响力
 
 --卡片生命值系统 (Card HP System)
 --基于Galaxy规则：守备力作为生命值
