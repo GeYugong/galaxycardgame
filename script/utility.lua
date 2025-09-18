@@ -2090,6 +2090,13 @@ function Galaxy.BattleSystem(c)
 	e6:SetTargetRange(1, 1)
 	e6:SetValue(Galaxy.ChangeBattleDamage)
 	Duel.RegisterEffect(e6, 0)
+	--优先选择有保护的单位攻击
+	local e7 = Effect.CreateEffect(c)
+	e7:SetType(EFFECT_TYPE_FIELD)
+	e7:SetCode(EFFECT_CANNOT_SELECT_BATTLE_TARGET)
+	e7:SetTargetRange(LOCATION_MZONE, LOCATION_MZONE)
+	e7:SetValue(Galaxy.ProtectAttackLimit)
+	Duel.RegisterEffect(e7, 0)
 end
 
 --在本回合召唤
@@ -2126,6 +2133,15 @@ function Galaxy.ChangeBattleDamage(e,re,dam,r,rp,rc)
 		return 0
 	end
 	return dam
+end
+
+--优先选择有保护的单位攻击
+function Galaxy.ProtectAttackLimit(e,c)
+	if c:IsHasEffect(EFFECT_PROTECT) then
+		return false
+	end
+	local tp = e:GetHandlerPlayer()
+	return Duel.IsExistingMatchingCard(Card.IsHasEffect,tp,LOCATION_MZONE,0,1,nil,EFFECT_PROTECT)
 end
 
 --禁止盖放支援/战术卡
@@ -2191,37 +2207,6 @@ Card.GetOriginalGalaxyProperty = Card.GetOriginalAttribute
 Card.IsGalaxyCategory = Card.IsRace
 Card.GetGalaxyCategory = Card.GetRace
 Card.GetOriginalGalaxyCategory = Card.GetOriginalRace
-
---==============================================
--- Galaxy 函数
---==============================================
-
---保护
-function Galaxy.AddProtectEffect(c)
-	local e1 = Effect.CreateEffect(c)
-	e1:SetType(EFFECT_TYPE_SINGLE)
-	e1:SetCode(EFFECT_PROTECT) --标记为保护怪兽
-	c:RegisterEffect(e1)
-	--对方怪兽不能选择其他怪兽作为攻击对象
-	local e2 = Effect.CreateEffect(c)
-	e2:SetType(EFFECT_TYPE_FIELD)
-	e2:SetRange(LOCATION_MZONE)
-	e2:SetTargetRange(0, LOCATION_MZONE)
-	e2:SetCode(EFFECT_CANNOT_SELECT_BATTLE_TARGET)
-	e2:SetValue(Galaxy.ProtectAttackLimit)
-	c:RegisterEffect(e2)
-	return e1, e2
-end
-
-function Galaxy.ProtectAttackLimit(e,c)
-	--如果目标是嘲讽怪兽，可以攻击
-	if c:IsHasEffect(EFFECT_PROTECT) then
-		return false
-	end
-	--如果目标不是嘲讽怪兽，且场上有嘲讽怪兽，则不能攻击
-	local tp = e:GetHandlerPlayer()
-	return Duel.IsExistingMatchingCard(Card.IsHasEffect,tp,LOCATION_MZONE,0,1,nil,EFFECT_PROTECT)
-end
 
 --[[
 --==============================================
