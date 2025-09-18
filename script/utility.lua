@@ -2129,7 +2129,7 @@ function Galaxy.SpecialSummonOperation(e,tp,eg,ep,ev,re,r,rp,c)
 	if cost > 0 then
 		local success = Galaxy.PayCost(tp, cost) --
 		if not success then
-			--LP不足，召唤失败
+			--不足，召唤失败
 			return false
 		end
 	end
