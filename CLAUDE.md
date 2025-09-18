@@ -140,14 +140,13 @@ The project includes automated CI builds for Windows, Linux, and macOS via GitHu
 ## Development Documentation Index
 
 ### Lua Script Development
-- **Development patterns**: `dev/docs/lua_development_patterns.md`
+- **Complete guide**: `dev/docs/lua_development_guide.md`
 - **API reference**: `ai/luatips/tips.json`
 - **Code snippets**: `ai/luatips/snippets.json`
 - **Example scripts**: `ai/examples/script/`
 
-### Galaxy Supply System
-- **Quick reference**: `dev/docs/galaxy_supply_system.md`
-- **Complete documentation**: `ai/docs/Galaxy_Supply_System_Complete.md`
+### Galaxy System
+- **Complete guide**: `dev/docs/galaxy_system_complete.md`
 - **System status**: 100% complete, stable, production-ready
 
 ### Key Development Resources
