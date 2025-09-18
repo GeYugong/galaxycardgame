@@ -2370,33 +2370,6 @@ if _G then
 	GALAXY_TYPE_COUNTER = TYPE_COUNTER
 end
 
---Galaxy便捷检查函数 (Galaxy Convenience Functions)
-if Card then
-	--检查是否为单位卡 (Check if unit card)
-	function Card:IsUnit()
-		return self:IsType(GALAXY_TYPE_UNIT)
-	end
-
-	--检查是否为支援卡 (Check if support card)
-	function Card:IsSupport()
-		return self:IsType(GALAXY_TYPE_SUPPORT)
-	end
-
-	--检查是否为战术卡 (Check if tactics card)
-	function Card:IsTactics()
-		return self:IsType(GALAXY_TYPE_TACTICS)
-	end
-
-	--检查是否在弃牌区 (Check if in discard pile)
-	function Card:IsInDiscardPile()
-		return self:IsLocation(GALAXY_LOCATION_DISCARD)
-	end
-
-	--检查是否被游戏外 (Check if exiled)
-	function Card:IsExiled()
-		return self:IsLocation(GALAXY_LOCATION_EXILED)
-	end
-end
 
 --Galaxy术语映射系统 (Galaxy Terminology Mapping)
 if Duel then

@@ -287,14 +287,7 @@ GALAXY_CATEGORY_AURORA = RACE_THUNDER       -- 极光(雷)
 
 #### Card Checks
 ```lua
--- GCG terminology functions
-card:IsUnit()           -- 检查是否为单位卡(怪兽)
-card:IsSupport()        -- 检查是否为支援卡(魔法)
-card:IsTactics()        -- 检查是否为战术卡(陷阱)
-card:IsInDiscardPile()  -- 检查是否在弃牌区(墓地)
-card:IsExiled()         -- 检查是否被游戏外(除外)
-
--- Property and Category checks
+-- Property and Category checks (Galaxy terminology aliases)
 card:IsGalaxyProperty(prop)   -- 检查特性 (原IsAttribute)
 card:IsGalaxyCategory(cat)    -- 检查类别 (原IsRace)
 ```
@@ -304,20 +297,20 @@ card:IsGalaxyCategory(cat)    -- 检查类别 (原IsRace)
 function c12345678.condition(e,tp,eg,ep,ev,re,r,rp)
     local c = e:GetHandler()
     -- Using GCG terminology for better game immersion
-    return c:IsTactics() and c:IsInDiscardPile() and
-           Duel.IsDeployPhase()
+    return c:IsType(TYPE_TRAP) and c:IsLocation(LOCATION_GRAVE) and
+           Duel.GetCurrentPhase() == PHASE_MAIN1
 end
 
 function c12345678.target(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
     if chkc then return chkc:IsLocation(GALAXY_LOCATION_UNIT_ZONE) and
                         chkc:IsType(GALAXY_TYPE_UNIT) end
-    if chk==0 then return Duel.IsExistingTarget(Card.IsUnit,tp,
+    if chk==0 then return Duel.IsExistingTarget(Card.IsType,tp,
                                                GALAXY_LOCATION_UNIT_ZONE,
-                                               GALAXY_LOCATION_UNIT_ZONE,1,nil) end
+                                               GALAXY_LOCATION_UNIT_ZONE,1,nil,TYPE_MONSTER) end
     Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TARGET)
-    Duel.SelectTarget(tp,Card.IsUnit,tp,
+    Duel.SelectTarget(tp,Card.IsType,tp,
                      GALAXY_LOCATION_UNIT_ZONE,
-                     GALAXY_LOCATION_UNIT_ZONE,1,1,nil)
+                     GALAXY_LOCATION_UNIT_ZONE,1,1,nil,TYPE_MONSTER)
 end
 ```
 

@@ -717,51 +717,6 @@
             }
         ]
     },
-    "IsUnit": {
-        "function": [
-            {
-                "name": "Card.IsUnit(Card c)",
-                "return": "bool",
-                "desc": "Galaxy术语函数：检查是否为单位卡(怪兽)  \nfunction Card:IsUnit() return self:IsType(GALAXY_TYPE_UNIT) end  \n"
-            }
-        ]
-    },
-    "IsSupport": {
-        "function": [
-            {
-                "name": "Card.IsSupport(Card c)",
-                "return": "bool",
-                "desc": "Galaxy术语函数：检查是否为支援卡(魔法)  \nfunction Card:IsSupport() return self:IsType(GALAXY_TYPE_SUPPORT) end  \n"
-            }
-        ]
-    },
-    "IsTactics": {
-        "function": [
-            {
-                "name": "Card.IsTactics(Card c)",
-                "return": "bool",
-                "desc": "Galaxy术语函数：检查是否为战术卡(陷阱)  \nfunction Card:IsTactics() return self:IsType(GALAXY_TYPE_TACTICS) end  \n"
-            }
-        ]
-    },
-    "IsInDiscardPile": {
-        "function": [
-            {
-                "name": "Card.IsInDiscardPile(Card c)",
-                "return": "bool",
-                "desc": "Galaxy术语函数：检查是否在弃牌区(墓地)  \nfunction Card:IsInDiscardPile() return self:IsLocation(GALAXY_LOCATION_DISCARD) end  \n"
-            }
-        ]
-    },
-    "IsExiled": {
-        "function": [
-            {
-                "name": "Card.IsExiled(Card c)",
-                "return": "bool",
-                "desc": "Galaxy术语函数：检查是否被游戏外(除外)  \nfunction Card:IsExiled() return self:IsLocation(GALAXY_LOCATION_EXILED) end  \n"
-            }
-        ]
-    },
     "GetPreviousCodeOnField": {
         "function": [
             {
