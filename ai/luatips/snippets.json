@@ -9979,6 +9979,51 @@
         "description": "•Duel.SetLP(int player, int lp)\n设置玩家 player 的当前LP为 lp  \n",
         "body": "Duel.SetLP"
     },
+    "Duel.GetSupply": {
+        "prefix": "Duel.GetSupply",
+        "description": "•Duel.GetSupply(int player)\n返回玩家 player 的当前补给值  \nGalaxy规则专用API，用于获取当前可用的补给点数  \n",
+        "body": "Duel.GetSupply"
+    },
+    "Duel.GetMaxSupply": {
+        "prefix": "Duel.GetMaxSupply",
+        "description": "•Duel.GetMaxSupply(int player)\n返回玩家 player 的最大补给值  \nGalaxy规则专用API，用于获取补给上限  \n",
+        "body": "Duel.GetMaxSupply"
+    },
+    "Duel.SetSupply": {
+        "prefix": "Duel.SetSupply",
+        "description": "•Duel.SetSupply(int player, int current, int maximum)\n设置玩家 player 的补给为 current/maximum  \nGalaxy规则专用API，用于直接设置补给值和上限  \n支持网络同步，会自动发送MSG_SUPPLY_UPDATE消息  \n",
+        "body": "Duel.SetSupply"
+    },
+    "Duel.AddSupply": {
+        "prefix": "Duel.AddSupply",
+        "description": "•Duel.AddSupply(int player, int amount)\n为玩家 player 增加 amount 点当前补给  \nGalaxy规则专用API，可以让当前补给临时超过最大补给上限  \n常用于卡牌效果给予临时补给，下回合会自动钳制到上限  \n",
+        "body": "Duel.AddSupply"
+    },
+    "Duel.SpendSupply": {
+        "prefix": "Duel.SpendSupply",
+        "description": "•Duel.SpendSupply(int player, int amount)\n让玩家 player 消耗 amount 点补给  \nGalaxy规则专用API，用于支付召唤代价等操作  \n如果补给不足会自动钳制到0，不会变成负数  \n",
+        "body": "Duel.SpendSupply"
+    },
+    "Duel.AddMaxSupply": {
+        "prefix": "Duel.AddMaxSupply",
+        "description": "•Duel.AddMaxSupply(int player, int amount)\n为玩家 player 增加 amount 点补给上限  \nGalaxy规则专用API，可以让补给上限超过10点的系统限制  \n用于实现增加补给上限的卡牌效果  \n",
+        "body": "Duel.AddMaxSupply"
+    },
+    "Duel.ClampSupply": {
+        "prefix": "Duel.ClampSupply",
+        "description": "•Duel.ClampSupply(int player)\n将玩家 player 的当前补给钳制到最大补给上限  \nGalaxy规则专用API，用于处理超出上限的补给  \n系统会在每回合开始时自动调用，也可手动调用  \n",
+        "body": "Duel.ClampSupply"
+    },
+    "Duel.CheckSupplyCost": {
+        "prefix": "Duel.CheckSupplyCost",
+        "description": "•Duel.CheckSupplyCost(int player, int cost)\n检查玩家 player 是否有足够的补给支付 cost 点代价  \nGalaxy规则专用API，对应LP系统的代价检查功能  \n返回true表示补给充足，false表示补给不足  \n",
+        "body": "Duel.CheckSupplyCost"
+    },
+    "Duel.PaySupplyCost": {
+        "prefix": "Duel.PaySupplyCost",
+        "description": "•Duel.PaySupplyCost(int player, int cost)\n让玩家 player 支付 cost 点补给代价  \nGalaxy规则专用API，对应LP系统的PayLPCost功能  \n用于召唤怪兽和激活效果的代价支付  \n",
+        "body": "Duel.PaySupplyCost"
+    },
     "Duel.IsTurnPlayer": {
         "prefix": "Duel.IsTurnPlayer",
         "description": "•Duel.IsTurnPlayer(int playerid)\n检查当前的回合玩家是否是 playerid  \n",
@@ -12068,5 +12113,95 @@
         "prefix": "Tenka.Shiki",
         "description": "•Tenka.Shiki(c)\n黑崎智秋（通用①效果）  \n",
         "body": "Tenka.Shiki"
+    },
+    "Galaxy.CheckCost": {
+        "prefix": "Galaxy.CheckCost",
+        "description": "•Galaxy.CheckCost(int tp, int cost)\n检查玩家 tp 是否有足够的补给支付 cost 点代价  \nGalaxy规则简化API，内部调用 Duel.CheckSupplyCost  \n定义在 script/utility.lua 中，常用于召唤条件和效果代价检查  \n",
+        "body": "Galaxy.CheckCost(${1:tp}, ${2:cost})"
+    },
+    "Galaxy.PayCost": {
+        "prefix": "Galaxy.PayCost",
+        "description": "•Galaxy.PayCost(int tp, int cost)\n让玩家 tp 支付 cost 点补给代价  \nGalaxy规则简化API，内部调用 Duel.PaySupplyCost  \n定义在 script/utility.lua 中，用于召唤怪兽和激活效果的代价支付  \n",
+        "body": "Galaxy.PayCost(${1:tp}, ${2:cost})"
+    },
+    "supply_check_condition": {
+        "prefix": "supply_check_condition",
+        "description": "Galaxy补给代价检查条件模板  \n用于特殊召唤条件检查  \n",
+        "body": [
+            "function c${1:cardid}.spsummon_condition(e,c)",
+            "\tif c==nil then return true end",
+            "\tlocal tp=c:GetControler()",
+            "\treturn Galaxy.CheckCost(tp, ${2:cost})",
+            "end"
+        ]
+    },
+    "supply_cost_operation": {
+        "prefix": "supply_cost_operation",
+        "description": "Galaxy补给代价支付操作模板  \n用于特殊召唤代价支付  \n",
+        "body": [
+            "function c${1:cardid}.spsummon_cost(e,tp,eg,ep,ev,re,r,rp,chk)",
+            "\tif chk==0 then return Galaxy.CheckCost(tp, ${2:cost}) end",
+            "\tGalaxy.PayCost(tp, ${2:cost})",
+            "end"
+        ]
+    },
+    "supply_effect_cost": {
+        "prefix": "supply_effect_cost",
+        "description": "Galaxy补给效果代价模板  \n用于效果激活的补给代价  \n",
+        "body": [
+            "function c${1:cardid}.${2:effect}_cost(e,tp,eg,ep,ev,re,r,rp,chk)",
+            "\tif chk==0 then return Galaxy.CheckCost(tp, ${3:cost}) end",
+            "\tGalaxy.PayCost(tp, ${3:cost})",
+            "end"
+        ]
+    },
+    "supply_add_temporary": {
+        "prefix": "supply_add_temporary",
+        "description": "Galaxy临时补给增加模板  \n用于卡牌效果临时增加补给（可超过上限）  \n",
+        "body": [
+            "function c${1:cardid}.${2:effect}_operation(e,tp,eg,ep,ev,re,r,rp)",
+            "\t-- 临时增加补给（可超过上限）",
+            "\tDuel.AddSupply(tp, ${3:amount})",
+            "end"
+        ]
+    },
+    "supply_increase_max": {
+        "prefix": "supply_increase_max",
+        "description": "Galaxy永久补给上限增加模板  \n用于卡牌效果永久增加补给上限  \n",
+        "body": [
+            "function c${1:cardid}.${2:effect}_operation(e,tp,eg,ep,ev,re,r,rp)",
+            "\t-- 永久增加补给上限",
+            "\tDuel.AddMaxSupply(tp, ${3:amount})",
+            "end"
+        ]
+    },
+    "supply_monster_summon": {
+        "prefix": "supply_monster_summon",
+        "description": "Galaxy怪兽补给召唤完整模板  \n包含召唤条件、代价和注册  \n",
+        "body": [
+            "-- 补给召唤条件",
+            "function c${1:cardid}.spsummon_condition(e,c)",
+            "\tif c==nil then return true end",
+            "\tlocal tp=c:GetControler()",
+            "\treturn Galaxy.CheckCost(tp, ${2:cost})",
+            "end",
+            "-- 补给召唤代价",
+            "function c${1:cardid}.spsummon_cost(e,tp,eg,ep,ev,re,r,rp,chk)",
+            "\tif chk==0 then return Galaxy.CheckCost(tp, ${2:cost}) end",
+            "\tGalaxy.PayCost(tp, ${2:cost})",
+            "end",
+            "-- 注册召唤效果",
+            "function c${1:cardid}.initial_effect(c)",
+            "\t-- 补给召唤",
+            "\tlocal e1=Effect.CreateEffect(c)",
+            "\te1:SetType(EFFECT_TYPE_FIELD)",
+            "\te1:SetCode(EFFECT_SPSUMMON_PROC)",
+            "\te1:SetProperty(EFFECT_FLAG_UNCOPYABLE)",
+            "\te1:SetRange(LOCATION_HAND)",
+            "\te1:SetCondition(c${1:cardid}.spsummon_condition)",
+            "\te1:SetCost(c${1:cardid}.spsummon_cost)",
+            "\tc:RegisterEffect(e1)",
+            "end"
+        ]
     }
 }
