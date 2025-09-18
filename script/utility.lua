@@ -2373,55 +2373,45 @@ if _G then
 	GALAXY_TYPE_COUNTER = TYPE_COUNTER
 end
 
---Galaxy便捷检查函数 (Galaxy Convenience Functions)
-if Card then
-	--检查是否为单位卡 (Check if unit card)
-	function Card:IsUnit()
-		return self:IsType(GALAXY_TYPE_UNIT)
-	end
 
-	--检查是否为支援卡 (Check if support card)
-	function Card:IsSupport()
-		return self:IsType(GALAXY_TYPE_SUPPORT)
-	end
-
-	--检查是否为战术卡 (Check if tactics card)
-	function Card:IsTactics()
-		return self:IsType(GALAXY_TYPE_TACTICS)
-	end
-
-	--检查是否在弃牌区 (Check if in discard pile)
-	function Card:IsInDiscardPile()
-		return self:IsLocation(GALAXY_LOCATION_DISCARD)
-	end
-
-	--检查是否被游戏外 (Check if exiled)
-	function Card:IsExiled()
-		return self:IsLocation(GALAXY_LOCATION_EXILED)
-	end
-end
-
---阶段检查函数 (Phase Check Functions)
+--Galaxy术语映射系统 (Galaxy Terminology Mapping)
 if Duel then
-	--检查是否为补给阶段 (Check if supply phase)
-	function Duel.IsSupplyPhase()
-		return Duel.GetCurrentPhase() == GALAXY_PHASE_SUPPLY
-	end
 
-	--检查是否为部署阶段 (Check if deploy phase)
-	function Duel.IsDeployPhase()
-		return Duel.GetCurrentPhase() == GALAXY_PHASE_DEPLOY
-	end
+	--特性(属性)术语映射 (Attribute/Property Terminology)
+	--地→军团 (Earth → Legion)
+	GALAXY_PROPERTY_LEGION = ATTRIBUTE_EARTH
+	--水→舰队 (Water → Fleet)
+	GALAXY_PROPERTY_FLEET = ATTRIBUTE_WATER
+	--炎→空间站 (Fire → Station)
+	GALAXY_PROPERTY_STATION = ATTRIBUTE_FIRE
+	--风→星港 (Wind → Starport)
+	GALAXY_PROPERTY_STARPORT = ATTRIBUTE_WIND
+	--光→指挥官 (Light → Commander)
+	GALAXY_PROPERTY_COMMANDER = ATTRIBUTE_LIGHT
 
-	--检查是否为交战阶段 (Check if combat phase)
-	function Duel.IsCombatPhase()
-		return Duel.GetCurrentPhase() == GALAXY_PHASE_COMBAT
-	end
+	--类别(种族)术语映射 (Race/Category Terminology)
+	--战士→人类 (Warrior → Human)
+	GALAXY_CATEGORY_HUMAN = RACE_WARRIOR
+	--兽→哺乳类 (Beast → Mammal)
+	GALAXY_CATEGORY_MAMMAL = RACE_BEAST
+	--恐龙→爬行类 (Dinosaur → Reptile)
+	GALAXY_CATEGORY_REPTILE = RACE_DINOSAUR
+	--鸟兽→鸟类 (Winged Beast → Avian)
+	GALAXY_CATEGORY_AVIAN = RACE_WINDBEAST
+	--昆虫→节肢类 (Insect → Arthropod)
+	GALAXY_CATEGORY_ARTHROPOD = RACE_INSECT
+	--海龙→软体类 (Sea Serpent → Mollusk)
+	GALAXY_CATEGORY_MOLLUSK = RACE_SEASERPENT
+	--爬虫类→真菌类 (Reptile → Fungal)
+	GALAXY_CATEGORY_FUNGAL = RACE_REPTILE
+	--不死→死灵 (Zombie → Undead)
+	GALAXY_CATEGORY_UNDEAD = RACE_ZOMBIE
+	--雷→极光 (Thunder → Aurora)
+	GALAXY_CATEGORY_AURORA = RACE_THUNDER
 
-	--检查是否为整备阶段 (Check if organize phase)
-	function Duel.IsOrganizePhase()
-		return Duel.GetCurrentPhase() == GALAXY_PHASE_ORGANIZE
-	end
+	--语义化别名函数 (Semantic Alias Functions)
+	Card.IsGalaxyProperty = Card.IsAttribute  -- 检查特性 (原属性)
+	Card.IsGalaxyCategory = Card.IsRace       -- 检查类别 (原种族)
 end
 
 --为陷阱卡添加手卡发动功能
@@ -2595,6 +2585,9 @@ end
 -- 为原版YGO Lua函数提供更符合Galaxy规则语义的别名
 -- 使代码更易读和理解，更好地体现Galaxy游戏机制
 
+--special summon = 部署
+--lp基本分 = 影响力
+
 --卡片生命值系统 (Card HP System)
 --基于Galaxy规则：守备力作为生命值
 if Card then
@@ -2629,52 +2622,3 @@ if Card then
 	Card.IsSupplyCostBelow = Card.IsLevelBelow
 end
 
---Galaxy便捷函数 (Galaxy Convenience Functions)
-if Card then
-	--检查卡片是否存活 (Check if card is alive)
-	function Card:IsAlive()
-		return self:GetHp() > 0
-	end
-
-	--检查卡片是否濒死 (Check if card is near death)
-	function Card:IsNearDeath()
-		return self:GetHp() <= (self:GetBaseHp() * 0.25)
-	end
-
-	--检查是否可以支付召唤代价 (Check if can afford summon cost)
-	function Card:CanAffordSummon(tp)
-		if not Galaxy.IsGalaxyDuel() then return true end
-		return Galaxy.CheckCost(tp, self:GetSupplyCost())
-	end
-
-	--检查陷阱是否可以从手卡发动 (Check if trap can activate from hand)
-	function Card:CanActivateFromHand()
-		return self:IsType(TYPE_TRAP) and Galaxy.IsGalaxyDuel() and Galaxy.TRAP_HAND_ACTIVATE
-	end
-end
-
---决斗便捷函数 (Duel Convenience Functions)
-if Duel then
-	--检查玩家是否有足够补给 (Check if player has enough supply)
-	function Duel.HasEnoughSupply(tp, cost)
-		if not Galaxy.IsGalaxyDuel() then return true end
-		return Galaxy.CheckCost(tp, cost)
-	end
-
-	--获取场上存活怪兽数量 (Get alive monster count)
-	function Duel.GetAliveMonsterCount(tp, loc1, loc2)
-		loc1 = loc1 or LOCATION_MZONE
-		loc2 = loc2 or 0
-		return Duel.GetMatchingGroupCount(function(c) return c:IsAlive() end, tp, loc1, loc2, nil)
-	end
-
-	--检查是否为对方回合 (Check if opponent's turn)
-	function Duel.IsOpponentTurn(tp)
-		return Duel.GetTurnPlayer() ~= tp
-	end
-
-	--检查是否为己方回合 (Check if own turn)
-	function Duel.IsOwnTurn(tp)
-		return Duel.GetTurnPlayer() == tp
-	end
-end

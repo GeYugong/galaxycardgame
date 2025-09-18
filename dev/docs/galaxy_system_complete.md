@@ -191,19 +191,11 @@ card:IsLevelAbove(val)  → card:IsSupplyCostAbove(val) -- Cost range
 card:IsLevelBelow(val)  → card:IsSupplyCostBelow(val) -- Cost range
 ```
 
-### Galaxy Convenience Functions
+### Galaxy Semantic Functions
 ```lua
--- Card status checks
-card:IsAlive()                -- HP > 0
-card:IsNearDeath()           -- HP ≤ 25% of max
-card:CanAffordSummon(tp)     -- Check supply cost
-card:CanActivateFromHand()   -- Trap hand activation check
-
--- Duel utilities
-Duel.HasEnoughSupply(tp, cost)    -- Supply availability
-Duel.GetAliveMonsterCount(tp)     -- Living monsters count
-Duel.IsOpponentTurn(tp)           -- Turn check
-Duel.IsOwnTurn(tp)               -- Turn check
+-- Semantic card checks (aliases for original functions)
+card:IsGalaxyProperty(property)     -- Check property (原IsAttribute)
+card:IsGalaxyCategory(category)     -- Check category (原IsRace)
 ```
 
 ### Usage Examples
@@ -212,15 +204,17 @@ function c12345678.cost(e,tp,eg,ep,ev,re,r,rp,chk)
     local c = e:GetHandler()
     if chk==0 then
         -- Using Galaxy aliases for better readability
-        return c:CanAffordSummon(tp) and Duel.IsOpponentTurn(tp)
+        return Galaxy.CheckCost(tp, c:GetSupplyCost()) and
+               Duel.GetTurnPlayer() ~= tp
     end
     Galaxy.PayCost(tp, c:GetSupplyCost())
 end
 
 function c12345678.condition(e,tp,eg,ep,ev,re,r,rp)
     local c = e:GetHandler()
-    -- Check if card is alive and can activate from hand
-    return c:IsAlive() and c:CanActivateFromHand()
+    -- Check card properties using Galaxy terminology
+    return c:IsGalaxyCategory(GALAXY_CATEGORY_HUMAN) and
+           c:IsGalaxyProperty(GALAXY_PROPERTY_LEGION)
 end
 ```
 
@@ -265,25 +259,37 @@ GALAXY_TYPE_AREA = TYPE_FIELD        -- 区域(场地)
 GALAXY_TYPE_ENHANCEMENT = TYPE_EQUIP -- 强化(装备)
 ```
 
-### Semantic Functions
-
-#### Card Type Checks
+#### Property (Attribute) Constants
 ```lua
--- GCG terminology functions
-card:IsUnit()           -- 检查是否为单位卡(怪兽)
-card:IsSupport()        -- 检查是否为支援卡(魔法)
-card:IsTactics()        -- 检查是否为战术卡(陷阱)
-card:IsInDiscardPile()  -- 检查是否在弃牌区(墓地)
-card:IsExiled()         -- 检查是否被游戏外(除外)
+-- Original YGO attributes → Galaxy terminology
+GALAXY_PROPERTY_LEGION = ATTRIBUTE_EARTH    -- 军团(地)
+GALAXY_PROPERTY_FLEET = ATTRIBUTE_WATER     -- 舰队(水)
+GALAXY_PROPERTY_STATION = ATTRIBUTE_FIRE    -- 空间站(炎)
+GALAXY_PROPERTY_STARPORT = ATTRIBUTE_WIND   -- 星港(风)
+GALAXY_PROPERTY_COMMANDER = ATTRIBUTE_LIGHT -- 指挥官(光)
 ```
 
-#### Phase Checks
+#### Category (Race) Constants
 ```lua
--- GCG phase checking functions
-Duel.IsSupplyPhase()    -- 检查是否为补给阶段
-Duel.IsDeployPhase()    -- 检查是否为部署阶段
-Duel.IsCombatPhase()    -- 检查是否为交战阶段
-Duel.IsOrganizePhase()  -- 检查是否为整备阶段
+-- Original YGO races → Galaxy terminology (only mapped terms from glossary)
+GALAXY_CATEGORY_HUMAN = RACE_WARRIOR        -- 人类(战士)
+GALAXY_CATEGORY_MAMMAL = RACE_BEAST         -- 哺乳类(兽)
+GALAXY_CATEGORY_REPTILE = RACE_DINOSAUR     -- 爬行类(恐龙)
+GALAXY_CATEGORY_AVIAN = RACE_WINDBEAST      -- 鸟类(鸟兽)
+GALAXY_CATEGORY_ARTHROPOD = RACE_INSECT     -- 节肢类(昆虫)
+GALAXY_CATEGORY_MOLLUSK = RACE_SEASERPENT   -- 软体类(海龙)
+GALAXY_CATEGORY_FUNGAL = RACE_REPTILE       -- 真菌类(爬虫类)
+GALAXY_CATEGORY_UNDEAD = RACE_ZOMBIE        -- 死灵(不死)
+GALAXY_CATEGORY_AURORA = RACE_THUNDER       -- 极光(雷)
+```
+
+### Semantic Functions
+
+#### Card Checks
+```lua
+-- Property and Category checks (Galaxy terminology aliases)
+card:IsGalaxyProperty(prop)   -- 检查特性 (原IsAttribute)
+card:IsGalaxyCategory(cat)    -- 检查类别 (原IsRace)
 ```
 
 ### Usage Examples
@@ -291,20 +297,20 @@ Duel.IsOrganizePhase()  -- 检查是否为整备阶段
 function c12345678.condition(e,tp,eg,ep,ev,re,r,rp)
     local c = e:GetHandler()
     -- Using GCG terminology for better game immersion
-    return c:IsTactics() and c:IsInDiscardPile() and
-           Duel.IsDeployPhase()
+    return c:IsType(TYPE_TRAP) and c:IsLocation(LOCATION_GRAVE) and
+           Duel.GetCurrentPhase() == PHASE_MAIN1
 end
 
 function c12345678.target(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
     if chkc then return chkc:IsLocation(GALAXY_LOCATION_UNIT_ZONE) and
                         chkc:IsType(GALAXY_TYPE_UNIT) end
-    if chk==0 then return Duel.IsExistingTarget(Card.IsUnit,tp,
+    if chk==0 then return Duel.IsExistingTarget(Card.IsType,tp,
                                                GALAXY_LOCATION_UNIT_ZONE,
-                                               GALAXY_LOCATION_UNIT_ZONE,1,nil) end
+                                               GALAXY_LOCATION_UNIT_ZONE,1,nil,TYPE_MONSTER) end
     Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TARGET)
-    Duel.SelectTarget(tp,Card.IsUnit,tp,
+    Duel.SelectTarget(tp,Card.IsType,tp,
                      GALAXY_LOCATION_UNIT_ZONE,
-                     GALAXY_LOCATION_UNIT_ZONE,1,1,nil)
+                     GALAXY_LOCATION_UNIT_ZONE,1,1,nil,TYPE_MONSTER)
 end
 ```
 

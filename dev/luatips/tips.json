@@ -717,87 +717,6 @@
             }
         ]
     },
-    "IsAlive": {
-        "function": [
-            {
-                "name": "Card.IsAlive(Card c)",
-                "return": "bool",
-                "desc": "Galaxy便捷函数：检查卡片是否存活(生命值>0)  \nfunction Card:IsAlive() return self:GetHp() > 0 end  \n"
-            }
-        ]
-    },
-    "IsNearDeath": {
-        "function": [
-            {
-                "name": "Card.IsNearDeath(Card c)",
-                "return": "bool",
-                "desc": "Galaxy便捷函数：检查卡片是否濒死(生命值≤25%基础值)  \nfunction Card:IsNearDeath() return self:GetHp() <= (self:GetBaseHp() * 0.25) end  \n"
-            }
-        ]
-    },
-    "CanAffordSummon": {
-        "function": [
-            {
-                "name": "Card.CanAffordSummon(Card c, int tp)",
-                "return": "bool",
-                "desc": "Galaxy便捷函数：检查是否可以支付召唤代价  \nfunction Card:CanAffordSummon(tp) return Galaxy.CheckCost(tp, self:GetSupplyCost()) end  \n"
-            }
-        ]
-    },
-    "CanActivateFromHand": {
-        "function": [
-            {
-                "name": "Card.CanActivateFromHand(Card c)",
-                "return": "bool",
-                "desc": "Galaxy便捷函数：检查陷阱是否可以从手卡发动  \nfunction Card:CanActivateFromHand() return self:IsType(TYPE_TRAP) and Galaxy.TRAP_HAND_ACTIVATE end  \n"
-            }
-        ]
-    },
-    "IsUnit": {
-        "function": [
-            {
-                "name": "Card.IsUnit(Card c)",
-                "return": "bool",
-                "desc": "Galaxy术语函数：检查是否为单位卡(怪兽)  \nfunction Card:IsUnit() return self:IsType(GALAXY_TYPE_UNIT) end  \n"
-            }
-        ]
-    },
-    "IsSupport": {
-        "function": [
-            {
-                "name": "Card.IsSupport(Card c)",
-                "return": "bool",
-                "desc": "Galaxy术语函数：检查是否为支援卡(魔法)  \nfunction Card:IsSupport() return self:IsType(GALAXY_TYPE_SUPPORT) end  \n"
-            }
-        ]
-    },
-    "IsTactics": {
-        "function": [
-            {
-                "name": "Card.IsTactics(Card c)",
-                "return": "bool",
-                "desc": "Galaxy术语函数：检查是否为战术卡(陷阱)  \nfunction Card:IsTactics() return self:IsType(GALAXY_TYPE_TACTICS) end  \n"
-            }
-        ]
-    },
-    "IsInDiscardPile": {
-        "function": [
-            {
-                "name": "Card.IsInDiscardPile(Card c)",
-                "return": "bool",
-                "desc": "Galaxy术语函数：检查是否在弃牌区(墓地)  \nfunction Card:IsInDiscardPile() return self:IsLocation(GALAXY_LOCATION_DISCARD) end  \n"
-            }
-        ]
-    },
-    "IsExiled": {
-        "function": [
-            {
-                "name": "Card.IsExiled(Card c)",
-                "return": "bool",
-                "desc": "Galaxy术语函数：检查是否被游戏外(除外)  \nfunction Card:IsExiled() return self:IsLocation(GALAXY_LOCATION_EXILED) end  \n"
-            }
-        ]
-    },
     "GetPreviousCodeOnField": {
         "function": [
             {
@@ -1219,6 +1138,24 @@
                 "name": "Card.IsRace(Card c, int race)",
                 "return": "bool",
                 "desc": "检查卡片 c 是否属于种族 race  \n"
+            }
+        ]
+    },
+    "IsGalaxyCategory": {
+        "function": [
+            {
+                "name": "Card.IsGalaxyCategory(Card c, int category)",
+                "return": "bool",
+                "desc": "Galaxy术语别名：检查卡片 c 是否属于类别 category (原种族)  \nCard.IsGalaxyCategory = Card.IsRace  \n"
+            }
+        ]
+    },
+    "IsGalaxyProperty": {
+        "function": [
+            {
+                "name": "Card.IsGalaxyProperty(Card c, int property)",
+                "return": "bool",
+                "desc": "Galaxy术语别名：检查卡片 c 是否具有特性 property (原属性)  \nCard.IsGalaxyProperty = Card.IsAttribute  \n"
             }
         ]
     },
@@ -3748,78 +3685,6 @@
                 "name": "Duel.GetTurnPlayer()",
                 "return": "int",
                 "desc": "返回当前的回合玩家  \n"
-            }
-        ]
-    },
-    "IsOpponentTurn": {
-        "function": [
-            {
-                "name": "Duel.IsOpponentTurn(int tp)",
-                "return": "bool",
-                "desc": "Galaxy便捷函数：检查是否为对方回合  \nfunction Duel.IsOpponentTurn(tp) return Duel.GetTurnPlayer() ~= tp end  \n"
-            }
-        ]
-    },
-    "IsOwnTurn": {
-        "function": [
-            {
-                "name": "Duel.IsOwnTurn(int tp)",
-                "return": "bool",
-                "desc": "Galaxy便捷函数：检查是否为己方回合  \nfunction Duel.IsOwnTurn(tp) return Duel.GetTurnPlayer() == tp end  \n"
-            }
-        ]
-    },
-    "HasEnoughSupply": {
-        "function": [
-            {
-                "name": "Duel.HasEnoughSupply(int tp, int cost)",
-                "return": "bool",
-                "desc": "Galaxy便捷函数：检查玩家是否有足够补给  \nfunction Duel.HasEnoughSupply(tp, cost) return Galaxy.CheckCost(tp, cost) end  \n"
-            }
-        ]
-    },
-    "GetAliveMonsterCount": {
-        "function": [
-            {
-                "name": "Duel.GetAliveMonsterCount(int tp[, int loc1=LOCATION_MZONE, int loc2=0])",
-                "return": "int",
-                "desc": "Galaxy便捷函数：获取场上存活怪兽数量  \nfunction Duel.GetAliveMonsterCount(tp, loc1, loc2) return Duel.GetMatchingGroupCount(Card.IsAlive, tp, loc1 or LOCATION_MZONE, loc2 or 0, nil) end  \n"
-            }
-        ]
-    },
-    "IsSupplyPhase": {
-        "function": [
-            {
-                "name": "Duel.IsSupplyPhase()",
-                "return": "bool",
-                "desc": "Galaxy术语函数：检查是否为补给阶段(抽卡阶段)  \nfunction Duel.IsSupplyPhase() return Duel.GetCurrentPhase() == GALAXY_PHASE_SUPPLY end  \n"
-            }
-        ]
-    },
-    "IsDeployPhase": {
-        "function": [
-            {
-                "name": "Duel.IsDeployPhase()",
-                "return": "bool",
-                "desc": "Galaxy术语函数：检查是否为部署阶段(主要阶段1)  \nfunction Duel.IsDeployPhase() return Duel.GetCurrentPhase() == GALAXY_PHASE_DEPLOY end  \n"
-            }
-        ]
-    },
-    "IsCombatPhase": {
-        "function": [
-            {
-                "name": "Duel.IsCombatPhase()",
-                "return": "bool",
-                "desc": "Galaxy术语函数：检查是否为交战阶段(战斗阶段)  \nfunction Duel.IsCombatPhase() return Duel.GetCurrentPhase() == GALAXY_PHASE_COMBAT end  \n"
-            }
-        ]
-    },
-    "IsOrganizePhase": {
-        "function": [
-            {
-                "name": "Duel.IsOrganizePhase()",
-                "return": "bool",
-                "desc": "Galaxy术语函数：检查是否为整备阶段(主要阶段2)  \nfunction Duel.IsOrganizePhase() return Duel.GetCurrentPhase() == GALAXY_PHASE_ORGANIZE end  \n"
             }
         ]
     },
@@ -12508,5 +12373,233 @@
         "type": 2,
         "value": "77702007",
         "desc": "额外卡组怪兽作为仪式素材（楽园図）"
+    },
+    "GALAXY_PHASE_SUPPLY": {
+        "name": "GALAXY_PHASE_SUPPLY",
+        "type": 2,
+        "value": "0x01",
+        "desc": "Galaxy阶段：补给阶段 (原抽卡阶段)"
+    },
+    "GALAXY_PHASE_PREPARATION": {
+        "name": "GALAXY_PHASE_PREPARATION",
+        "type": 2,
+        "value": "0x02",
+        "desc": "Galaxy阶段：战备阶段 (原准备阶段)"
+    },
+    "GALAXY_PHASE_DEPLOY": {
+        "name": "GALAXY_PHASE_DEPLOY",
+        "type": 2,
+        "value": "0x04",
+        "desc": "Galaxy阶段：部署阶段 (原主要阶段1)"
+    },
+    "GALAXY_PHASE_COMBAT": {
+        "name": "GALAXY_PHASE_COMBAT",
+        "type": 2,
+        "value": "0x08",
+        "desc": "Galaxy阶段：交战阶段 (原战斗阶段)"
+    },
+    "GALAXY_PHASE_ORGANIZE": {
+        "name": "GALAXY_PHASE_ORGANIZE",
+        "type": 2,
+        "value": "0x10",
+        "desc": "Galaxy阶段：整备阶段 (原主要阶段2)"
+    },
+    "GALAXY_PHASE_REST": {
+        "name": "GALAXY_PHASE_REST",
+        "type": 2,
+        "value": "0x20",
+        "desc": "Galaxy阶段：休整阶段 (原结束阶段)"
+    },
+    "GALAXY_LOCATION_BASIC_DECK": {
+        "name": "GALAXY_LOCATION_BASIC_DECK",
+        "type": 2,
+        "value": "0x01",
+        "desc": "Galaxy位置：基本卡组 (原卡组)"
+    },
+    "GALAXY_LOCATION_HAND_CARDS": {
+        "name": "GALAXY_LOCATION_HAND_CARDS",
+        "type": 2,
+        "value": "0x02",
+        "desc": "Galaxy位置：手卡 (原手牌)"
+    },
+    "GALAXY_LOCATION_UNIT_ZONE": {
+        "name": "GALAXY_LOCATION_UNIT_ZONE",
+        "type": 2,
+        "value": "0x04",
+        "desc": "Galaxy位置：单位区域 (原怪兽区域)"
+    },
+    "GALAXY_LOCATION_SUPPORT_ZONE": {
+        "name": "GALAXY_LOCATION_SUPPORT_ZONE",
+        "type": 2,
+        "value": "0x08",
+        "desc": "Galaxy位置：支援区域 (原魔陷区域)"
+    },
+    "GALAXY_LOCATION_DISCARD": {
+        "name": "GALAXY_LOCATION_DISCARD",
+        "type": 2,
+        "value": "0x10",
+        "desc": "Galaxy位置：弃牌区 (原墓地)"
+    },
+    "GALAXY_LOCATION_EXILED": {
+        "name": "GALAXY_LOCATION_EXILED",
+        "type": 2,
+        "value": "0x20",
+        "desc": "Galaxy位置：游戏外 (原除外区)"
+    },
+    "GALAXY_LOCATION_SPECIAL_DECK": {
+        "name": "GALAXY_LOCATION_SPECIAL_DECK",
+        "type": 2,
+        "value": "0x40",
+        "desc": "Galaxy位置：特殊卡组 (原额外卡组)"
+    },
+    "GALAXY_TYPE_UNIT": {
+        "name": "GALAXY_TYPE_UNIT",
+        "type": 2,
+        "value": "0x1",
+        "desc": "Galaxy类型：单位 (原怪兽)"
+    },
+    "GALAXY_TYPE_SUPPORT": {
+        "name": "GALAXY_TYPE_SUPPORT",
+        "type": 2,
+        "value": "0x2",
+        "desc": "Galaxy类型：支援 (原魔法)"
+    },
+    "GALAXY_TYPE_TACTICS": {
+        "name": "GALAXY_TYPE_TACTICS",
+        "type": 2,
+        "value": "0x4",
+        "desc": "Galaxy类型：战术 (原陷阱)"
+    },
+    "GALAXY_TYPE_GENERAL": {
+        "name": "GALAXY_TYPE_GENERAL",
+        "type": 2,
+        "value": "0x10",
+        "desc": "Galaxy类型：一般 (原通常)"
+    },
+    "GALAXY_TYPE_FORCES": {
+        "name": "GALAXY_TYPE_FORCES",
+        "type": 2,
+        "value": "0x20",
+        "desc": "Galaxy类型：部队 (原效果)"
+    },
+    "GALAXY_TYPE_LARGE": {
+        "name": "GALAXY_TYPE_LARGE",
+        "type": 2,
+        "value": "0x40",
+        "desc": "Galaxy类型：大型 (原融合)"
+    },
+    "GALAXY_TYPE_FACILITY": {
+        "name": "GALAXY_TYPE_FACILITY",
+        "type": 2,
+        "value": "0x80",
+        "desc": "Galaxy类型：设施 (原永续)"
+    },
+    "GALAXY_TYPE_AREA": {
+        "name": "GALAXY_TYPE_AREA",
+        "type": 2,
+        "value": "0x80000",
+        "desc": "Galaxy类型：区域 (原场地)"
+    },
+    "GALAXY_TYPE_ENHANCEMENT": {
+        "name": "GALAXY_TYPE_ENHANCEMENT",
+        "type": 2,
+        "value": "0x40000",
+        "desc": "Galaxy类型：强化 (原装备)"
+    },
+    "GALAXY_TYPE_QUICK": {
+        "name": "GALAXY_TYPE_QUICK",
+        "type": 2,
+        "value": "0x10000",
+        "desc": "Galaxy类型：快速 (原速攻)"
+    },
+    "GALAXY_TYPE_COUNTER": {
+        "name": "GALAXY_TYPE_COUNTER",
+        "type": 2,
+        "value": "0x20000",
+        "desc": "Galaxy类型：反制 (原反击)"
+    },
+    "GALAXY_PROPERTY_LEGION": {
+        "name": "GALAXY_PROPERTY_LEGION",
+        "type": 2,
+        "value": "0x01",
+        "desc": "Galaxy特性：军团 (原地属性)"
+    },
+    "GALAXY_PROPERTY_FLEET": {
+        "name": "GALAXY_PROPERTY_FLEET",
+        "type": 2,
+        "value": "0x02",
+        "desc": "Galaxy特性：舰队 (原水属性)"
+    },
+    "GALAXY_PROPERTY_STATION": {
+        "name": "GALAXY_PROPERTY_STATION",
+        "type": 2,
+        "value": "0x04",
+        "desc": "Galaxy特性：空间站 (原炎属性)"
+    },
+    "GALAXY_PROPERTY_STARPORT": {
+        "name": "GALAXY_PROPERTY_STARPORT",
+        "type": 2,
+        "value": "0x08",
+        "desc": "Galaxy特性：星港 (原风属性)"
+    },
+    "GALAXY_PROPERTY_COMMANDER": {
+        "name": "GALAXY_PROPERTY_COMMANDER",
+        "type": 2,
+        "value": "0x20",
+        "desc": "Galaxy特性：指挥官 (原光属性)"
+    },
+    "GALAXY_CATEGORY_HUMAN": {
+        "name": "GALAXY_CATEGORY_HUMAN",
+        "type": 2,
+        "value": "0x01",
+        "desc": "Galaxy类别：人类 (原战士族)"
+    },
+    "GALAXY_CATEGORY_MAMMAL": {
+        "name": "GALAXY_CATEGORY_MAMMAL",
+        "type": 2,
+        "value": "0x02",
+        "desc": "Galaxy类别：哺乳类 (原兽族)"
+    },
+    "GALAXY_CATEGORY_REPTILE": {
+        "name": "GALAXY_CATEGORY_REPTILE",
+        "type": 2,
+        "value": "0x04",
+        "desc": "Galaxy类别：爬行类 (原恐龙族)"
+    },
+    "GALAXY_CATEGORY_AVIAN": {
+        "name": "GALAXY_CATEGORY_AVIAN",
+        "type": 2,
+        "value": "0x08",
+        "desc": "Galaxy类别：鸟类 (原鸟兽族)"
+    },
+    "GALAXY_CATEGORY_ARTHROPOD": {
+        "name": "GALAXY_CATEGORY_ARTHROPOD",
+        "type": 2,
+        "value": "0x10",
+        "desc": "Galaxy类别：节肢类 (原昆虫族)"
+    },
+    "GALAXY_CATEGORY_MOLLUSK": {
+        "name": "GALAXY_CATEGORY_MOLLUSK",
+        "type": 2,
+        "value": "0x20",
+        "desc": "Galaxy类别：软体类 (原海龙族)"
+    },
+    "GALAXY_CATEGORY_FUNGAL": {
+        "name": "GALAXY_CATEGORY_FUNGAL",
+        "type": 2,
+        "value": "0x40",
+        "desc": "Galaxy类别：真菌类 (原爬虫类族)"
+    },
+    "GALAXY_CATEGORY_UNDEAD": {
+        "name": "GALAXY_CATEGORY_UNDEAD",
+        "type": 2,
+        "value": "0x80",
+        "desc": "Galaxy类别：死灵 (原不死族)"
+    },
+    "GALAXY_CATEGORY_AURORA": {
+        "name": "GALAXY_CATEGORY_AURORA",
+        "type": 2,
+        "value": "0x100",
+        "desc": "Galaxy类别：极光 (原雷族)"
     }
 }
