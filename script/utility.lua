@@ -1,17 +1,6 @@
-Auxiliary={}
-aux=Auxiliary
-POS_FACEUP_DEFENCE=POS_FACEUP_DEFENSE
-POS_FACEDOWN_DEFENCE=POS_FACEDOWN_DEFENSE
-RACE_CYBERS=RACE_CYBERSE
+Auxiliary = {}
+aux = Auxiliary
 NULL_VALUE=-10
-
-function Import()
-	self_table.initial_effect = function(c)
-		Galaxy.ApplyRulesToCard(c)
-		if c.initial then c.initial(c) end
-	end
-	return self_table, self_code
-end
 
 --the lua version of the bit32 lib, which is deprecated in lua 5.3
 bit={}
@@ -1986,55 +1975,226 @@ function Auxiliary.MonsterEffectPropertyFilter(flag)
 	end
 end
 
---===============================
---Galaxy Card Game Rules 
---===============================
+--==============================================
+-- 导入 Galaxy 全局规则
+--==============================================
 
---Galaxy规则通过单张卡片脚本调用的方式实现- Individual Card Approach
 Galaxy = {}
+gal = Galaxy
 
---==============================================
--- 待刪除
---==============================================
-
-	--基础配置
-	Galaxy.NO_COVER_SUMMON = true
-	Galaxy.NO_SET_SPELL_TRAP = true
-	Galaxy.DEFENSE_AS_HP = true
-	Galaxy.NO_MONSTER_BATTLE_DAMAGE = true
-	--Galaxy.SUMMON_TURN_CANNOT_ATTACK = true  --召唤回合不能攻击
-	Galaxy.TRAP_OPPONENT_TURN_ONLY = true  --陷阱卡只能在对方回合发动
-	Galaxy.TRAP_HAND_ACTIVATE = true  --陷阱卡可以从手卡发动
-
-	--补给代价系统配置
-	Galaxy.USE_COST_SYSTEM = true
-	Galaxy.MONSTER_SUMMON_COST = true   --怪兽召唤需要代价
-	--Galaxy.SPELL_TRAP_COST = true   --魔法陷阱发动需要代价（暂时禁用）
-	Galaxy.SPELL_TRAP_COST = false	--魔法陷阱发动暂时不需要代价
-
-	--特殊召唤系统配置
-	Galaxy.SPECIAL_SUMMON_ONLY = true   --禁止通常召唤，改为特殊召唤（无次数限制）
-
-	--检查是否为Galaxy规则对战
-	function Galaxy.IsGalaxyDuel()
-		return 1
+--为卡片导入 Galaxy 全局规则 返回 self_table, self_code
+function Import()
+	self_table.initial_effect = function(c)
+		if c.initial then c.initial(c) end
+		if Galaxy.GlobalRule then return end
+		Galaxy.GlobalRule = true
+		Galaxy.UnitRule(c) --单位通用
+		Galaxy.BattleSystem(c) --战斗系统
+		Galaxy.CannotSetST(c) --支援/战术通用
+		Galaxy.TacticsRule(c) --战术通用
 	end
+	return self_table, self_code
+end
+
+--单位通用
+function Galaxy.UnitRule(c)
+	local property = EFFECT_FLAG_CANNOT_DISABLE + EFFECT_FLAG_UNCOPYABLE
+	--怪兽不能变为守备表示
+	local e1 = Effect.CreateEffect(c)
+	e1:SetType(EFFECT_TYPE_FIELD)
+	e1:SetCode(EFFECT_CANNOT_CHANGE_POSITION)
+	e1:SetProperty(property)
+	e1:SetTargetRange(LOCATION_MZONE, LOCATION_MZONE)
+	Duel.RegisterEffect(e1, 0)
+	--禁止盖放怪兽
+	local e2 = e1:Clone()
+	e2:SetCode(EFFECT_CANNOT_MSET)
+	e2:SetProperty(property + EFFECT_FLAG_PLAYER_TARGET)
+	e2:SetTargetRange(1, 1)
+	Duel.RegisterEffect(e2, 0)
+	--禁止通常召唤
+	local e3 = e2:Clone()
+	e3:SetCode(EFFECT_CANNOT_SUMMON)
+	Duel.RegisterEffect(e3, 0)
+	--添加特殊召唤手续（强制攻击表示，包含代价检查）
+	local e4 = Effect.CreateEffect(c)
+	e4:SetType(EFFECT_TYPE_FIELD)
+	e4:SetCode(EFFECT_SPSUMMON_PROC)
+	e4:SetProperty(EFFECT_FLAG_UNCOPYABLE + EFFECT_FLAG_SPSUM_PARAM)
+	e4:SetRange(LOCATION_HAND)
+	e4:SetTargetRange(POS_FACEUP_ATTACK, 0)
+	e4:SetCondition(Galaxy.SummonCondition)
+	e4:SetOperation(Galaxy.SummonOperation)  --在这里支付代价
+	local e5 = Effect.CreateEffect(c)
+	e5:SetType(EFFECT_TYPE_FIELD + EFFECT_TYPE_GRANT)
+	e5:SetTargetRange(LOCATION_HAND, LOCATION_HAND)
+	e5:SetProperty(property + EFFECT_FLAG_IGNORE_IMMUNE)
+	e5:SetLabelObject(e4)
+	Duel.RegisterEffect(e5, 0)
+end
+
+--特殊召唤条件：检查场地和代价是否足够
+function Galaxy.SummonCondition(e,c)
+	if c == nil then return true end
+	local tp = c:GetControler()
+	return Duel.GetLocationCount(tp, LOCATION_MZONE) > 0 and Duel.CheckSupplyCost(tp, c:GetSupplyCost())
+end
+
+--特殊召唤操作：在召唤过程中支付代价
+function Galaxy.SummonOperation(e,tp,eg,ep,ev,re,r,rp,c)
+	local cost = c:GetSupplyCost()
+	if cost > 0 then Duel.PaySupplyCost(tp, cost) end
+	return true
+end
+
+--战斗系统
+function Galaxy.BattleSystem(c)
+	local property = EFFECT_FLAG_CANNOT_DISABLE + EFFECT_FLAG_UNCOPYABLE
+	--召唤回合不能攻击
+	local e1 = Effect.CreateEffect(c)
+	e1:SetType(EFFECT_TYPE_FIELD)
+	e1:SetCode(EFFECT_CANNOT_ATTACK)
+	e1:SetProperty(property)
+	e1:SetTargetRange(LOCATION_MZONE, LOCATION_MZONE)
+	e1:SetTarget(Galaxy.SummonThisTurn)
+	Duel.RegisterEffect(e1, 0)
+	--禁止战斗破坏
+	local e2 = e1:Clone()
+	e2:SetCode(EFFECT_INDESTRUCTABLE_BATTLE)
+	Duel.RegisterEffect(e2, 0)
+	--伤害步骤结束时处理降低怪兽生命
+	local e3 = Effect.CreateEffect(c)
+	e3:SetType(EFFECT_TYPE_FIELD + EFFECT_TYPE_CONTINUOUS)
+	e3:SetCode(EVENT_DAMAGE_STEP_END)
+	e3:SetProperty(property)
+	e3:SetCondition(Galaxy.ReduceHP)
+	Duel.RegisterEffect(e3, 0)
+	--生命为 0 时自动破坏
+	local e4 = Effect.CreateEffect(c)
+	e4:SetType(EFFECT_TYPE_SINGLE)
+	e4:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
+	e4:SetRange(LOCATION_MZONE)
+	e4:SetCode(EFFECT_SELF_DESTROY)
+	e4:SetCondition(Galaxy.SelfDestroy)
+	local e5 = Effect.CreateEffect(c)
+	e5:SetType(EFFECT_TYPE_FIELD + EFFECT_TYPE_GRANT)
+	e5:SetTargetRange(LOCATION_MZONE, LOCATION_MZONE)
+	e5:SetProperty(property + EFFECT_FLAG_IGNORE_IMMUNE)
+	e5:SetLabelObject(e4)
+	Duel.RegisterEffect(e5, 0)
+	--不造成战斗伤害
+	local e6 = Effect.CreateEffect(c)
+	e6:SetType(EFFECT_TYPE_FIELD)
+	e6:SetCode(EFFECT_CHANGE_DAMAGE)
+	e6:SetProperty(property + EFFECT_FLAG_PLAYER_TARGET)
+	e6:SetTargetRange(1, 1)
+	e6:SetValue(Galaxy.ChangeBattleDamage)
+	Duel.RegisterEffect(e6, 0)
+end
+
+--在本回合召唤
+function Galaxy.SummonThisTurn(e,c)
+	return not c:IsHasEffect(EFFECT_RUSH) and (c:IsStatus(STATUS_SUMMON_TURN)
+		or c:IsStatus(STATUS_FLIP_SUMMON_TURN) or c:IsStatus(STATUS_SPSUMMON_TURN))
+end
+
+--伤害步骤结束时处理守备力减少（仅怪兽对怪兽战斗时）
+function Galaxy.ReduceHP(e,tp,eg,ep,ev,re,r,rp)
+	local atker = Duel.GetAttacker()
+	local defer = Duel.GetAttackTarget()
+	if not (atker and defer) then return false end
+	local e1 = Effect.CreateEffect(atker)
+	e1:SetType(EFFECT_TYPE_SINGLE)
+	e1:SetCode(EFFECT_UPDATE_DEFENSE)
+	e1:SetValue(-defer:GetAttack())
+	e1:SetReset(RESET_EVENT+RESETS_STANDARD)
+	atker:RegisterEffect(e1)
+	local e2 = e1:Clone()
+	e2:SetValue(-atker:GetAttack())
+	defer:RegisterEffect(e2)
+	return false
+end
+
+--守备力为0时的自动破坏条件
+function Galaxy.SelfDestroy(e)
+	return e:GetHandler():GetDefense() <= 0
+end
+
+--不造成战斗伤害（如果有攻击目标，说明非直接攻击玩家，阻止伤害）
+function Galaxy.ChangeBattleDamage(e,re,dam,r,rp,rc)
+	if r & REASON_BATTLE == REASON_BATTLE and Duel.GetAttackTarget() then
+		return 0
+	end
+	return dam
+end
+
+--禁止盖放支援/战术卡
+function Galaxy.CannotSetST(c)
+	local e1 = Effect.CreateEffect(c)
+	e1:SetType(EFFECT_TYPE_FIELD)
+	e1:SetCode(EFFECT_CANNOT_SSET)
+	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE + EFFECT_FLAG_UNCOPYABLE + EFFECT_FLAG_PLAYER_TARGET)
+	e1:SetTargetRange(1, 1)
+	Duel.RegisterEffect(e1, 0)
+end
+
+--战术卡通用
+function Galaxy.TacticsRule(c)
+	local property = EFFECT_FLAG_CANNOT_DISABLE + EFFECT_FLAG_UNCOPYABLE
+	--可以从手卡发动
+	local e1 = Effect.CreateEffect(c)
+	e1:SetType(EFFECT_TYPE_FIELD)
+	e1:SetCode(EFFECT_TRAP_ACT_IN_HAND)
+	e1:SetProperty(property)
+	e1:SetTargetRange(LOCATION_HAND, LOCATION_HAND)
+	Duel.RegisterEffect(e1, 0)
+	--只能在对方回合发动
+	local e2 = Effect.CreateEffect(c)
+	e2:SetType(EFFECT_TYPE_FIELD)
+	e2:SetCode(EFFECT_CANNOT_TRIGGER)
+	e2:SetProperty(property)
+	e2:SetTargetRange(0xff, 0xff)
+	e2:SetTarget(Galaxy.TacticsOppoOnly)
+	Duel.RegisterEffect(e2, 0)
+end
+
+--战术卡只能在对方回合发动
+function Galaxy.TacticsOppoOnly(e,c)
+	return c:IsType(GALAXY_TYPE_TACTICS) and Duel.GetTurnPlayer() == c:GetControler()
+end
+
 --==============================================
+-- Galaxy Card 函数
+--==============================================
+
+--获取/检查 单位生命值相关
+Card.GetHp = Card.GetDefense
+Card.GetBaseHp = Card.GetBaseDefense
+Card.IsHp = Card.IsDefense
+Card.IsHpAbove = Card.IsDefenseAbove
+Card.IsHpBelow = Card.IsDefenseBelow
+Card.GetOriginalHp = Card.GetTextDefense
+
+--获取/检查 补给代价
+Card.GetSupplyCost = Card.GetLevel
+Card.IsSupplyCost = Card.IsLevel
+Card.IsSupplyCostAbove = Card.IsLevelAbove
+Card.IsSupplyCostBelow = Card.IsLevelBelow
+Card.GetOriginalSupplyCost = Card.GetOriginalLevel
+
+--[[
+--==============================================
+-- 暂时无用
+--==============================================
+
+--补给代价系统配置
+Galaxy.USE_COST_SYSTEM = true
+--Galaxy.SPELL_TRAP_COST = true   --魔法陷阱发动需要代价（暂时禁用）
+Galaxy.SPELL_TRAP_COST = false	--魔法陷阱发动暂时不需要代价
 
 --补给代价系统基础函数
 Galaxy.DEFAULT_SUMMON_COST = 0   --怪兽召唤/特殊召唤默认代价（实际使用星级）
 Galaxy.DEFAULT_ACTIVATE_COST = 0   --魔法/陷阱发动默认代价
-
---检查玩家是否有足够的补给支付代价
-function Galaxy.CheckCost(tp, cost)
-	return Duel.CheckSupplyCost(tp, cost)  --使用新的API检查补给代价
-end
-
---支付补给代价
-function Galaxy.PayCost(tp, cost)
-	Duel.PaySupplyCost(tp, cost)  --使用新的API支付补给代价
-	return true
-end
 
 --代价存储的Flag ID
 Galaxy.SUMMON_COST_FLAG = 99990001  --召唤代价Flag
@@ -2075,73 +2235,10 @@ function Galaxy.SetActivateCost(c, cost)
 	c:RegisterFlagEffect(Galaxy.ACTIVATE_COST_FLAG, 0, 0, 0, cost)
 end
 
---为怪兽卡添加特殊召唤替代系统
-function Galaxy.AddSpecialSummonOnlyToCard(c)
-	if not Galaxy.IsGalaxyDuel() or not Galaxy.SPECIAL_SUMMON_ONLY then return end
-	if not c or not c:IsType(TYPE_MONSTER) then return end
-
-	--禁止通常召唤
-	local e1=Effect.CreateEffect(c)
-	e1:SetType(EFFECT_TYPE_SINGLE)
-	e1:SetCode(EFFECT_CANNOT_SUMMON)
-	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
-	c:RegisterEffect(e1)
-
-	--添加特殊召唤手续（强制攻击表示，包含代价检查）
-	local e2=Effect.CreateEffect(c)
-	e2:SetType(EFFECT_TYPE_FIELD)
-	e2:SetCode(EFFECT_SPSUMMON_PROC)
-	e2:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE+EFFECT_FLAG_SPSUM_PARAM)
-	e2:SetRange(LOCATION_HAND)
-	e2:SetTargetRange(POS_FACEUP_ATTACK,0)
-	e2:SetCondition(Galaxy.SpecialSummonCondition)
-	e2:SetOperation(Galaxy.SpecialSummonOperation)  --在这里支付代价
-	c:RegisterEffect(e2)
-end
-
---存储额外特殊召唤条件的全局表
-Galaxy.ExtraSpConditions = Galaxy.ExtraSpConditions or {}
-
---为卡片设置额外特殊召唤条件
-function Galaxy.SetExtraSpCondition(code, condition_func)
-	Galaxy.ExtraSpConditions[code] = condition_func
-end
-
---特殊召唤条件：检查场地和代价是否足够
-function Galaxy.SpecialSummonCondition(e,c)
-	if c==nil then return true end
-	local tp=c:GetControler()
-	local cost = Galaxy.GetSummonCost(c)
-
-	--检查基本条件：场地和代价
-	local basic_condition = Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and Galaxy.CheckCost(tp, cost)
-
-	--检查卡片是否有额外特殊召唤条件
-	local extra_condition = Galaxy.ExtraSpConditions[c:GetCode()]
-	if extra_condition then
-		return basic_condition and extra_condition(e,c,tp)
-	end
-
-	return basic_condition
-end
-
---特殊召唤操作：在召唤过程中支付代价
-function Galaxy.SpecialSummonOperation(e,tp,eg,ep,ev,re,r,rp,c)
-	local cost = Galaxy.GetSummonCost(c)
-	if cost > 0 then
-		local success = Galaxy.PayCost(tp, cost) --
-		if not success then
-			--不足，召唤失败
-			return false
-		end
-	end
-	return true --
-end
-
 --为魔法/陷阱卡添加发动代价效果（通用代价包装）
 --注意：此功能已暂时禁用，魔法陷阱卡发动暂时不需要支付代价
 function Galaxy.AddActivateCostToCard(c)
-	if not Galaxy.IsGalaxyDuel() or not Galaxy.USE_COST_SYSTEM or not Galaxy.SPELL_TRAP_COST then return end
+	if not Galaxy.USE_COST_SYSTEM or not Galaxy.SPELL_TRAP_COST then return end
 	if not c or not (c:IsType(TYPE_SPELL) or c:IsType(TYPE_TRAP)) then return end
 
 	--此函数现在主要用于标记卡片需要代价
@@ -2158,15 +2255,15 @@ function Galaxy.WrapCost(c, original_cost)
 			--检查Galaxy代价
 			local galaxy_ok = true
 			if galaxy_cost > 0 then
-				galaxy_ok = Galaxy.CheckCost and Galaxy.CheckCost(tp, galaxy_cost) or false
+				galaxy_ok = Duel.CheckSupplyCost(tp, galaxy_cost) or false
 			end
 			--检查原始代价
 			local original_ok = not original_cost or original_cost(e,tp,eg,ep,ev,re,r,rp,chk)
 			return galaxy_ok and original_ok
 		else
 			--支付Galaxy代价
-			if galaxy_cost > 0 and Galaxy.PayCost then
-				Galaxy.PayCost(tp, galaxy_cost)
+			if galaxy_cost > 0 then
+				Duel.PaySupplyCost(tp, galaxy_cost)
 			end
 			--支付原始代价
 			if original_cost then
@@ -2181,447 +2278,10 @@ function Galaxy.SimpleCost(c)
 	return Galaxy.WrapCost(c, nil)
 end
 
-
 --发动补给代价支付操作
 function Galaxy.ActivateCostOperation(e,tp,eg,ep,ev,re,r,rp)
 	local c = e:GetHandler()
 	local cost = Galaxy.GetActivateCost(c)
-	Galaxy.PayCost(tp, cost)
+	Duel.PaySupplyCost(tp, cost)
 end
-
---==============================================
--- Galaxy 全局规则
---==============================================
-
---通用函数：为卡片添加 Galaxy 全局规则
-function Galaxy.ApplyRulesToCard(c)
-	if not c or not Galaxy.IsGalaxyDuel() then return end
-
-	if c:IsType(TYPE_MONSTER) then
-		Galaxy.AddDefenseAsHPToCard(c) --守备力作为生命值
-		Galaxy.AddNoBattleDamageToCard(c) --不进行战斗伤害
-		Galaxy.AddCannotChangeToDefenseToCard(c) --不能变为守备表示
-		Galaxy.AddSpecialSummonOnlyToCard(c) --添加特殊召唤替代系统
-	elseif c:IsType(TYPE_SPELL) or c:IsType(TYPE_TRAP) then
-		Galaxy.AddNoCoverSetToCard(c) --禁止覆盖放置
-		--Galaxy.AddActivateCostToCard(c) --添加发动代价（暂时禁用）
-		if c:IsType(TYPE_TRAP) then
-			Galaxy.AddTrapOpponentTurnOnlyToCard(c) --陷阱卡只能在对方回合发动
-			Galaxy.AddTrapHandActivateToCard(c) --陷阱卡可以从手卡发动
-		end
-	end
-
-	if Galaxy.GlobalRule then return end
-	Galaxy.GlobalRule = true
-	Galaxy.SummonTurnCannotAttack(c) --召唤回合不能攻击
-	Galaxy.CannotCoverSummon(c) --禁止覆盖怪兽
-end
-
---召唤回合不能攻击
-function Galaxy.SummonTurnCannotAttack(c)
-	local e1=Effect.CreateEffect(c)
-	e1:SetType(EFFECT_TYPE_FIELD)
-	e1:SetCode(EFFECT_CANNOT_ATTACK)
-	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
-	e1:SetTargetRange(LOCATION_MZONE,LOCATION_MZONE)
-	e1:SetTarget(Galaxy.SummonThisTurn)
-	Duel.RegisterEffect(e1, 0)
-end
-
---在本回合召唤
-function Galaxy.SummonThisTurn(e,c)
-	return not c:IsHasEffect(EFFECT_ASSAULT) and (c:IsStatus(STATUS_SUMMON_TURN)
-		or c:IsStatus(STATUS_FLIP_SUMMON_TURN) or c:IsStatus(STATUS_SPSUMMON_TURN))
-end
-
---禁止覆盖怪兽
-function Galaxy.CannotCoverSummon(c)
-	local e1=Effect.CreateEffect(c)
-	e1:SetType(EFFECT_TYPE_FIELD)
-	e1:SetCode(EFFECT_CANNOT_MSET)
-	e1:SetTargetRange(1,1)
-	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
-	Duel.RegisterEffect(e1, 0)
-end
-
---==============================================
--- Galaxy old 全局规则
---==============================================
-
---为怪兽卡添加禁止覆盖召唤效果
-function Galaxy.AddNoCoverSummonToCard(c)
-	if not Galaxy.IsGalaxyDuel() or not Galaxy.NO_COVER_SUMMON then return end
-	if not c or not c:IsType(TYPE_MONSTER) then return end
-
-	local e1=Effect.CreateEffect(c)
-	e1:SetType(EFFECT_TYPE_SINGLE)
-	e1:SetCode(EFFECT_CANNOT_MSET)
-	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
-	c:RegisterEffect(e1)
-end
-
---为怪兽卡添加不能变为守备表示效果
-function Galaxy.AddCannotChangeToDefenseToCard(c)
-	if not Galaxy.IsGalaxyDuel() then return end
-	if not c or not c:IsType(TYPE_MONSTER) then return end
-
-	local e1=Effect.CreateEffect(c)
-	e1:SetType(EFFECT_TYPE_SINGLE)
-	e1:SetCode(EFFECT_CANNOT_CHANGE_POSITION)
-	e1:SetCondition(Galaxy.AttackPositionCondition)
-	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
-	c:RegisterEffect(e1)
-end
-
---条件：仅在攻击表示时不能变换表示形式
-function Galaxy.AttackPositionCondition(e)
-	return e:GetHandler():IsPosition(POS_FACEUP_ATTACK)
-end
-
---为魔法/陷阱卡添加禁止覆盖放置效果
-function Galaxy.AddNoCoverSetToCard(c)
-	if not Galaxy.IsGalaxyDuel() or not Galaxy.NO_SET_SPELL_TRAP then return end
-	if not c or not (c:IsType(TYPE_SPELL) or c:IsType(TYPE_TRAP)) then return end
-
-	local e1=Effect.CreateEffect(c)
-	e1:SetType(EFFECT_TYPE_SINGLE)
-	e1:SetCode(EFFECT_CANNOT_SSET)
-	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
-	c:RegisterEffect(e1)
-end
-
---为陷阱卡添加只能在对方回合发动的限制
-function Galaxy.AddTrapOpponentTurnOnlyToCard(c)
-	if not Galaxy.IsGalaxyDuel() or not Galaxy.TRAP_OPPONENT_TURN_ONLY then return end
-	if not c or not c:IsType(TYPE_TRAP) then return end
-
-	--添加只能在对方回合发动的限制条件
-	--这将在卡片的发动检查中被调用
-	local e1=Effect.CreateEffect(c)
-	e1:SetType(EFFECT_TYPE_SINGLE)
-	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
-	e1:SetCode(EFFECT_CANNOT_TRIGGER)
-	e1:SetCondition(Galaxy.TrapOpponentTurnCondition)
-	c:RegisterEffect(e1)
-end
-
---陷阱卡对方回合限制条件
-function Galaxy.TrapOpponentTurnCondition(e)
-	local tp = e:GetHandlerPlayer()
-	--当前是己方回合时，陷阱卡不能发动
-	return Duel.GetTurnPlayer() == tp
-end
-
---==============================================
--- Galaxy术语映射系统 (Galaxy Terminology Mapping)
---==============================================
--- 为YGO常量提供更符合Galaxy Card Game术语的别名
--- 基于 dev/docs/gcg_Glossary.md 中的术语对照表
--- 使用Galaxy前缀保持项目命名一致性
-
---游戏阶段术语映射 (Game Phase Terminology)
-if _G then
-	--补给阶段 (Supply Phase - 原抽卡阶段)
-	GALAXY_PHASE_SUPPLY = PHASE_DRAW
-
-	--战备阶段 (Preparation Phase - 原准备阶段)
-	GALAXY_PHASE_PREPARATION = PHASE_STANDBY
-
-	--部署阶段 (Deploy Phase - 原主要阶段1)
-	GALAXY_PHASE_DEPLOY = PHASE_MAIN1
-
-	--交战阶段 (Combat Phase - 原战斗阶段)
-	GALAXY_PHASE_COMBAT = PHASE_BATTLE
-
-	--整备阶段 (Organize Phase - 原主要阶段2)
-	GALAXY_PHASE_ORGANIZE = PHASE_MAIN2
-
-	--休整阶段 (Rest Phase - 原结束阶段)
-	GALAXY_PHASE_REST = PHASE_END
-end
-
---位置术语映射 (Location Terminology)
-if _G then
-	--基本卡组 (Basic Deck - 原主卡组)
-	GALAXY_LOCATION_BASIC_DECK = LOCATION_DECK
-
-	--手牌区 (Hand Cards)
-	GALAXY_LOCATION_HAND_CARDS = LOCATION_HAND
-
-	--单位区 (Unit Zone - 原怪兽区)
-	GALAXY_LOCATION_UNIT_ZONE = LOCATION_MZONE
-
-	--支援区 (Support Zone - 原魔陷区)
-	GALAXY_LOCATION_SUPPORT_ZONE = LOCATION_SZONE
-
-	--弃牌区 (Discard Pile - 原墓地)
-	GALAXY_LOCATION_DISCARD = LOCATION_GRAVE
-
-	--游戏外 (Exiled - 原除外区)
-	GALAXY_LOCATION_EXILED = LOCATION_REMOVED
-
-	--特殊卡组 (Special Deck - 原额外卡组)
-	GALAXY_LOCATION_SPECIAL_DECK = LOCATION_EXTRA
-end
-
---卡片类型术语映射 (Card Type Terminology)
-if _G then
-	--单位 (Unit - 原怪兽)
-	GALAXY_TYPE_UNIT = TYPE_MONSTER
-
-	--支援 (Support - 原魔法)
-	GALAXY_TYPE_SUPPORT = TYPE_SPELL
-
-	--战术 (Tactics - 原陷阱)
-	GALAXY_TYPE_TACTICS = TYPE_TRAP
-
-	--一般 (General - 原通常)
-	GALAXY_TYPE_GENERAL = TYPE_NORMAL
-
-	--部队 (Forces - 原效果)
-	GALAXY_TYPE_FORCES = TYPE_EFFECT
-
-	--大型 (Large - 原融合)
-	GALAXY_TYPE_LARGE = TYPE_FUSION
-
-	--设施 (Facility - 原永续)
-	GALAXY_TYPE_FACILITY = TYPE_CONTINUOUS
-
-	--区域 (Area - 原场地)
-	GALAXY_TYPE_AREA = TYPE_FIELD
-
-	--强化 (Enhancement - 原装备)
-	GALAXY_TYPE_ENHANCEMENT = TYPE_EQUIP
-
-	--快速 (Quick - 原速攻)
-	GALAXY_TYPE_QUICK = TYPE_QUICK
-
-	--反制 (Counter - 原反击)
-	GALAXY_TYPE_COUNTER = TYPE_COUNTER
-end
-
-
---Galaxy术语映射系统 (Galaxy Terminology Mapping)
-if Duel then
-
-	--特性(属性)术语映射 (Attribute/Property Terminology)
-	--地→军团 (Earth → Legion)
-	GALAXY_PROPERTY_LEGION = ATTRIBUTE_EARTH
-	--水→舰队 (Water → Fleet)
-	GALAXY_PROPERTY_FLEET = ATTRIBUTE_WATER
-	--炎→空间站 (Fire → Station)
-	GALAXY_PROPERTY_STATION = ATTRIBUTE_FIRE
-	--风→星港 (Wind → Starport)
-	GALAXY_PROPERTY_STARPORT = ATTRIBUTE_WIND
-	--光→指挥官 (Light → Commander)
-	GALAXY_PROPERTY_COMMANDER = ATTRIBUTE_LIGHT
-
-	--类别(种族)术语映射 (Race/Category Terminology)
-	--战士→人类 (Warrior → Human)
-	GALAXY_CATEGORY_HUMAN = RACE_WARRIOR
-	--兽→哺乳类 (Beast → Mammal)
-	GALAXY_CATEGORY_MAMMAL = RACE_BEAST
-	--恐龙→爬行类 (Dinosaur → Reptile)
-	GALAXY_CATEGORY_REPTILE = RACE_DINOSAUR
-	--鸟兽→鸟类 (Winged Beast → Avian)
-	GALAXY_CATEGORY_AVIAN = RACE_WINDBEAST
-	--昆虫→节肢类 (Insect → Arthropod)
-	GALAXY_CATEGORY_ARTHROPOD = RACE_INSECT
-	--海龙→软体类 (Sea Serpent → Mollusk)
-	GALAXY_CATEGORY_MOLLUSK = RACE_SEASERPENT
-	--爬虫类→真菌类 (Reptile → Fungal)
-	GALAXY_CATEGORY_FUNGAL = RACE_REPTILE
-	--不死→死灵 (Zombie → Undead)
-	GALAXY_CATEGORY_UNDEAD = RACE_ZOMBIE
-	--雷→极光 (Thunder → Aurora)
-	GALAXY_CATEGORY_AURORA = RACE_THUNDER
-
-	--语义化别名函数 (Semantic Alias Functions)
-	Card.IsGalaxyProperty = Card.IsAttribute  -- 检查特性 (原属性)
-	Card.IsGalaxyCategory = Card.IsRace       -- 检查类别 (原种族)
-end
-
---为陷阱卡添加手卡发动功能
-function Galaxy.AddTrapHandActivateToCard(c)
-	if not Galaxy.IsGalaxyDuel() or not Galaxy.TRAP_HAND_ACTIVATE then return end
-	if not c or not c:IsType(TYPE_TRAP) then return end
-
-	--添加手卡发动效果
-	local e1=Effect.CreateEffect(c)
-	e1:SetDescription(aux.Stringid(c:GetCode(),0))
-	e1:SetType(EFFECT_TYPE_SINGLE)
-	e1:SetCode(EFFECT_TRAP_ACT_IN_HAND)
-	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
-	c:RegisterEffect(e1)
-end
-
---为怪兽卡添加守备力作为生命值系统
-function Galaxy.AddDefenseAsHPToCard(c)
-	if not Galaxy.IsGalaxyDuel() or not Galaxy.DEFENSE_AS_HP then return end
-	if not c or not c:IsType(TYPE_MONSTER) then return end
-
-	--完全禁止战斗破坏
-	local e1=Effect.CreateEffect(c)
-	e1:SetType(EFFECT_TYPE_SINGLE)
-	e1:SetCode(EFFECT_INDESTRUCTABLE_BATTLE)
-	e1:SetValue(1)
-	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
-	c:RegisterEffect(e1)
-
-	--伤害步骤结束时处理守备力减少（仅怪兽对怪兽战斗）
-	local e3=Effect.CreateEffect(c)
-	e3:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_F)
-	e3:SetCode(EVENT_DAMAGE_STEP_END)
-	e3:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
-	e3:SetCondition(Galaxy.DefenseHPReductionCondition)
-	e3:SetOperation(Galaxy.ReduceDefenseHP)
-	c:RegisterEffect(e3)
-
-	--守备力为0时自动破坏
-	local e4=Effect.CreateEffect(c)
-	e4:SetType(EFFECT_TYPE_SINGLE)
-	e4:SetProperty(EFFECT_FLAG_SINGLE_RANGE+EFFECT_FLAG_CANNOT_DISABLE)
-	e4:SetRange(LOCATION_MZONE)
-	e4:SetCode(EFFECT_SELF_DESTROY)
-	e4:SetCondition(Galaxy.DefenseZeroCondition)
-	c:RegisterEffect(e4)
-end
-
---伤害步骤结束时处理守备力减少
-function Galaxy.ReduceDefenseHP(e,tp,eg,ep,ev,re,r,rp)
-	local c = e:GetHandler()
-	if not c:IsRelateToEffect(e) or not c:IsLocation(LOCATION_MZONE) then return end
-
-	local attacker = Duel.GetAttacker()
-	local target = Duel.GetAttackTarget()
-
-	local opponent
-	local opponent_atk
-
-	--判断自己是攻击方还是被攻击方，获取对方的攻击力
-	if c == attacker then
-		opponent = target
-		opponent_atk = target:GetAttack()
-	elseif c == target then
-		opponent = attacker
-		opponent_atk = attacker:GetAttack()
-	else
-		return
-	end
-
-	local damage = -opponent_atk  -- 负数表示减少
-
-	--使用UPDATE_DEFENSE减少守备力
-	local e1=Effect.CreateEffect(c)
-	e1:SetType(EFFECT_TYPE_SINGLE)
-	e1:SetCode(EFFECT_UPDATE_DEFENSE)
-	e1:SetValue(damage)
-	e1:SetReset(RESET_EVENT+RESETS_STANDARD)
-	c:RegisterEffect(e1)
-
-end
-
---守备力减少的触发条件（仅怪兽对怪兽战斗时）
-function Galaxy.DefenseHPReductionCondition(e,tp,eg,ep,ev,re,r,rp)
-	--首先检查基本的伤害步骤条件
-	if not aux.dsercon(e,tp,eg,ep,ev,re,r,rp) then return false end
-	
-	--检查是否为怪兽对怪兽战斗
-	local attacker = Duel.GetAttacker()
-	local target = Duel.GetAttackTarget()
-	
-	--如果是直接攻击玩家，target为nil，不触发守备力减少
-	if not attacker or not target then return false end
-	if not attacker:IsType(TYPE_MONSTER) or not target:IsType(TYPE_MONSTER) then return false end
-	
-	--确认当前怪兽参与了战斗
-	local c = e:GetHandler()
-	return c == attacker or c == target
-end
-
---守备力为0时的自动破坏条件
-function Galaxy.DefenseZeroCondition(e)
-	local c = e:GetHandler()
-	return c:GetDefense() <= 0
-end
-
-
---为怪兽卡添加条件性无战斗伤害效果（仅怪兽对怪兽）
-function Galaxy.AddNoBattleDamageToCard(c)
-	if not Galaxy.IsGalaxyDuel() then return end
-	if not c or not c:IsType(TYPE_MONSTER) then return end
-
-	--条件性效果：仅在怪兽对怪兽战斗时不造成战斗伤害
-	local e1=Effect.CreateEffect(c)
-	e1:SetType(EFFECT_TYPE_SINGLE)
-	e1:SetCode(EFFECT_NO_BATTLE_DAMAGE)
-	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
-	e1:SetCondition(Galaxy.MonsterVsMonsterCondition)
-	c:RegisterEffect(e1)
-
-	--条件性效果：仅在怪兽对怪兽战斗时避免战斗伤害
-	local e2=Effect.CreateEffect(c)
-	e2:SetType(EFFECT_TYPE_SINGLE)
-	e2:SetCode(EFFECT_AVOID_BATTLE_DAMAGE)
-	e2:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
-	e2:SetCondition(Galaxy.MonsterVsMonsterCondition)
-	e2:SetValue(1)
-	c:RegisterEffect(e2)
-end
-
---条件：仅在怪兽对怪兽战斗时生效
-function Galaxy.MonsterVsMonsterCondition(e)
-	local c = e:GetHandler()
-	local attacker = Duel.GetAttacker()
-	local target = Duel.GetAttackTarget()
-
-	-- 如果没有攻击目标，说明是直接攻击玩家，不阻止伤害
-	if not target then return false end
-
-	-- 只有在怪兽对怪兽战斗时才阻止伤害
-	return (c == attacker or c == target) and target:IsType(TYPE_MONSTER)
-end
-
---==============================================
--- Galaxy函数别名系统 (Galaxy Function Aliases)
---==============================================
--- 为原版YGO Lua函数提供更符合Galaxy规则语义的别名
--- 使代码更易读和理解，更好地体现Galaxy游戏机制
-
---special summon = 部署
---lp基本分 = 影响力
-
---卡片生命值系统 (Card HP System)
---基于Galaxy规则：守备力作为生命值
-if Card then
-	--获取当前生命值 (Get current HP)
-	Card.GetHp = Card.GetDefense
-
-	--获取基础生命值 (Get base HP)
-	Card.GetBaseHp = Card.GetBaseDefense
-
-	--检查生命值 (Check HP)
-	Card.IsHp = Card.IsDefense
-
-	--检查生命值范围 (Check HP range)
-	Card.IsHpAbove = Card.IsDefenseAbove
-	Card.IsHpBelow = Card.IsDefenseBelow
-
-	--获取原始生命值 (Get original HP)
-	Card.GetOriginalHp = Card.GetOriginalDefense
-end
-
---卡片补给代价系统 (Card Supply Cost System)
---基于Galaxy规则：等级作为召唤代价
-if Card then
-	--获取补给代价 (Get supply cost)
-	Card.GetSupplyCost = Card.GetLevel
-
-	--检查补给代价 (Check supply cost)
-	Card.IsSupplyCost = Card.IsLevel
-
-	--检查代价范围 (Check cost range)
-	Card.IsSupplyCostAbove = Card.IsLevelAbove
-	Card.IsSupplyCostBelow = Card.IsLevelBelow
-end
-
+--]]
