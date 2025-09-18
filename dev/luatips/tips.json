@@ -627,6 +627,177 @@
             }
         ]
     },
+    "GetHp": {
+        "function": [
+            {
+                "name": "Card.GetHp(Card c)",
+                "return": "int",
+                "desc": "Galaxy函数别名：返回卡片 c 的当前生命值(守备力)  \n等同于 Card.GetDefense(c)  \n"
+            }
+        ]
+    },
+    "GetBaseHp": {
+        "function": [
+            {
+                "name": "Card.GetBaseHp(Card c)",
+                "return": "int",
+                "desc": "Galaxy函数别名：返回卡片 c 的基础生命值(原本守备力)  \n等同于 Card.GetBaseDefense(c)  \n"
+            }
+        ]
+    },
+    "GetOriginalHp": {
+        "function": [
+            {
+                "name": "Card.GetOriginalHp(Card c)",
+                "return": "int",
+                "desc": "Galaxy函数别名：返回卡片 c 的原始生命值  \n等同于 Card.GetOriginalDefense(c)  \n"
+            }
+        ]
+    },
+    "IsHp": {
+        "function": [
+            {
+                "name": "Card.IsHp(Card c, int hp[, int hp2,...])",
+                "return": "bool",
+                "desc": "Galaxy函数别名：检查卡片 c 的生命值是否是指定值  \n等同于 Card.IsDefense(c, hp[, hp2,...])  \n"
+            }
+        ]
+    },
+    "IsHpAbove": {
+        "function": [
+            {
+                "name": "Card.IsHpAbove(Card c, int hp)",
+                "return": "bool",
+                "desc": "Galaxy函数别名：检查卡片 c 的生命值是否在指定值以上  \n等同于 Card.IsDefenseAbove(c, hp)  \n"
+            }
+        ]
+    },
+    "IsHpBelow": {
+        "function": [
+            {
+                "name": "Card.IsHpBelow(Card c, int hp)",
+                "return": "bool",
+                "desc": "Galaxy函数别名：检查卡片 c 的生命值是否在指定值以下  \n等同于 Card.IsDefenseBelow(c, hp)  \n"
+            }
+        ]
+    },
+    "GetSupplyCost": {
+        "function": [
+            {
+                "name": "Card.GetSupplyCost(Card c)",
+                "return": "int",
+                "desc": "Galaxy函数别名：返回卡片 c 的补给代价(等级)  \n等同于 Card.GetLevel(c)  \n"
+            }
+        ]
+    },
+    "IsSupplyCost": {
+        "function": [
+            {
+                "name": "Card.IsSupplyCost(Card c, int cost[, int cost2,...])",
+                "return": "bool",
+                "desc": "Galaxy函数别名：检查卡片 c 的补给代价是否是指定值  \n等同于 Card.IsLevel(c, cost[, cost2,...])  \n"
+            }
+        ]
+    },
+    "IsSupplyCostAbove": {
+        "function": [
+            {
+                "name": "Card.IsSupplyCostAbove(Card c, int cost)",
+                "return": "bool",
+                "desc": "Galaxy函数别名：检查卡片 c 的补给代价是否在指定值以上  \n等同于 Card.IsLevelAbove(c, cost)  \n"
+            }
+        ]
+    },
+    "IsSupplyCostBelow": {
+        "function": [
+            {
+                "name": "Card.IsSupplyCostBelow(Card c, int cost)",
+                "return": "bool",
+                "desc": "Galaxy函数别名：检查卡片 c 的补给代价是否在指定值以下  \n等同于 Card.IsLevelBelow(c, cost)  \n"
+            }
+        ]
+    },
+    "IsAlive": {
+        "function": [
+            {
+                "name": "Card.IsAlive(Card c)",
+                "return": "bool",
+                "desc": "Galaxy便捷函数：检查卡片是否存活(生命值>0)  \nfunction Card:IsAlive() return self:GetHp() > 0 end  \n"
+            }
+        ]
+    },
+    "IsNearDeath": {
+        "function": [
+            {
+                "name": "Card.IsNearDeath(Card c)",
+                "return": "bool",
+                "desc": "Galaxy便捷函数：检查卡片是否濒死(生命值≤25%基础值)  \nfunction Card:IsNearDeath() return self:GetHp() <= (self:GetBaseHp() * 0.25) end  \n"
+            }
+        ]
+    },
+    "CanAffordSummon": {
+        "function": [
+            {
+                "name": "Card.CanAffordSummon(Card c, int tp)",
+                "return": "bool",
+                "desc": "Galaxy便捷函数：检查是否可以支付召唤代价  \nfunction Card:CanAffordSummon(tp) return Galaxy.CheckCost(tp, self:GetSupplyCost()) end  \n"
+            }
+        ]
+    },
+    "CanActivateFromHand": {
+        "function": [
+            {
+                "name": "Card.CanActivateFromHand(Card c)",
+                "return": "bool",
+                "desc": "Galaxy便捷函数：检查陷阱是否可以从手卡发动  \nfunction Card:CanActivateFromHand() return self:IsType(TYPE_TRAP) and Galaxy.TRAP_HAND_ACTIVATE end  \n"
+            }
+        ]
+    },
+    "IsUnit": {
+        "function": [
+            {
+                "name": "Card.IsUnit(Card c)",
+                "return": "bool",
+                "desc": "Galaxy术语函数：检查是否为单位卡(怪兽)  \nfunction Card:IsUnit() return self:IsType(GALAXY_TYPE_UNIT) end  \n"
+            }
+        ]
+    },
+    "IsSupport": {
+        "function": [
+            {
+                "name": "Card.IsSupport(Card c)",
+                "return": "bool",
+                "desc": "Galaxy术语函数：检查是否为支援卡(魔法)  \nfunction Card:IsSupport() return self:IsType(GALAXY_TYPE_SUPPORT) end  \n"
+            }
+        ]
+    },
+    "IsTactics": {
+        "function": [
+            {
+                "name": "Card.IsTactics(Card c)",
+                "return": "bool",
+                "desc": "Galaxy术语函数：检查是否为战术卡(陷阱)  \nfunction Card:IsTactics() return self:IsType(GALAXY_TYPE_TACTICS) end  \n"
+            }
+        ]
+    },
+    "IsInDiscardPile": {
+        "function": [
+            {
+                "name": "Card.IsInDiscardPile(Card c)",
+                "return": "bool",
+                "desc": "Galaxy术语函数：检查是否在弃牌区(墓地)  \nfunction Card:IsInDiscardPile() return self:IsLocation(GALAXY_LOCATION_DISCARD) end  \n"
+            }
+        ]
+    },
+    "IsExiled": {
+        "function": [
+            {
+                "name": "Card.IsExiled(Card c)",
+                "return": "bool",
+                "desc": "Galaxy术语函数：检查是否被游戏外(除外)  \nfunction Card:IsExiled() return self:IsLocation(GALAXY_LOCATION_EXILED) end  \n"
+            }
+        ]
+    },
     "GetPreviousCodeOnField": {
         "function": [
             {
@@ -3577,6 +3748,78 @@
                 "name": "Duel.GetTurnPlayer()",
                 "return": "int",
                 "desc": "返回当前的回合玩家  \n"
+            }
+        ]
+    },
+    "IsOpponentTurn": {
+        "function": [
+            {
+                "name": "Duel.IsOpponentTurn(int tp)",
+                "return": "bool",
+                "desc": "Galaxy便捷函数：检查是否为对方回合  \nfunction Duel.IsOpponentTurn(tp) return Duel.GetTurnPlayer() ~= tp end  \n"
+            }
+        ]
+    },
+    "IsOwnTurn": {
+        "function": [
+            {
+                "name": "Duel.IsOwnTurn(int tp)",
+                "return": "bool",
+                "desc": "Galaxy便捷函数：检查是否为己方回合  \nfunction Duel.IsOwnTurn(tp) return Duel.GetTurnPlayer() == tp end  \n"
+            }
+        ]
+    },
+    "HasEnoughSupply": {
+        "function": [
+            {
+                "name": "Duel.HasEnoughSupply(int tp, int cost)",
+                "return": "bool",
+                "desc": "Galaxy便捷函数：检查玩家是否有足够补给  \nfunction Duel.HasEnoughSupply(tp, cost) return Galaxy.CheckCost(tp, cost) end  \n"
+            }
+        ]
+    },
+    "GetAliveMonsterCount": {
+        "function": [
+            {
+                "name": "Duel.GetAliveMonsterCount(int tp[, int loc1=LOCATION_MZONE, int loc2=0])",
+                "return": "int",
+                "desc": "Galaxy便捷函数：获取场上存活怪兽数量  \nfunction Duel.GetAliveMonsterCount(tp, loc1, loc2) return Duel.GetMatchingGroupCount(Card.IsAlive, tp, loc1 or LOCATION_MZONE, loc2 or 0, nil) end  \n"
+            }
+        ]
+    },
+    "IsSupplyPhase": {
+        "function": [
+            {
+                "name": "Duel.IsSupplyPhase()",
+                "return": "bool",
+                "desc": "Galaxy术语函数：检查是否为补给阶段(抽卡阶段)  \nfunction Duel.IsSupplyPhase() return Duel.GetCurrentPhase() == GALAXY_PHASE_SUPPLY end  \n"
+            }
+        ]
+    },
+    "IsDeployPhase": {
+        "function": [
+            {
+                "name": "Duel.IsDeployPhase()",
+                "return": "bool",
+                "desc": "Galaxy术语函数：检查是否为部署阶段(主要阶段1)  \nfunction Duel.IsDeployPhase() return Duel.GetCurrentPhase() == GALAXY_PHASE_DEPLOY end  \n"
+            }
+        ]
+    },
+    "IsCombatPhase": {
+        "function": [
+            {
+                "name": "Duel.IsCombatPhase()",
+                "return": "bool",
+                "desc": "Galaxy术语函数：检查是否为交战阶段(战斗阶段)  \nfunction Duel.IsCombatPhase() return Duel.GetCurrentPhase() == GALAXY_PHASE_COMBAT end  \n"
+            }
+        ]
+    },
+    "IsOrganizePhase": {
+        "function": [
+            {
+                "name": "Duel.IsOrganizePhase()",
+                "return": "bool",
+                "desc": "Galaxy术语函数：检查是否为整备阶段(主要阶段2)  \nfunction Duel.IsOrganizePhase() return Duel.GetCurrentPhase() == GALAXY_PHASE_ORGANIZE end  \n"
             }
         ]
     },

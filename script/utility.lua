@@ -1999,6 +1999,8 @@ Galaxy.NO_SET_SPELL_TRAP = true
 Galaxy.DEFENSE_AS_HP = true
 Galaxy.NO_MONSTER_BATTLE_DAMAGE = true
 Galaxy.SUMMON_TURN_CANNOT_ATTACK = true  --召唤回合不能攻击
+Galaxy.TRAP_OPPONENT_TURN_ONLY = true  --陷阱卡只能在对方回合发动
+Galaxy.TRAP_HAND_ACTIVATE = true  --陷阱卡可以从手卡发动
 
 --补给代价系统配置
 Galaxy.USE_COST_SYSTEM = true
@@ -2258,6 +2260,181 @@ function Galaxy.AddNoCoverSetToCard(c)
 	c:RegisterEffect(e1)
 end
 
+--为陷阱卡添加只能在对方回合发动的限制
+function Galaxy.AddTrapOpponentTurnOnlyToCard(c)
+	if not Galaxy.IsGalaxyDuel() or not Galaxy.TRAP_OPPONENT_TURN_ONLY then return end
+	if not c or not c:IsType(TYPE_TRAP) then return end
+
+	--添加只能在对方回合发动的限制条件
+	--这将在卡片的发动检查中被调用
+	local e1=Effect.CreateEffect(c)
+	e1:SetType(EFFECT_TYPE_SINGLE)
+	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
+	e1:SetCode(EFFECT_CANNOT_TRIGGER)
+	e1:SetCondition(Galaxy.TrapOpponentTurnCondition)
+	c:RegisterEffect(e1)
+end
+
+--陷阱卡对方回合限制条件
+function Galaxy.TrapOpponentTurnCondition(e)
+	local tp = e:GetHandlerPlayer()
+	--当前是己方回合时，陷阱卡不能发动
+	return Duel.GetTurnPlayer() == tp
+end
+
+--==============================================
+-- Galaxy术语映射系统 (Galaxy Terminology Mapping)
+--==============================================
+-- 为YGO常量提供更符合Galaxy Card Game术语的别名
+-- 基于 dev/docs/gcg_Glossary.md 中的术语对照表
+-- 使用Galaxy前缀保持项目命名一致性
+
+--游戏阶段术语映射 (Game Phase Terminology)
+if _G then
+	--补给阶段 (Supply Phase - 原抽卡阶段)
+	GALAXY_PHASE_SUPPLY = PHASE_DRAW
+
+	--战备阶段 (Preparation Phase - 原准备阶段)
+	GALAXY_PHASE_PREPARATION = PHASE_STANDBY
+
+	--部署阶段 (Deploy Phase - 原主要阶段1)
+	GALAXY_PHASE_DEPLOY = PHASE_MAIN1
+
+	--交战阶段 (Combat Phase - 原战斗阶段)
+	GALAXY_PHASE_COMBAT = PHASE_BATTLE
+
+	--整备阶段 (Organize Phase - 原主要阶段2)
+	GALAXY_PHASE_ORGANIZE = PHASE_MAIN2
+
+	--休整阶段 (Rest Phase - 原结束阶段)
+	GALAXY_PHASE_REST = PHASE_END
+end
+
+--位置术语映射 (Location Terminology)
+if _G then
+	--基本卡组 (Basic Deck - 原主卡组)
+	GALAXY_LOCATION_BASIC_DECK = LOCATION_DECK
+
+	--手牌区 (Hand Cards)
+	GALAXY_LOCATION_HAND_CARDS = LOCATION_HAND
+
+	--单位区 (Unit Zone - 原怪兽区)
+	GALAXY_LOCATION_UNIT_ZONE = LOCATION_MZONE
+
+	--支援区 (Support Zone - 原魔陷区)
+	GALAXY_LOCATION_SUPPORT_ZONE = LOCATION_SZONE
+
+	--弃牌区 (Discard Pile - 原墓地)
+	GALAXY_LOCATION_DISCARD = LOCATION_GRAVE
+
+	--游戏外 (Exiled - 原除外区)
+	GALAXY_LOCATION_EXILED = LOCATION_REMOVED
+
+	--特殊卡组 (Special Deck - 原额外卡组)
+	GALAXY_LOCATION_SPECIAL_DECK = LOCATION_EXTRA
+end
+
+--卡片类型术语映射 (Card Type Terminology)
+if _G then
+	--单位 (Unit - 原怪兽)
+	GALAXY_TYPE_UNIT = TYPE_MONSTER
+
+	--支援 (Support - 原魔法)
+	GALAXY_TYPE_SUPPORT = TYPE_SPELL
+
+	--战术 (Tactics - 原陷阱)
+	GALAXY_TYPE_TACTICS = TYPE_TRAP
+
+	--一般 (General - 原通常)
+	GALAXY_TYPE_GENERAL = TYPE_NORMAL
+
+	--部队 (Forces - 原效果)
+	GALAXY_TYPE_FORCES = TYPE_EFFECT
+
+	--大型 (Large - 原融合)
+	GALAXY_TYPE_LARGE = TYPE_FUSION
+
+	--设施 (Facility - 原永续)
+	GALAXY_TYPE_FACILITY = TYPE_CONTINUOUS
+
+	--区域 (Area - 原场地)
+	GALAXY_TYPE_AREA = TYPE_FIELD
+
+	--强化 (Enhancement - 原装备)
+	GALAXY_TYPE_ENHANCEMENT = TYPE_EQUIP
+
+	--快速 (Quick - 原速攻)
+	GALAXY_TYPE_QUICK = TYPE_QUICK
+
+	--反制 (Counter - 原反击)
+	GALAXY_TYPE_COUNTER = TYPE_COUNTER
+end
+
+--Galaxy便捷检查函数 (Galaxy Convenience Functions)
+if Card then
+	--检查是否为单位卡 (Check if unit card)
+	function Card:IsUnit()
+		return self:IsType(GALAXY_TYPE_UNIT)
+	end
+
+	--检查是否为支援卡 (Check if support card)
+	function Card:IsSupport()
+		return self:IsType(GALAXY_TYPE_SUPPORT)
+	end
+
+	--检查是否为战术卡 (Check if tactics card)
+	function Card:IsTactics()
+		return self:IsType(GALAXY_TYPE_TACTICS)
+	end
+
+	--检查是否在弃牌区 (Check if in discard pile)
+	function Card:IsInDiscardPile()
+		return self:IsLocation(GALAXY_LOCATION_DISCARD)
+	end
+
+	--检查是否被游戏外 (Check if exiled)
+	function Card:IsExiled()
+		return self:IsLocation(GALAXY_LOCATION_EXILED)
+	end
+end
+
+--阶段检查函数 (Phase Check Functions)
+if Duel then
+	--检查是否为补给阶段 (Check if supply phase)
+	function Duel.IsSupplyPhase()
+		return Duel.GetCurrentPhase() == GALAXY_PHASE_SUPPLY
+	end
+
+	--检查是否为部署阶段 (Check if deploy phase)
+	function Duel.IsDeployPhase()
+		return Duel.GetCurrentPhase() == GALAXY_PHASE_DEPLOY
+	end
+
+	--检查是否为交战阶段 (Check if combat phase)
+	function Duel.IsCombatPhase()
+		return Duel.GetCurrentPhase() == GALAXY_PHASE_COMBAT
+	end
+
+	--检查是否为整备阶段 (Check if organize phase)
+	function Duel.IsOrganizePhase()
+		return Duel.GetCurrentPhase() == GALAXY_PHASE_ORGANIZE
+	end
+end
+
+--为陷阱卡添加手卡发动功能
+function Galaxy.AddTrapHandActivateToCard(c)
+	if not Galaxy.IsGalaxyDuel() or not Galaxy.TRAP_HAND_ACTIVATE then return end
+	if not c or not c:IsType(TYPE_TRAP) then return end
+
+	--添加手卡发动效果
+	local e1=Effect.CreateEffect(c)
+	e1:SetDescription(aux.Stringid(c:GetCode(),0))
+	e1:SetType(EFFECT_TYPE_SINGLE)
+	e1:SetCode(EFFECT_TRAP_ACT_IN_HAND)
+	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
+	c:RegisterEffect(e1)
+end
+
 --为怪兽卡添加守备力作为生命值系统
 function Galaxy.AddDefenseAsHPToCard(c)
 	if not Galaxy.IsGalaxyDuel() or not Galaxy.DEFENSE_AS_HP then return end
@@ -2402,5 +2579,99 @@ function Galaxy.ApplyRulesToCard(c)
 	elseif c:IsType(TYPE_SPELL) or c:IsType(TYPE_TRAP) then
 		Galaxy.AddNoCoverSetToCard(c) --禁止覆盖放置
 		--Galaxy.AddActivateCostToCard(c) --添加发动代价（暂时禁用）
+		if c:IsType(TYPE_TRAP) then
+			Galaxy.AddTrapOpponentTurnOnlyToCard(c) --陷阱卡只能在对方回合发动
+			Galaxy.AddTrapHandActivateToCard(c) --陷阱卡可以从手卡发动
+		end
+	end
+end
+
+--==============================================
+-- Galaxy函数别名系统 (Galaxy Function Aliases)
+--==============================================
+-- 为原版YGO Lua函数提供更符合Galaxy规则语义的别名
+-- 使代码更易读和理解，更好地体现Galaxy游戏机制
+
+--卡片生命值系统 (Card HP System)
+--基于Galaxy规则：守备力作为生命值
+if Card then
+	--获取当前生命值 (Get current HP)
+	Card.GetHp = Card.GetDefense
+
+	--获取基础生命值 (Get base HP)
+	Card.GetBaseHp = Card.GetBaseDefense
+
+	--检查生命值 (Check HP)
+	Card.IsHp = Card.IsDefense
+
+	--检查生命值范围 (Check HP range)
+	Card.IsHpAbove = Card.IsDefenseAbove
+	Card.IsHpBelow = Card.IsDefenseBelow
+
+	--获取原始生命值 (Get original HP)
+	Card.GetOriginalHp = Card.GetOriginalDefense
+end
+
+--卡片补给代价系统 (Card Supply Cost System)
+--基于Galaxy规则：等级作为召唤代价
+if Card then
+	--获取补给代价 (Get supply cost)
+	Card.GetSupplyCost = Card.GetLevel
+
+	--检查补给代价 (Check supply cost)
+	Card.IsSupplyCost = Card.IsLevel
+
+	--检查代价范围 (Check cost range)
+	Card.IsSupplyCostAbove = Card.IsLevelAbove
+	Card.IsSupplyCostBelow = Card.IsLevelBelow
+end
+
+--Galaxy便捷函数 (Galaxy Convenience Functions)
+if Card then
+	--检查卡片是否存活 (Check if card is alive)
+	function Card:IsAlive()
+		return self:GetHp() > 0
+	end
+
+	--检查卡片是否濒死 (Check if card is near death)
+	function Card:IsNearDeath()
+		return self:GetHp() <= (self:GetBaseHp() * 0.25)
+	end
+
+	--检查是否可以支付召唤代价 (Check if can afford summon cost)
+	function Card:CanAffordSummon(tp)
+		if not Galaxy.IsGalaxyDuel() then return true end
+		return Galaxy.CheckCost(tp, self:GetSupplyCost())
+	end
+
+	--检查陷阱是否可以从手卡发动 (Check if trap can activate from hand)
+	function Card:CanActivateFromHand()
+		return self:IsType(TYPE_TRAP) and Galaxy.IsGalaxyDuel() and Galaxy.TRAP_HAND_ACTIVATE
+	end
+end
+
+--决斗便捷函数 (Duel Convenience Functions)
+if Duel then
+	--检查玩家是否有足够补给 (Check if player has enough supply)
+	function Duel.HasEnoughSupply(tp, cost)
+		if not Galaxy.IsGalaxyDuel() then return true end
+		return Galaxy.CheckCost(tp, cost)
+	end
+
+	--获取场上存活怪兽数量 (Get alive monster count)
+	function Duel.GetAliveMonsterCount(tp, loc1, loc2)
+		loc1 = loc1 or LOCATION_MZONE
+		loc2 = loc2 or 0
+		return Duel.GetMatchingGroupCount(function(c) return c:IsAlive() end, tp, loc1, loc2, nil)
+	end
+
+	--检查是否为对方回合 (Check if opponent's turn)
+	function Duel.IsOpponentTurn(tp)
+		return Duel.GetTurnPlayer() ~= tp
+	end
+
+	--检查是否为己方回合 (Check if own turn)
+	function Duel.IsOwnTurn(tp)
+		return Duel.GetTurnPlayer() == tp
 	end
 end

@@ -93,6 +93,15 @@ end
 - **Mechanics**: No normal summon, unlimited special summons from hand
 - **Implementation**: `EFFECT_SPSUMMON_PROC` replaces normal summon
 
+#### 8. Trap Card Rules
+- **Opponent Turn Only**: Trap cards can only be activated during opponent's turn
+- **Hand Activation**: All trap cards can be activated directly from hand
+- **Implementation**:
+  ```lua
+  EFFECT_CANNOT_TRIGGER + condition check (Duel.GetTurnPlayer() == tp)
+  EFFECT_TRAP_ACT_IN_HAND for all trap cards
+  ```
+
 ### Usage Pattern
 ```lua
 function c12345678.initial_effect(c)
@@ -117,6 +126,8 @@ Galaxy.NO_COVER_SUMMON = true
 Galaxy.DEFENSE_AS_HP = true
 Galaxy.NO_MONSTER_BATTLE_DAMAGE = true
 Galaxy.SUMMON_TURN_CANNOT_ATTACK = true
+Galaxy.TRAP_OPPONENT_TURN_ONLY = true  -- Trap cards opponent turn only
+Galaxy.TRAP_HAND_ACTIVATE = true       -- Trap cards hand activation
 Galaxy.USE_COST_SYSTEM = true
 Galaxy.MONSTER_SUMMON_COST = true
 Galaxy.SPELL_TRAP_COST = false  -- Temporarily disabled
@@ -157,6 +168,146 @@ Duel.AddSupply(tp, 3)  -- Can exceed max
 Duel.AddMaxSupply(tp, 1)
 ```
 
+## Galaxy Function Aliases
+
+Galaxy provides semantic aliases for YGO Lua functions to better match the game rules and improve code readability.
+
+### Card HP System (Defense → HP)
+```lua
+-- Original YGO functions → Galaxy aliases
+card:GetDefense()       → card:GetHp()          -- Current HP
+card:GetBaseDefense()   → card:GetMaxHp()       -- Max HP
+card:SetDefense(val)    → card:SetHp(val)       -- Set HP
+card:IsDefense(val)     → card:IsHp(val)        -- Check HP
+card:GetOriginalDefense() → card:GetOriginalHp() -- Original max HP
+```
+
+### Card Supply Cost System (Level → Cost)
+```lua
+-- Original YGO functions → Galaxy aliases
+card:GetLevel()         → card:GetSupplyCost()     -- Summon cost
+card:IsLevel(val)       → card:IsSupplyCost(val)   -- Check cost
+card:IsLevelAbove(val)  → card:IsSupplyCostAbove(val) -- Cost range
+card:IsLevelBelow(val)  → card:IsSupplyCostBelow(val) -- Cost range
+```
+
+### Galaxy Convenience Functions
+```lua
+-- Card status checks
+card:IsAlive()                -- HP > 0
+card:IsNearDeath()           -- HP ≤ 25% of max
+card:CanAffordSummon(tp)     -- Check supply cost
+card:CanActivateFromHand()   -- Trap hand activation check
+
+-- Duel utilities
+Duel.HasEnoughSupply(tp, cost)    -- Supply availability
+Duel.GetAliveMonsterCount(tp)     -- Living monsters count
+Duel.IsOpponentTurn(tp)           -- Turn check
+Duel.IsOwnTurn(tp)               -- Turn check
+```
+
+### Usage Examples
+```lua
+function c12345678.cost(e,tp,eg,ep,ev,re,r,rp,chk)
+    local c = e:GetHandler()
+    if chk==0 then
+        -- Using Galaxy aliases for better readability
+        return c:CanAffordSummon(tp) and Duel.IsOpponentTurn(tp)
+    end
+    Galaxy.PayCost(tp, c:GetSupplyCost())
+end
+
+function c12345678.condition(e,tp,eg,ep,ev,re,r,rp)
+    local c = e:GetHandler()
+    -- Check if card is alive and can activate from hand
+    return c:IsAlive() and c:CanActivateFromHand()
+end
+```
+
+## Galaxy Terminology Mapping
+
+Galaxy provides semantic constants and functions using GCG (Galaxy Card Game) terminology to improve code readability and match the game's theme.
+
+### Constants Mapping
+
+#### Phase Constants
+```lua
+-- Original YGO phases → Galaxy terminology
+GALAXY_PHASE_SUPPLY = PHASE_DRAW        -- 补给阶段(抽卡阶段)
+GALAXY_PHASE_PREPARATION = PHASE_STANDBY -- 战备阶段(准备阶段)
+GALAXY_PHASE_DEPLOY = PHASE_MAIN1        -- 部署阶段(主要阶段1)
+GALAXY_PHASE_COMBAT = PHASE_BATTLE       -- 交战阶段(战斗阶段)
+GALAXY_PHASE_ORGANIZE = PHASE_MAIN2      -- 整备阶段(主要阶段2)
+GALAXY_PHASE_REST = PHASE_END            -- 休整阶段(结束阶段)
+```
+
+#### Location Constants
+```lua
+-- Original YGO locations → Galaxy terminology
+GALAXY_LOCATION_BASIC_DECK = LOCATION_DECK     -- 基本卡组(主卡组)
+GALAXY_LOCATION_UNIT_ZONE = LOCATION_MZONE     -- 单位区(怪兽区)
+GALAXY_LOCATION_SUPPORT_ZONE = LOCATION_SZONE  -- 支援区(魔陷区)
+GALAXY_LOCATION_DISCARD = LOCATION_GRAVE       -- 弃牌区(墓地)
+GALAXY_LOCATION_EXILED = LOCATION_REMOVED      -- 游戏外(除外区)
+GALAXY_LOCATION_SPECIAL_DECK = LOCATION_EXTRA  -- 特殊卡组(额外卡组)
+```
+
+#### Type Constants
+```lua
+-- Original YGO types → Galaxy terminology
+GALAXY_TYPE_UNIT = TYPE_MONSTER      -- 单位(怪兽)
+GALAXY_TYPE_SUPPORT = TYPE_SPELL     -- 支援(魔法)
+GALAXY_TYPE_TACTICS = TYPE_TRAP      -- 战术(陷阱)
+GALAXY_TYPE_FORCES = TYPE_EFFECT     -- 部队(效果)
+GALAXY_TYPE_LARGE = TYPE_FUSION      -- 大型(融合)
+GALAXY_TYPE_FACILITY = TYPE_CONTINUOUS -- 设施(永续)
+GALAXY_TYPE_AREA = TYPE_FIELD        -- 区域(场地)
+GALAXY_TYPE_ENHANCEMENT = TYPE_EQUIP -- 强化(装备)
+```
+
+### Semantic Functions
+
+#### Card Type Checks
+```lua
+-- GCG terminology functions
+card:IsUnit()           -- 检查是否为单位卡(怪兽)
+card:IsSupport()        -- 检查是否为支援卡(魔法)
+card:IsTactics()        -- 检查是否为战术卡(陷阱)
+card:IsInDiscardPile()  -- 检查是否在弃牌区(墓地)
+card:IsExiled()         -- 检查是否被游戏外(除外)
+```
+
+#### Phase Checks
+```lua
+-- GCG phase checking functions
+Duel.IsSupplyPhase()    -- 检查是否为补给阶段
+Duel.IsDeployPhase()    -- 检查是否为部署阶段
+Duel.IsCombatPhase()    -- 检查是否为交战阶段
+Duel.IsOrganizePhase()  -- 检查是否为整备阶段
+```
+
+### Usage Examples
+```lua
+function c12345678.condition(e,tp,eg,ep,ev,re,r,rp)
+    local c = e:GetHandler()
+    -- Using GCG terminology for better game immersion
+    return c:IsTactics() and c:IsInDiscardPile() and
+           Duel.IsDeployPhase()
+end
+
+function c12345678.target(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
+    if chkc then return chkc:IsLocation(GALAXY_LOCATION_UNIT_ZONE) and
+                        chkc:IsType(GALAXY_TYPE_UNIT) end
+    if chk==0 then return Duel.IsExistingTarget(Card.IsUnit,tp,
+                                               GALAXY_LOCATION_UNIT_ZONE,
+                                               GALAXY_LOCATION_UNIT_ZONE,1,nil) end
+    Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TARGET)
+    Duel.SelectTarget(tp,Card.IsUnit,tp,
+                     GALAXY_LOCATION_UNIT_ZONE,
+                     GALAXY_LOCATION_UNIT_ZONE,1,1,nil)
+end
+```
+
 ## System Status
 - **Completion**: 100% - All core features implemented and tested
 - **Stability**: Production ready, no known crashes
@@ -168,3 +319,5 @@ Duel.AddMaxSupply(tp, 1)
 - `c7852878`: EVENT_DAMAGE_STEP_END + TRIGGER_F pattern
 - `c36553319`: EFFECT_SELF_DESTROY best practice
 - `c7171149`: Summon turn attack restriction
+- `c4408198`: Opponent turn only condition pattern (`Duel.GetTurnPlayer()~=tp`)
+- `c10000034`, `c10000035`: Trap hand activation examples (now using global rules)

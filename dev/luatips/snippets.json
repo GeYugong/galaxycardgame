@@ -4394,6 +4394,101 @@
         "description": "•Card.GetLevel(Card c)\n返回卡片 c 的当前等级  \n",
         "body": "GetLevel"
     },
+    "GetHp": {
+        "prefix": "GetHp",
+        "description": "•Card.GetHp(Card c) [Galaxy别名]\n返回卡片 c 的当前生命值(守备力)\n等同于 Card.GetDefense(c)",
+        "body": "GetHp"
+    },
+    "GetBaseHp": {
+        "prefix": "GetBaseHp",
+        "description": "•Card.GetBaseHp(Card c) [Galaxy别名]\n返回卡片 c 的基础生命值(原本守备力)\n等同于 Card.GetBaseDefense(c)",
+        "body": "GetBaseHp"
+    },
+    "GetSupplyCost": {
+        "prefix": "GetSupplyCost",
+        "description": "•Card.GetSupplyCost(Card c) [Galaxy别名]\n返回卡片 c 的补给代价(等级)\n等同于 Card.GetLevel(c)",
+        "body": "GetSupplyCost"
+    },
+    "IsAlive": {
+        "prefix": "IsAlive",
+        "description": "•Card.IsAlive(Card c) [Galaxy便捷函数]\n检查卡片是否存活(生命值>0)",
+        "body": "IsAlive"
+    },
+    "IsNearDeath": {
+        "prefix": "IsNearDeath",
+        "description": "•Card.IsNearDeath(Card c) [Galaxy便捷函数]\n检查卡片是否濒死(生命值≤25%基础值)",
+        "body": "IsNearDeath"
+    },
+    "CanAffordSummon": {
+        "prefix": "CanAffordSummon",
+        "description": "•Card.CanAffordSummon(Card c, int tp) [Galaxy便捷函数]\n检查是否可以支付召唤代价",
+        "body": "CanAffordSummon"
+    },
+    "CanActivateFromHand": {
+        "prefix": "CanActivateFromHand",
+        "description": "•Card.CanActivateFromHand(Card c) [Galaxy便捷函数]\n检查陷阱是否可以从手卡发动",
+        "body": "CanActivateFromHand"
+    },
+    "IsOpponentTurn": {
+        "prefix": "IsOpponentTurn",
+        "description": "•Duel.IsOpponentTurn(int tp) [Galaxy便捷函数]\n检查是否为对方回合",
+        "body": "IsOpponentTurn"
+    },
+    "IsOwnTurn": {
+        "prefix": "IsOwnTurn",
+        "description": "•Duel.IsOwnTurn(int tp) [Galaxy便捷函数]\n检查是否为己方回合",
+        "body": "IsOwnTurn"
+    },
+    "HasEnoughSupply": {
+        "prefix": "HasEnoughSupply",
+        "description": "•Duel.HasEnoughSupply(int tp, int cost) [Galaxy便捷函数]\n检查玩家是否有足够补给",
+        "body": "HasEnoughSupply"
+    },
+    "IsUnit": {
+        "prefix": "IsUnit",
+        "description": "•Card.IsUnit(Card c) [Galaxy术语函数]\n检查是否为单位卡(怪兽)",
+        "body": "IsUnit"
+    },
+    "IsSupport": {
+        "prefix": "IsSupport",
+        "description": "•Card.IsSupport(Card c) [Galaxy术语函数]\n检查是否为支援卡(魔法)",
+        "body": "IsSupport"
+    },
+    "IsTactics": {
+        "prefix": "IsTactics",
+        "description": "•Card.IsTactics(Card c) [Galaxy术语函数]\n检查是否为战术卡(陷阱)",
+        "body": "IsTactics"
+    },
+    "IsInDiscardPile": {
+        "prefix": "IsInDiscardPile",
+        "description": "•Card.IsInDiscardPile(Card c) [Galaxy术语函数]\n检查是否在弃牌区(墓地)",
+        "body": "IsInDiscardPile"
+    },
+    "IsExiled": {
+        "prefix": "IsExiled",
+        "description": "•Card.IsExiled(Card c) [Galaxy术语函数]\n检查是否被游戏外(除外)",
+        "body": "IsExiled"
+    },
+    "IsSupplyPhase": {
+        "prefix": "IsSupplyPhase",
+        "description": "•Duel.IsSupplyPhase() [Galaxy术语函数]\n检查是否为补给阶段(抽卡阶段)",
+        "body": "IsSupplyPhase"
+    },
+    "IsDeployPhase": {
+        "prefix": "IsDeployPhase",
+        "description": "•Duel.IsDeployPhase() [Galaxy术语函数]\n检查是否为部署阶段(主要阶段1)",
+        "body": "IsDeployPhase"
+    },
+    "IsCombatPhase": {
+        "prefix": "IsCombatPhase",
+        "description": "•Duel.IsCombatPhase() [Galaxy术语函数]\n检查是否为交战阶段(战斗阶段)",
+        "body": "IsCombatPhase"
+    },
+    "IsOrganizePhase": {
+        "prefix": "IsOrganizePhase",
+        "description": "•Duel.IsOrganizePhase() [Galaxy术语函数]\n检查是否为整备阶段(主要阶段2)",
+        "body": "IsOrganizePhase"
+    },
     "GetRank": {
         "prefix": "GetRank",
         "description": "•Card.GetRank(Card c)\n返回卡片 c 的当前阶级  \n",
