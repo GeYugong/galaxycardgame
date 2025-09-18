@@ -2175,12 +2175,22 @@ Card.IsHpAbove = Card.IsDefenseAbove
 Card.IsHpBelow = Card.IsDefenseBelow
 Card.GetOriginalHp = Card.GetTextDefense
 
---获取/检查 补给代价
+--获取/检查 补给代价相关
 Card.GetSupplyCost = Card.GetLevel
 Card.IsSupplyCost = Card.IsLevel
 Card.IsSupplyCostAbove = Card.IsLevelAbove
 Card.IsSupplyCostBelow = Card.IsLevelBelow
 Card.GetOriginalSupplyCost = Card.GetOriginalLevel
+
+--获取/检查 特性(原属性)相关
+Card.IsGalaxyProperty = Card.IsAttribute
+Card.GetGalaxyProperty = Card.GetAttribute
+Card.GetOriginalGalaxyProperty = Card.GetOriginalAttribute
+
+--获取/检查 检查类别(原种族)相关
+Card.IsGalaxyCategory = Card.IsRace
+Card.GetGalaxyCategory = Card.GetRace
+Card.GetOriginalGalaxyCategory = Card.GetOriginalRace
 
 --[[
 --==============================================
@@ -2190,7 +2200,7 @@ Card.GetOriginalSupplyCost = Card.GetOriginalLevel
 --补给代价系统配置
 Galaxy.USE_COST_SYSTEM = true
 --Galaxy.SPELL_TRAP_COST = true   --魔法陷阱发动需要代价（暂时禁用）
-Galaxy.SPELL_TRAP_COST = false	--魔法陷阱发动暂时不需要代价
+Galaxy.SPELL_TRAP_COST = false  --魔法陷阱发动暂时不需要代价
 
 --补给代价系统基础函数
 Galaxy.DEFAULT_SUMMON_COST = 0   --怪兽召唤/特殊召唤默认代价（实际使用星级）
