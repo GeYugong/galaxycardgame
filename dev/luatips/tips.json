@@ -717,42 +717,6 @@
             }
         ]
     },
-    "IsAlive": {
-        "function": [
-            {
-                "name": "Card.IsAlive(Card c)",
-                "return": "bool",
-                "desc": "Galaxy便捷函数：检查卡片是否存活(生命值>0)  \nfunction Card:IsAlive() return self:GetHp() > 0 end  \n"
-            }
-        ]
-    },
-    "IsNearDeath": {
-        "function": [
-            {
-                "name": "Card.IsNearDeath(Card c)",
-                "return": "bool",
-                "desc": "Galaxy便捷函数：检查卡片是否濒死(生命值≤25%基础值)  \nfunction Card:IsNearDeath() return self:GetHp() <= (self:GetBaseHp() * 0.25) end  \n"
-            }
-        ]
-    },
-    "CanAffordSummon": {
-        "function": [
-            {
-                "name": "Card.CanAffordSummon(Card c, int tp)",
-                "return": "bool",
-                "desc": "Galaxy便捷函数：检查是否可以支付召唤代价  \nfunction Card:CanAffordSummon(tp) return Galaxy.CheckCost(tp, self:GetSupplyCost()) end  \n"
-            }
-        ]
-    },
-    "CanActivateFromHand": {
-        "function": [
-            {
-                "name": "Card.CanActivateFromHand(Card c)",
-                "return": "bool",
-                "desc": "Galaxy便捷函数：检查陷阱是否可以从手卡发动  \nfunction Card:CanActivateFromHand() return self:IsType(TYPE_TRAP) and Galaxy.TRAP_HAND_ACTIVATE end  \n"
-            }
-        ]
-    },
     "IsUnit": {
         "function": [
             {
@@ -1219,6 +1183,24 @@
                 "name": "Card.IsRace(Card c, int race)",
                 "return": "bool",
                 "desc": "检查卡片 c 是否属于种族 race  \n"
+            }
+        ]
+    },
+    "IsGalaxyCategory": {
+        "function": [
+            {
+                "name": "Card.IsGalaxyCategory(Card c, int category)",
+                "return": "bool",
+                "desc": "Galaxy术语别名：检查卡片 c 是否属于类别 category (原种族)  \nCard.IsGalaxyCategory = Card.IsRace  \n"
+            }
+        ]
+    },
+    "IsGalaxyProperty": {
+        "function": [
+            {
+                "name": "Card.IsGalaxyProperty(Card c, int property)",
+                "return": "bool",
+                "desc": "Galaxy术语别名：检查卡片 c 是否具有特性 property (原属性)  \nCard.IsGalaxyProperty = Card.IsAttribute  \n"
             }
         ]
     },
@@ -3748,78 +3730,6 @@
                 "name": "Duel.GetTurnPlayer()",
                 "return": "int",
                 "desc": "返回当前的回合玩家  \n"
-            }
-        ]
-    },
-    "IsOpponentTurn": {
-        "function": [
-            {
-                "name": "Duel.IsOpponentTurn(int tp)",
-                "return": "bool",
-                "desc": "Galaxy便捷函数：检查是否为对方回合  \nfunction Duel.IsOpponentTurn(tp) return Duel.GetTurnPlayer() ~= tp end  \n"
-            }
-        ]
-    },
-    "IsOwnTurn": {
-        "function": [
-            {
-                "name": "Duel.IsOwnTurn(int tp)",
-                "return": "bool",
-                "desc": "Galaxy便捷函数：检查是否为己方回合  \nfunction Duel.IsOwnTurn(tp) return Duel.GetTurnPlayer() == tp end  \n"
-            }
-        ]
-    },
-    "HasEnoughSupply": {
-        "function": [
-            {
-                "name": "Duel.HasEnoughSupply(int tp, int cost)",
-                "return": "bool",
-                "desc": "Galaxy便捷函数：检查玩家是否有足够补给  \nfunction Duel.HasEnoughSupply(tp, cost) return Galaxy.CheckCost(tp, cost) end  \n"
-            }
-        ]
-    },
-    "GetAliveMonsterCount": {
-        "function": [
-            {
-                "name": "Duel.GetAliveMonsterCount(int tp[, int loc1=LOCATION_MZONE, int loc2=0])",
-                "return": "int",
-                "desc": "Galaxy便捷函数：获取场上存活怪兽数量  \nfunction Duel.GetAliveMonsterCount(tp, loc1, loc2) return Duel.GetMatchingGroupCount(Card.IsAlive, tp, loc1 or LOCATION_MZONE, loc2 or 0, nil) end  \n"
-            }
-        ]
-    },
-    "IsSupplyPhase": {
-        "function": [
-            {
-                "name": "Duel.IsSupplyPhase()",
-                "return": "bool",
-                "desc": "Galaxy术语函数：检查是否为补给阶段(抽卡阶段)  \nfunction Duel.IsSupplyPhase() return Duel.GetCurrentPhase() == GALAXY_PHASE_SUPPLY end  \n"
-            }
-        ]
-    },
-    "IsDeployPhase": {
-        "function": [
-            {
-                "name": "Duel.IsDeployPhase()",
-                "return": "bool",
-                "desc": "Galaxy术语函数：检查是否为部署阶段(主要阶段1)  \nfunction Duel.IsDeployPhase() return Duel.GetCurrentPhase() == GALAXY_PHASE_DEPLOY end  \n"
-            }
-        ]
-    },
-    "IsCombatPhase": {
-        "function": [
-            {
-                "name": "Duel.IsCombatPhase()",
-                "return": "bool",
-                "desc": "Galaxy术语函数：检查是否为交战阶段(战斗阶段)  \nfunction Duel.IsCombatPhase() return Duel.GetCurrentPhase() == GALAXY_PHASE_COMBAT end  \n"
-            }
-        ]
-    },
-    "IsOrganizePhase": {
-        "function": [
-            {
-                "name": "Duel.IsOrganizePhase()",
-                "return": "bool",
-                "desc": "Galaxy术语函数：检查是否为整备阶段(主要阶段2)  \nfunction Duel.IsOrganizePhase() return Duel.GetCurrentPhase() == GALAXY_PHASE_ORGANIZE end  \n"
             }
         ]
     },
