@@ -1992,6 +1992,7 @@ function Import()
 		Galaxy.BattleSystem(c) --战斗系统
 		Galaxy.CannotSetST(c) --支援/战术通用
 		Galaxy.TacticsRule(c) --战术通用
+		Galaxy.FirstTurnToken(c) --对局开始后攻玩家给token
 	end
 	return self_table, self_code
 end
@@ -2177,6 +2178,43 @@ end
 --战术卡只能在对方回合发动
 function Galaxy.TacticsOppoOnly(e,c)
 	return c:IsType(GALAXY_TYPE_TACTICS) and Duel.GetTurnPlayer() == c:GetControler()
+end
+
+--对局开始后攻玩家抽完卡后给后攻玩家手牌中创建Token
+function Galaxy.FirstTurnToken(c)
+	local e1=Effect.CreateEffect(c)
+	e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
+	e1:SetCode(EVENT_ADJUST)
+	e1:SetCondition(Galaxy.FirstTurnTokenCondition)
+	e1:SetOperation(Galaxy.FirstTurnTokenOperation)
+	Duel.RegisterEffect(e1,0)
+end
+
+function Galaxy.FirstTurnTokenCondition(e,tp,eg,ep,ev,re,r,rp)
+	--检查是否为对局开始的第一个调整时点，且后攻玩家手牌中没有Token
+	return Duel.GetTurnCount()==1 and Duel.GetCurrentPhase()==PHASE_DRAW
+		and not Duel.IsExistingMatchingCard(Card.IsCode,1,LOCATION_HAND,0,1,nil,99999999)
+end
+
+function Galaxy.FirstTurnTokenOperation(e,tp,eg,ep,ev,re,r,rp)
+	--为后攻玩家(1)在手牌中创建Token(99999999)
+	local token=Duel.CreateToken(1,99999999)
+	if token then
+		Duel.SendtoHand(token,1,REASON_RULE)
+		Duel.ConfirmCards(0,token)
+
+		--添加离场后除外效果（已移至c99999999.lua中实现）
+		--local e1=Effect.CreateEffect(e:GetHandler())
+		--e1:SetDescription(3300)
+		--e1:SetType(EFFECT_TYPE_SINGLE)
+		--e1:SetCode(EFFECT_LEAVE_FIELD_REDIRECT)
+		--e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
+		--e1:SetReset(RESET_EVENT+0x47e0000)
+		--e1:SetValue(LOCATION_REMOVED)
+		--token:RegisterEffect(e1)
+	end
+	--重置效果，避免重复触发
+	e:Reset()
 end
 
 --==============================================
