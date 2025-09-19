@@ -2140,7 +2140,7 @@ function Galaxy.ProtectAttackLimit(e,c)
 	if c:IsHasEffect(EFFECT_PROTECT) then
 		return false
 	end
-	local tp = e:GetHandlerPlayer()
+	local tp = c:GetControler()
 	return Duel.IsExistingMatchingCard(Card.IsHasEffect,tp,LOCATION_MZONE,0,1,nil,EFFECT_PROTECT)
 end
 
