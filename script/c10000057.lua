@@ -2,7 +2,7 @@
 --临时单位。每自己回合补给阶段，消耗2点补给，如果无法支付则这张卡被破坏。
 local s, id = Import()
 function s.initial(c)
-	--每自己回合补给阶段消耗1点补给
+	--每自己回合补给阶段消耗2点补给
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_F)
