@@ -137,18 +137,11 @@ end
 
 ### Usage Pattern
 ```lua
-function c12345678.initial_effect(c)
-    -- Apply Galaxy rules
-    if Galaxy and Galaxy.ApplyRulesToCard then
-        Galaxy.ApplyRulesToCard(c)
-    end
-
-    -- Set custom costs if needed
-    if Galaxy and Galaxy.SetSummonCost then
-        Galaxy.SetSummonCost(c, 5) -- Custom cost
-    end
-
-    -- Original card effects...
+local s, id = Import()
+function s.initial(c)
+    -- Card effects implementation
+    -- Note: Galaxy rules are applied automatically
+    -- No need for manual Galaxy.ApplyRulesToCard calls
 end
 ```
 
@@ -205,12 +198,8 @@ Duel.AddMaxSupply(tp, 1)
 
 ### Protection Effect Implementation
 ```lua
-function c12345678.initial_effect(c)
-    -- Apply Galaxy rules first
-    if Galaxy and Galaxy.ApplyRulesToCard then
-        Galaxy.ApplyRulesToCard(c)
-    end
-
+local s, id = Import()
+function s.initial(c)
     -- Add protection effect
     local e1=Effect.CreateEffect(c)
     e1:SetType(EFFECT_TYPE_SINGLE)
