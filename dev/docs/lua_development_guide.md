@@ -159,7 +159,27 @@ e2:SetCode(EFFECT_UPDATE_DEFENSE)
 c:RegisterEffect(e2)
 ```
 
-### Taunt Monster
+### Protect Monster (Protection Effect)
+```lua
+-- c10000019: Protection effect - forces opponents to attack this monster first
+local e1=Effect.CreateEffect(c)
+e1:SetType(EFFECT_TYPE_SINGLE)
+e1:SetCode(EFFECT_PROTECT) -- Mark as protection monster (code 501)
+c:RegisterEffect(e1)
+-- Note: Attack targeting restriction is handled globally by Galaxy.BattleSystem()
+```
+
+### Rush Monster (Rush Effect)
+```lua
+-- c10000018: Rush effect - can attack in the same turn it's deployed
+local e1=Effect.CreateEffect(c)
+e1:SetType(EFFECT_TYPE_SINGLE)
+e1:SetCode(EFFECT_RUSH) -- Mark as rush monster (code 500)
+c:RegisterEffect(e1)
+-- Note: Overrides Galaxy.SUMMON_TURN_CANNOT_ATTACK global restriction
+```
+
+### Legacy Taunt Monster (Pre-protection system)
 ```lua
 -- c10000019: Force opponents to attack this monster
 local e1=Effect.CreateEffect(c)
@@ -226,6 +246,14 @@ SetCondition(condition_function)
 ```
 
 ## Important Technical Fixes
+
+### Galaxy Protection System (Latest Update)
+- **EFFECT_PROTECT constant**: New effect code `501` for protection marking
+- **EFFECT_RUSH constant**: New effect code `500` for deployment turn attack ability
+- **System-level implementation**: Protection handled globally by `Galaxy.BattleSystem()`
+- **Attack priority logic**: `Galaxy.ProtectAttackLimit()` forces opponents to attack protected units first
+- **API changes**: `Galaxy.CheckCost/PayCost` replaced with `Duel.CheckSupplyCost/PaySupplyCost`
+- **Bug fix**: Corrected player detection in protection logic (`c:GetControler()` vs `e:GetHandlerPlayer()`)
 
 ### Galaxy Attack Restriction Configuration
 - Added `Galaxy.SUMMON_TURN_CANNOT_ATTACK` toggle

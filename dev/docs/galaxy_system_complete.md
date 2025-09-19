@@ -30,8 +30,13 @@ Duel.CheckSupplyCost(player, cost)  -- Check if enough supply
 Duel.PaySupplyCost(player, cost)    -- Pay supply cost
 ```
 
-#### Galaxy Simplified APIs (script/utility.lua)
+#### Galaxy APIs (Updated)
 ```lua
+-- New direct API (recommended)
+Duel.CheckSupplyCost(tp, cost)  -- Check if enough supply
+Duel.PaySupplyCost(tp, cost)    -- Pay supply cost
+
+-- Legacy Galaxy wrapper (deprecated)
 Galaxy.CheckCost(tp, cost)  -- Calls Duel.CheckSupplyCost
 Galaxy.PayCost(tp, cost)    -- Calls Duel.PaySupplyCost
 ```
@@ -41,10 +46,10 @@ Galaxy.PayCost(tp, cost)    -- Calls Duel.PaySupplyCost
 function card_cost(e,tp,eg,ep,ev,re,r,rp,chk)
     if chk==0 then
         -- chk==0: Check phase - verify conditions only
-        return Galaxy.CheckCost(tp, 3)
+        return Duel.CheckSupplyCost(tp, 3)
     end
     -- chk!=0: Execute phase - actually pay the cost
-    Galaxy.PayCost(tp, 3)
+    Duel.PaySupplyCost(tp, 3)
 end
 ```
 
@@ -102,6 +107,34 @@ end
   EFFECT_TRAP_ACT_IN_HAND for all trap cards
   ```
 
+#### 9. Protection System
+- **Mechanics**: Units with protection effect must be attacked first by opponents
+- **System-level**: Globally enforced through `Galaxy.BattleSystem()`
+- **Implementation**:
+  ```lua
+  -- Mark unit with protection
+  local e1=Effect.CreateEffect(c)
+  e1:SetType(EFFECT_TYPE_SINGLE)
+  e1:SetCode(EFFECT_PROTECT) -- Custom effect code 501
+  c:RegisterEffect(e1)
+
+  -- Global attack restriction (handled by Galaxy.BattleSystem)
+  EFFECT_CANNOT_SELECT_BATTLE_TARGET + Galaxy.ProtectAttackLimit
+  ```
+
+#### 10. Rush System
+- **Mechanics**: Units with rush effect can attack in the same turn they are deployed
+- **Implementation**:
+  ```lua
+  -- Mark unit with rush
+  local e1=Effect.CreateEffect(c)
+  e1:SetType(EFFECT_TYPE_SINGLE)
+  e1:SetCode(EFFECT_RUSH) -- Custom effect code 500
+  c:RegisterEffect(e1)
+
+  -- Overrides global summon turn attack restriction
+  ```
+
 ### Usage Pattern
 ```lua
 function c12345678.initial_effect(c)
@@ -132,6 +165,8 @@ Galaxy.USE_COST_SYSTEM = true
 Galaxy.MONSTER_SUMMON_COST = true
 Galaxy.SPELL_TRAP_COST = false  -- Temporarily disabled
 Galaxy.SPECIAL_SUMMON_ONLY = true
+Galaxy.PROTECTION_SYSTEM = true         -- Protection effect system
+Galaxy.PROTECT_ATTACK_PRIORITY = true   -- Force attack protected units first
 ```
 
 ## Common Templates
@@ -141,21 +176,21 @@ Galaxy.SPECIAL_SUMMON_ONLY = true
 function c12345678.spsummon_condition(e,c)
     if c==nil then return true end
     local tp=c:GetControler()
-    return Galaxy.CheckCost(tp, c:GetLevel())
+    return Duel.CheckSupplyCost(tp, c:GetLevel())
 end
 
 function c12345678.spsummon_cost(e,tp,eg,ep,ev,re,r,rp,chk)
     local c=e:GetHandler()
-    if chk==0 then return Galaxy.CheckCost(tp, c:GetLevel()) end
-    Galaxy.PayCost(tp, c:GetLevel())
+    if chk==0 then return Duel.CheckSupplyCost(tp, c:GetLevel()) end
+    Duel.PaySupplyCost(tp, c:GetLevel())
 end
 ```
 
 ### Effect Activation Cost
 ```lua
 function c12345678.activate_cost(e,tp,eg,ep,ev,re,r,rp,chk)
-    if chk==0 then return Galaxy.CheckCost(tp, 2) end
-    Galaxy.PayCost(tp, 2)
+    if chk==0 then return Duel.CheckSupplyCost(tp, 2) end
+    Duel.PaySupplyCost(tp, 2)
 end
 ```
 
@@ -166,6 +201,30 @@ Duel.AddSupply(tp, 3)  -- Can exceed max
 
 -- Permanent max increase
 Duel.AddMaxSupply(tp, 1)
+```
+
+### Protection Effect Implementation
+```lua
+function c12345678.initial_effect(c)
+    -- Apply Galaxy rules first
+    if Galaxy and Galaxy.ApplyRulesToCard then
+        Galaxy.ApplyRulesToCard(c)
+    end
+
+    -- Add protection effect
+    local e1=Effect.CreateEffect(c)
+    e1:SetType(EFFECT_TYPE_SINGLE)
+    e1:SetCode(EFFECT_PROTECT) -- Mark as protection unit (code 501)
+    c:RegisterEffect(e1)
+
+    -- Add rush effect (optional - allows attack in deployment turn)
+    local e2=Effect.CreateEffect(c)
+    e2:SetType(EFFECT_TYPE_SINGLE)
+    e2:SetCode(EFFECT_RUSH) -- Mark as rush unit (code 500)
+    c:RegisterEffect(e2)
+
+    -- Other card effects...
+end
 ```
 
 ## Galaxy Function Aliases
