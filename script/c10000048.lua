@@ -45,10 +45,20 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 
 	local token=Duel.CreateToken(tp,10000041)
 	if Duel.SpecialSummon(token,0,tp,tp,false,false,POS_FACEUP_ATTACK)>0 then
+		--保护效果
 		local e1=Effect.CreateEffect(e:GetHandler())
 		e1:SetType(EFFECT_TYPE_SINGLE)
 		e1:SetCode(EFFECT_PROTECT)
 		e1:SetReset(RESET_EVENT+RESETS_STANDARD)
 		token:RegisterEffect(e1,true)
+
+		--显示保护效果提示
+		local e2=Effect.CreateEffect(e:GetHandler())
+		e2:SetDescription(aux.Stringid(id,1))
+		e2:SetType(EFFECT_TYPE_SINGLE)
+		e2:SetProperty(EFFECT_FLAG_SINGLE_RANGE+EFFECT_FLAG_CLIENT_HINT)
+		e2:SetRange(GALAXY_LOCATION_UNIT_ZONE)
+		e2:SetReset(RESET_EVENT+RESETS_STANDARD)
+		token:RegisterEffect(e2,true)
 	end
 end

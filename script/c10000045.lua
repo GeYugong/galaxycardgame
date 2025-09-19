@@ -47,12 +47,21 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 		e3:SetDescription(aux.Stringid(id,0))
 		e3:SetCategory(CATEGORY_DEFCHANGE)
 		e3:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_F)
-		e3:SetCode(EVENT_DAMAGE_STEP_END)
+		e3:SetCode(EVENT_PRE_DAMAGE_CALCULATE)
 		e3:SetCondition(s.damcon)
 		e3:SetTarget(s.damtg)
 		e3:SetOperation(s.damop)
 		e3:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END)
 		tc:RegisterEffect(e3)
+
+		--显示进化效果提示
+		local e4=Effect.CreateEffect(e:GetHandler())
+		e4:SetDescription(aux.Stringid(id,1))
+		e4:SetType(EFFECT_TYPE_SINGLE)
+		e4:SetProperty(EFFECT_FLAG_SINGLE_RANGE+EFFECT_FLAG_CLIENT_HINT)
+		e4:SetRange(GALAXY_LOCATION_UNIT_ZONE)
+		e4:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END)
+		tc:RegisterEffect(e4)
 
 		tc=g:GetNext()
 	end
@@ -61,7 +70,7 @@ end
 function s.damcon(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	local bc=c:GetBattleTarget()
-	return aux.dsercon(e,tp,eg,ep,ev,re,r,rp) and bc and bc:IsControler(1-tp)
+	return bc and bc:IsControler(1-tp)
 end
 
 function s.damtg(e,tp,eg,ep,ev,re,r,rp,chk)
