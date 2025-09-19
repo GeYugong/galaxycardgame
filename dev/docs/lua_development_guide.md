@@ -287,6 +287,94 @@ end)
 4. **Systematic thinking**: Consider effect impact on entire game system
 5. **Defensive programming**: Add necessary safety checks and error handling
 
+## Galaxy Semantic Programming Guidelines
+
+### Core Principle
+When writing GCG card scripts, prioritize Galaxy semantic terms over original YGO terms to improve code readability and game immersion.
+
+### Term Mapping Table
+
+#### Basic Types
+```lua
+TYPE_MONSTER → GALAXY_TYPE_UNIT       // 单位
+TYPE_SPELL   → GALAXY_TYPE_SUPPORT    // 支援
+TYPE_TRAP    → GALAXY_TYPE_TACTICS    // 战术
+```
+
+#### Location Areas
+```lua
+LOCATION_HAND   → GALAXY_LOCATION_HAND_CARDS   // 手牌区
+LOCATION_MZONE  → GALAXY_LOCATION_UNIT_ZONE    // 单位区
+LOCATION_SZONE  → GALAXY_LOCATION_SUPPORT_ZONE // 支援区
+LOCATION_GRAVE  → GALAXY_LOCATION_DISCARD      // 弃牌区
+LOCATION_DECK   → GALAXY_LOCATION_BASIC_DECK   // 基本卡组
+```
+
+#### Race/Categories
+```lua
+RACE_INSECT   → GALAXY_CATEGORY_ARTHROPOD  // 节肢类
+RACE_WARRIOR  → GALAXY_CATEGORY_HUMAN      // 人类
+RACE_BEAST    → GALAXY_CATEGORY_MAMMAL     // 哺乳类
+RACE_WINDBEAST → GALAXY_CATEGORY_AVIAN     // 鸟类
+```
+
+#### Function Calls
+```lua
+c:IsRace()      → c:IsGalaxyCategory()    // 检查类别
+c:IsAttribute() → c:IsGalaxyProperty()    // 检查特性
+```
+
+### Practical Examples
+```lua
+// ✅ Recommended: Using Galaxy semantic terms
+function s.filter(c)
+    return c:IsGalaxyCategory(GALAXY_CATEGORY_ARTHROPOD) and c:IsType(GALAXY_TYPE_UNIT)
+end
+
+function s.condition(e,tp,eg,ep,ev,re,r,rp)
+    return Duel.IsExistingMatchingCard(s.filter,tp,GALAXY_LOCATION_HAND_CARDS,0,1,nil)
+end
+
+// ❌ Avoid: Direct use of original YGO terms
+function s.filter(c)
+    return c:IsRace(RACE_INSECT) and c:IsType(TYPE_MONSTER)
+end
+```
+
+### Comment Terminology
+- 特殊召唤 → 部署 (Deployment)
+- 攻击力 → 战斗力 (Combat Power)
+- 守备力 → 生命值 (HP/Life Points)
+- 怪兽 → 单位 (Unit)
+- 魔法 → 支援 (Support)
+- 陷阱 → 战术 (Tactics)
+
+### Implementation Example
+```lua
+--幼虫工兵 (Larva Engineer)
+--部署时如果手牌中有其他节肢类单位，这张卡获得+1/+2（战斗力/生命值）
+local s, id = Import()
+function s.initial(c)
+    local e1=Effect.CreateEffect(c)
+    e1:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_F)
+    e1:SetCode(EVENT_SPSUMMON_SUCCESS)
+    e1:SetCondition(s.condition)
+    e1:SetOperation(s.operation)
+    c:RegisterEffect(e1)
+end
+
+function s.filter(c)
+    return c:IsGalaxyCategory(GALAXY_CATEGORY_ARTHROPOD) and c:IsType(GALAXY_TYPE_UNIT)
+end
+
+function s.condition(e,tp,eg,ep,ev,re,r,rp)
+    local c=e:GetHandler()
+    return Duel.IsExistingMatchingCard(s.filter,tp,LOCATION_HAND,0,1,c)
+end
+```
+
+This semantic system maintains YGOPro technical compatibility while creating a unique galaxy-themed gaming experience.
+
 ## Development Resources
 - **API documentation**: `ai/luatips/tips.json`
 - **Code snippets**: `ai/luatips/snippets.json`
