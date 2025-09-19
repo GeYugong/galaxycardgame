@@ -375,6 +375,33 @@ end
 
 This semantic system maintains YGOPro technical compatibility while creating a unique galaxy-themed gaming experience.
 
+## Galaxy Card Development Patterns
+
+### Advanced Implementation Techniques
+
+#### Synergy-Based Card Design
+- **Field monitoring**: Use `EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_F` for cross-card interactions
+- **Token ecosystem**: Central units spawn and manage related tokens (eggs→warriors)
+- **Dynamic scaling**: Stats based on other units present (`EFFECT_FLAG_SINGLE_RANGE`)
+
+#### Cost-Benefit Mechanics
+- **Risk-reward summoning**: Allow deployment with insufficient resources, apply penalties
+- **Resource conversion**: Transform HP to cards, supply to units
+- **Delayed consequences**: Use phase-based removal with `RESET_SELF_TURN,1`
+
+#### Battle Enhancement Systems
+- **Compound effects**: Combine stat boosts with triggered battle abilities
+- **HP manipulation**: Use `EFFECT_UPDATE_DEFENSE` with negative values for damage
+- **Complete lockdown**: Layer multiple disable effects for total control
+
+### Best Practices
+
+1. **Galaxy semantics**: Always use `GALAXY_*` constants for consistency
+2. **Synergy design**: Create meaningful interactions between related cards
+3. **Balanced costs**: Match powerful effects with appropriate supply requirements
+4. **Effect duration**: Choose permanent vs temporary effects appropriately
+5. **Safety checks**: Validate targets and conditions before applying effects
+
 ## Development Resources
 - **API documentation**: `ai/luatips/tips.json`
 - **Code snippets**: `ai/luatips/snippets.json`
