@@ -2,24 +2,20 @@
 local s, id = Import()
 function s.initial(c)
 	--这张卡可以向对方全部怪兽各做一次攻击。
-	--这张卡在自己补给8以上时才可以特殊召唤
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_SINGLE)
 	e1:SetCode(EFFECT_ATTACK_ALL)
 	e1:SetValue(1)
 	c:RegisterEffect(e1)
-
-	--设置额外特殊召唤条件
-	if Galaxy and Galaxy.SetExtraSpCondition then
-		Galaxy.SetExtraSpCondition(id, s.sp_extra_condition)
-	end
-
-	--应用Galaxy规则
-	if Galaxy and Galaxy.ApplyRulesToCard then
-		Galaxy.ApplyRulesToCard(c)
-	end
+	--这张卡在自己补给8以上时才可以特殊召唤
+	local e2=Effect.CreateEffect(c)
+	e2:SetType(EFFECT_TYPE_SINGLE)
+	e2:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
+	e2:SetCode(EFFECT_CANNOT_SPECIAL_SUMMON)
+	e2:SetCondition(s.con2)
+	c:RegisterEffect(e2)
 end
-function s.sp_extra_condition(e,c,tp)
-	--额外条件：补给必须≥8
-	return Duel.GetSupply(tp) >= 8
+--额外条件：补给必须 >= 8
+function s.con2(e)
+	return Duel.GetSupply(e:GetHandlerPlayer()) < 8
 end
