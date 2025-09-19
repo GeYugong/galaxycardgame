@@ -15,7 +15,7 @@
 #include <thread>
 #include <set>
 
-unsigned short PRO_VERSION = 0x1000;
+unsigned short PRO_VERSION = 0x1001;
 
 namespace ygo {
 
@@ -851,7 +851,7 @@ bool Game::Initialize() {
 	cbRace->setMaxSelectionRows(10);
 	cbRace->addItem(dataManager.GetSysString(1310), 0);
 	// 允许显示的种族系统字符串ID列表
-	std::set<int> allowedRaceIds = {1020, 1024, 1025, 1028, 1029, 1030, 1031, 1034, 1036, 1038, 1039};
+	std::set<int> allowedRaceIds = {1020, 1024, 1025, 1028, 1029, 1030, 1031, 1032, 1034, 1036, 1038, 1039};
 
 	for (int filter = 0; filter < RACES_COUNT; ++filter) {
 		unsigned int raceValue = 0x1U << filter;

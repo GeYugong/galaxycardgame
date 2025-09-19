@@ -1586,6 +1586,12 @@ void DeckBuilder::FilterCards() {
 			continue;
 		if(filter_marks && (data.link_marker & filter_marks) != filter_marks)
 			continue;
+		// 默认排除custom和TCG卡片，除非明确选择对应筛选（原来在filter_lm==0时会显示所有卡片包括custom和TCG）
+		if(filter_lm != 7 && filter_lm != 5 && (data.ot & AVAIL_CUSTOM) && !(data.ot & ~AVAIL_CUSTOM))
+			continue;
+		if(filter_lm != 5 && (data.ot & AVAIL_TCG) && !(data.ot & ~AVAIL_TCG))
+			continue;
+
 		if(filter_lm) {
 			if(filter_lm <= 3 && (!filterList->content.count(ptr->first) || filterList->content.at(ptr->first) != filter_lm - 1))
 				continue;
