@@ -14,14 +14,17 @@ function s.initial(c)
 	e1:SetCondition(s.splimcon)
 	c:RegisterEffect(e1)
 
-	-- 特殊召唤方式（自行部署）
+	-- 特殊召唤方式（从额外卡组特殊召唤）
 	local e2=Effect.CreateEffect(c)
+	e2:SetDescription(aux.Stringid(id,2))
 	e2:SetType(EFFECT_TYPE_FIELD)
 	e2:SetCode(EFFECT_SPSUMMON_PROC)
 	e2:SetProperty(EFFECT_FLAG_UNCOPYABLE)
 	e2:SetRange(LOCATION_EXTRA)
 	e2:SetCondition(s.spcon)
-	e2:SetCost(s.spcost)
+	e2:SetTarget(s.sptg)
+	e2:SetOperation(s.spop)
+	e2:SetValue(SUMMON_VALUE_SELF)
 	c:RegisterEffect(e2)
 
 	-- 4.自毁条件：当场上不存在"共振壳"或"高能区域"时破坏
@@ -77,18 +80,28 @@ function s.splimcon(e)
 	return s.check_support_exist(tp)
 end
 
--- 特殊召唤条件
+-- 特殊召唤条件：支援卡存在且有足够补给
 function s.spcon(e,c)
 	if c==nil then return true end
-	local tp=c:GetControler()
-	return s.check_support_exist(tp) and Duel.GetLocationCountFromEx(tp,tp,nil,c)>0
+	local tp = c:GetControler()
+	return s.check_support_exist(tp)
+		and Duel.GetLocationCountFromEx(tp,tp,nil,c)>0
+		and Duel.CheckSupplyCost(tp, c:GetLevel())
 end
 
--- 特殊召唤消耗（大型单位补给消耗）
-function s.spcost(e,tp,eg,ep,ev,re,r,rp,chk)
-	local c=e:GetHandler()
-	if chk==0 then return Duel.CheckSupplyCost(tp, c:GetLevel()) end
-	Duel.PaySupplyCost(tp, c:GetLevel())
+-- 特殊召唤目标
+function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk,c)
+	if chk==0 then return s.spcon(e,c) end
+	-- 在这里不执行操作，只是标记要支付的费用
+	local cost = c:GetLevel()
+	e:SetLabel(cost)
+	return true
+end
+
+-- 特殊召唤操作
+function s.spop(e,tp,eg,ep,ev,re,r,rp,c)
+	local cost = e:GetLabel()
+	Duel.PaySupplyCost(tp, cost)
 end
 
 -- 自毁条件：支援卡不存在
