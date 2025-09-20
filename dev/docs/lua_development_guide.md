@@ -159,7 +159,27 @@ e2:SetCode(EFFECT_UPDATE_DEFENSE)
 c:RegisterEffect(e2)
 ```
 
-### Taunt Monster
+### Protect Monster (Protection Effect)
+```lua
+-- c10000019: Protection effect - forces opponents to attack this monster first
+local e1=Effect.CreateEffect(c)
+e1:SetType(EFFECT_TYPE_SINGLE)
+e1:SetCode(EFFECT_PROTECT) -- Mark as protection monster (code 501)
+c:RegisterEffect(e1)
+-- Note: Attack targeting restriction is handled globally by Galaxy.BattleSystem()
+```
+
+### Rush Monster (Rush Effect)
+```lua
+-- c10000018: Rush effect - can attack in the same turn it's deployed
+local e1=Effect.CreateEffect(c)
+e1:SetType(EFFECT_TYPE_SINGLE)
+e1:SetCode(EFFECT_RUSH) -- Mark as rush monster (code 500)
+c:RegisterEffect(e1)
+-- Note: Overrides Galaxy.SUMMON_TURN_CANNOT_ATTACK global restriction
+```
+
+### Legacy Taunt Monster (Pre-protection system)
 ```lua
 -- c10000019: Force opponents to attack this monster
 local e1=Effect.CreateEffect(c)
@@ -227,6 +247,14 @@ SetCondition(condition_function)
 
 ## Important Technical Fixes
 
+### Galaxy Protection System (Latest Update)
+- **EFFECT_PROTECT constant**: New effect code `501` for protection marking
+- **EFFECT_RUSH constant**: New effect code `500` for deployment turn attack ability
+- **System-level implementation**: Protection handled globally by `Galaxy.BattleSystem()`
+- **Attack priority logic**: `Galaxy.ProtectAttackLimit()` forces opponents to attack protected units first
+- **API changes**: `Galaxy.CheckCost/PayCost` replaced with `Duel.CheckSupplyCost/PaySupplyCost`
+- **Bug fix**: Corrected player detection in protection logic (`c:GetControler()` vs `e:GetHandlerPlayer()`)
+
 ### Galaxy Attack Restriction Configuration
 - Added `Galaxy.SUMMON_TURN_CANNOT_ATTACK` toggle
 - Individual cards can override global setting
@@ -259,8 +287,174 @@ end)
 4. **Systematic thinking**: Consider effect impact on entire game system
 5. **Defensive programming**: Add necessary safety checks and error handling
 
+## Galaxy Semantic Programming Guidelines
+
+### Core Principle
+When writing GCG card scripts, prioritize Galaxy semantic terms over original YGO terms to improve code readability and game immersion.
+
+### Term Mapping Table
+
+#### Basic Types
+```lua
+TYPE_MONSTER → GALAXY_TYPE_UNIT       // 单位
+TYPE_SPELL   → GALAXY_TYPE_SUPPORT    // 支援
+TYPE_TRAP    → GALAXY_TYPE_TACTICS    // 战术
+```
+
+#### Location Areas
+```lua
+LOCATION_HAND   → GALAXY_LOCATION_HAND_CARDS   // 手牌区
+LOCATION_MZONE  → GALAXY_LOCATION_UNIT_ZONE    // 单位区
+LOCATION_SZONE  → GALAXY_LOCATION_SUPPORT_ZONE // 支援区
+LOCATION_GRAVE  → GALAXY_LOCATION_DISCARD      // 弃牌区
+LOCATION_DECK   → GALAXY_LOCATION_BASIC_DECK   // 基本卡组
+```
+
+#### Race/Categories
+```lua
+RACE_INSECT   → GALAXY_CATEGORY_ARTHROPOD  // 节肢类
+RACE_WARRIOR  → GALAXY_CATEGORY_HUMAN      // 人类
+RACE_BEAST    → GALAXY_CATEGORY_MAMMAL     // 哺乳类
+RACE_WINDBEAST → GALAXY_CATEGORY_AVIAN     // 鸟类
+```
+
+#### Function Calls
+```lua
+c:IsRace()      → c:IsGalaxyCategory()    // 检查类别
+c:IsAttribute() → c:IsGalaxyProperty()    // 检查特性
+```
+
+### Practical Examples
+```lua
+// ✅ Recommended: Using Galaxy semantic terms
+function s.filter(c)
+    return c:IsGalaxyCategory(GALAXY_CATEGORY_ARTHROPOD) and c:IsType(GALAXY_TYPE_UNIT)
+end
+
+function s.condition(e,tp,eg,ep,ev,re,r,rp)
+    return Duel.IsExistingMatchingCard(s.filter,tp,GALAXY_LOCATION_HAND_CARDS,0,1,nil)
+end
+
+// ❌ Avoid: Direct use of original YGO terms
+function s.filter(c)
+    return c:IsRace(RACE_INSECT) and c:IsType(TYPE_MONSTER)
+end
+```
+
+### Comment Terminology
+- 特殊召唤 → 部署 (Deployment)
+- 攻击力 → 战斗力 (Combat Power)
+- 守备力 → 生命值 (HP/Life Points)
+- 怪兽 → 单位 (Unit)
+- 魔法 → 支援 (Support)
+- 陷阱 → 战术 (Tactics)
+
+### Implementation Example
+```lua
+--幼虫工兵 (Larva Engineer)
+--部署时如果手牌中有其他节肢类单位，这张卡获得+1/+2（战斗力/生命值）
+local s, id = Import()
+function s.initial(c)
+    local e1=Effect.CreateEffect(c)
+    e1:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_F)
+    e1:SetCode(EVENT_SPSUMMON_SUCCESS)
+    e1:SetCondition(s.condition)
+    e1:SetOperation(s.operation)
+    c:RegisterEffect(e1)
+end
+
+function s.filter(c)
+    return c:IsGalaxyCategory(GALAXY_CATEGORY_ARTHROPOD) and c:IsType(GALAXY_TYPE_UNIT)
+end
+
+function s.condition(e,tp,eg,ep,ev,re,r,rp)
+    local c=e:GetHandler()
+    return Duel.IsExistingMatchingCard(s.filter,tp,LOCATION_HAND,0,1,c)
+end
+```
+
+This semantic system maintains YGOPro technical compatibility while creating a unique galaxy-themed gaming experience.
+
+## Galaxy Card Development Patterns
+
+### Advanced Implementation Techniques
+
+#### Synergy-Based Card Design
+- **Field monitoring**: Use `EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_F` for cross-card interactions
+- **Token ecosystem**: Central units spawn and manage related tokens (eggs→warriors)
+- **Dynamic scaling**: Stats based on other units present (`EFFECT_FLAG_SINGLE_RANGE`)
+
+#### Cost-Benefit Mechanics
+- **Risk-reward summoning**: Allow deployment with insufficient resources, apply penalties
+- **Resource conversion**: Transform HP to cards, supply to units
+- **Delayed consequences**: Use phase-based removal with `RESET_SELF_TURN,1`
+
+#### Battle Enhancement Systems
+- **Compound effects**: Combine stat boosts with triggered battle abilities
+- **HP manipulation**: Use `EFFECT_UPDATE_DEFENSE` with negative values for damage
+- **Complete lockdown**: Layer multiple disable effects for total control
+
+### Best Practices
+
+1. **Galaxy semantics**: Always use `GALAXY_*` constants for consistency
+2. **Synergy design**: Create meaningful interactions between related cards
+3. **Balanced costs**: Match powerful effects with appropriate supply requirements
+4. **Effect duration**: Choose permanent vs temporary effects appropriately
+5. **Safety checks**: Validate targets and conditions before applying effects
+
 ## Development Resources
 - **API documentation**: `ai/luatips/tips.json`
 - **Code snippets**: `ai/luatips/snippets.json`
 - **Reference examples**: `ai/examples/script/`
 - **Galaxy rules**: `script/utility.lua`
+
+## Latest Development Guidelines
+
+### Client Hint Usage Rules
+- **Card self effects**: Generally no client hints needed
+- **Summoned Tokens**: Only show hints for tokens with special effects
+- **Universal race/attribute**: Follow original implementations (usually no `EFFECT_FLAG_CLIENT_HINT`)
+- **Reference c11270236**: Standard pattern for `EFFECT_ADD_RACE/EFFECT_ADD_ATTRIBUTE`
+
+### Battle Timing Optimization
+```lua
+// ❌ Wrong: Using EVENT_DAMAGE_STEP_END for extra damage
+SetCode(EVENT_DAMAGE_STEP_END)
+
+// ✅ Correct: Using EVENT_PRE_DAMAGE_CALCULATE
+SetCode(EVENT_PRE_DAMAGE_CALCULATE)
+SetCondition(s.damcon) // No aux.dsercon needed
+```
+
+### Hand Monster Level Modification
+```lua
+// Reference: c64002884 pattern
+e1:SetReset(RESET_EVENT+RESETS_STANDARD-RESET_TOFIELD+RESET_PHASE+PHASE_END)
+```
+
+### First Turn Token Distribution
+- **Location**: utility.lua Galaxy global rules
+- **Timing**: `EVENT_ADJUST` in first turn draw phase
+- **Critical**: Must `e:Reset()` after operation to prevent repeated triggers
+- **Remove logic**: Implement in card script (c99999999), not system
+
+### Development Discipline
+- **Strict requirements**: Never add undescribed functionality
+- **Reference originals**: Always base on existing card patterns
+- **Avoid innovation**: Use verified API combinations
+
+## Key Development Notes
+
+### Counter System Best Practices
+- Use `AddCounter(type, count, true)` for individual addition with visual feedback
+- Use `Duel.IsCanRemoveCounter/RemoveCounter` APIs instead of manual selection
+- Reference: c56111151, c93332803
+
+### Galaxy System Integration
+- GCG auto-destroys units when HP ≤ 0, don't manually destroy
+- Use `GetHp()/GetMaxHp()` aliases for clarity
+- Use `CATEGORY_DEFCHANGE` for life changes, not `CATEGORY_RECOVER`
+- Use `GetLocationCountFromEx` for Extra Deck fusion monsters
+
+### High-Energy Counter Ecosystem Complete
+Nine-card synergy system spanning generation, consumption, and strategic effects.
