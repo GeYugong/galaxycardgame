@@ -407,3 +407,54 @@ This semantic system maintains YGOPro technical compatibility while creating a u
 - **Code snippets**: `ai/luatips/snippets.json`
 - **Reference examples**: `ai/examples/script/`
 - **Galaxy rules**: `script/utility.lua`
+
+## Latest Development Guidelines
+
+### Client Hint Usage Rules
+- **Card self effects**: Generally no client hints needed
+- **Summoned Tokens**: Only show hints for tokens with special effects
+- **Universal race/attribute**: Follow original implementations (usually no `EFFECT_FLAG_CLIENT_HINT`)
+- **Reference c11270236**: Standard pattern for `EFFECT_ADD_RACE/EFFECT_ADD_ATTRIBUTE`
+
+### Battle Timing Optimization
+```lua
+// ❌ Wrong: Using EVENT_DAMAGE_STEP_END for extra damage
+SetCode(EVENT_DAMAGE_STEP_END)
+
+// ✅ Correct: Using EVENT_PRE_DAMAGE_CALCULATE
+SetCode(EVENT_PRE_DAMAGE_CALCULATE)
+SetCondition(s.damcon) // No aux.dsercon needed
+```
+
+### Hand Monster Level Modification
+```lua
+// Reference: c64002884 pattern
+e1:SetReset(RESET_EVENT+RESETS_STANDARD-RESET_TOFIELD+RESET_PHASE+PHASE_END)
+```
+
+### First Turn Token Distribution
+- **Location**: utility.lua Galaxy global rules
+- **Timing**: `EVENT_ADJUST` in first turn draw phase
+- **Critical**: Must `e:Reset()` after operation to prevent repeated triggers
+- **Remove logic**: Implement in card script (c99999999), not system
+
+### Development Discipline
+- **Strict requirements**: Never add undescribed functionality
+- **Reference originals**: Always base on existing card patterns
+- **Avoid innovation**: Use verified API combinations
+
+## Key Development Notes
+
+### Counter System Best Practices
+- Use `AddCounter(type, count, true)` for individual addition with visual feedback
+- Use `Duel.IsCanRemoveCounter/RemoveCounter` APIs instead of manual selection
+- Reference: c56111151, c93332803
+
+### Galaxy System Integration
+- GCG auto-destroys units when HP ≤ 0, don't manually destroy
+- Use `GetHp()/GetMaxHp()` aliases for clarity
+- Use `CATEGORY_DEFCHANGE` for life changes, not `CATEGORY_RECOVER`
+- Use `GetLocationCountFromEx` for Extra Deck fusion monsters
+
+### High-Energy Counter Ecosystem Complete
+Nine-card synergy system spanning generation, consumption, and strategic effects.

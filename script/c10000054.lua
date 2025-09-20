@@ -42,7 +42,10 @@ function s.ctcon(e,tp,eg,ep,ev,re,r,rp)
 end
 
 function s.ctop(e,tp,eg,ep,ev,re,r,rp)
-	e:GetHandler():AddCounter(0x1041,1)
+	local ct=eg:FilterCount(s.ctfilter,nil)
+	if ct>0 then
+		e:GetHandler():AddCounter(0x1041,ct,true)
+	end
 end
 
 --召唤效果相关
