@@ -1986,14 +1986,13 @@ gal = Galaxy
 function Import()
 	self_table.initial_effect = function(c)
 		if c.initial then c.initial(c) end
-		if c:IsType(GALAXY_TYPE_UNIT) then
-			Galaxy.UnitRule(c) --单位通用
-		end
 		if Galaxy.GlobalRule then return end
 		Galaxy.GlobalRule = true
-		Galaxy.PlayerRule(c) --玩家规则
-		Galaxy.BattleRule(c) --战斗规则
-		Galaxy.TacticsRule(c)--战术规则
+		Galaxy.UnitRule(c) --单位通用
+		Galaxy.BattleSystem(c) --战斗系统
+		Galaxy.CannotSetST(c) --支援/战术通用
+		Galaxy.TacticsRule(c) --战术通用
+		Galaxy.FirstTurnToken(c) --对局开始后攻玩家给token
 	end
 	return self_table, self_code
 end
@@ -2001,32 +2000,38 @@ end
 --单位通用
 function Galaxy.UnitRule(c)
 	local property = EFFECT_FLAG_CANNOT_DISABLE + EFFECT_FLAG_UNCOPYABLE
-	--添加特殊召唤手续（强制攻击表示，包含代价检查）
+	--怪兽不能变为守备表示
 	local e1 = Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_FIELD)
-	e1:SetCode(EFFECT_SPSUMMON_PROC)
-	e1:SetProperty(property + EFFECT_FLAG_SPSUM_PARAM)
-	e1:SetRange(LOCATION_HAND)
-	e1:SetTargetRange(POS_FACEUP_ATTACK, 0)
-	e1:SetCondition(Galaxy.SummonCondition)
-	e1:SetOperation(Galaxy.SummonOperation)  --在这里支付代价
-	c:RegisterEffect(e1)
-	--生命为 0 时自动破坏
-	local e2 = Effect.CreateEffect(c)
-	e2:SetType(EFFECT_TYPE_SINGLE)
-	e2:SetProperty(property + EFFECT_FLAG_SINGLE_RANGE)
-	e2:SetRange(LOCATION_MZONE)
-	e2:SetCode(EFFECT_SELF_DESTROY)
-	e2:SetCondition(Galaxy.SelfDestroy)
-	c:RegisterEffect(e2)
-	--禁止战斗破坏
-	local e3 = Effect.CreateEffect(c)
-	e3:SetType(EFFECT_TYPE_SINGLE)
-	e3:SetProperty(property + EFFECT_FLAG_SINGLE_RANGE)
-	e3:SetRange(LOCATION_MZONE)
-	e3:SetCode(EFFECT_INDESTRUCTABLE_BATTLE)
-	e3:SetValue(1)
-	c:RegisterEffect(e3)
+	e1:SetCode(EFFECT_CANNOT_CHANGE_POSITION)
+	e1:SetProperty(property)
+	e1:SetTargetRange(LOCATION_MZONE, LOCATION_MZONE)
+	Duel.RegisterEffect(e1, 0)
+	--禁止盖放怪兽
+	local e2 = e1:Clone()
+	e2:SetCode(EFFECT_CANNOT_MSET)
+	e2:SetProperty(property + EFFECT_FLAG_PLAYER_TARGET)
+	e2:SetTargetRange(1, 1)
+	Duel.RegisterEffect(e2, 0)
+	--禁止通常召唤
+	local e3 = e2:Clone()
+	e3:SetCode(EFFECT_CANNOT_SUMMON)
+	Duel.RegisterEffect(e3, 0)
+	--添加特殊召唤手续（强制攻击表示，包含代价检查）
+	local e4 = Effect.CreateEffect(c)
+	e4:SetType(EFFECT_TYPE_FIELD)
+	e4:SetCode(EFFECT_SPSUMMON_PROC)
+	e4:SetProperty(EFFECT_FLAG_UNCOPYABLE + EFFECT_FLAG_SPSUM_PARAM)
+	e4:SetRange(LOCATION_HAND)
+	e4:SetTargetRange(POS_FACEUP_ATTACK, 0)
+	e4:SetCondition(Galaxy.SummonCondition)
+	e4:SetOperation(Galaxy.SummonOperation)  --在这里支付代价
+	local e5 = Effect.CreateEffect(c)
+	e5:SetType(EFFECT_TYPE_FIELD + EFFECT_TYPE_GRANT)
+	e5:SetTargetRange(LOCATION_HAND, LOCATION_HAND)
+	e5:SetProperty(property + EFFECT_FLAG_IGNORE_IMMUNE)
+	e5:SetLabelObject(e4)
+	Duel.RegisterEffect(e5, 0)
 end
 
 --特殊召唤条件：检查场地和代价是否足够
@@ -2043,70 +2048,56 @@ function Galaxy.SummonOperation(e,tp,eg,ep,ev,re,r,rp,c)
 	return true
 end
 
---生命值为 0 时的自动破坏条件
-function Galaxy.SelfDestroy(e)
-	return e:GetHandler():IsHpBelow(0)
-end
-
---玩家规则
-function Galaxy.PlayerRule(c)
-	local property = EFFECT_FLAG_CANNOT_DISABLE + EFFECT_FLAG_UNCOPYABLE
-	--怪兽不能变为守备表示
-	local e1 = Effect.CreateEffect(c)
-	e1:SetType(EFFECT_TYPE_FIELD)
-	e1:SetCode(EFFECT_CANNOT_CHANGE_POSITION)
-	e1:SetProperty(property)
-	e1:SetTargetRange(LOCATION_MZONE, LOCATION_MZONE)
-	Duel.RegisterEffect(e1, 0)
-	--禁止通常召唤
-	local e2 = e1:Clone()
-	e2:SetCode(EFFECT_CANNOT_SUMMON)
-	e2:SetProperty(property + EFFECT_FLAG_PLAYER_TARGET)
-	e2:SetTargetRange(1, 1)
-	Duel.RegisterEffect(e2, 0)
-	--禁止盖放怪兽
-	local e3 = e2:Clone()
-	e3:SetCode(EFFECT_CANNOT_MSET)
-	Duel.RegisterEffect(e3, 0)
-	--禁止盖放支援/战术卡
-	local e4 = e2:Clone()
-	e4:SetCode(EFFECT_CANNOT_SSET)
-	Duel.RegisterEffect(e4, 0)
-end
-
---战斗规则
-function Galaxy.BattleRule(c)
+--战斗系统
+function Galaxy.BattleSystem(c)
 	local property = EFFECT_FLAG_CANNOT_DISABLE + EFFECT_FLAG_UNCOPYABLE
 	--召唤回合不能攻击
 	local e1 = Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_FIELD)
 	e1:SetCode(EFFECT_CANNOT_ATTACK)
 	e1:SetProperty(property)
-	e1:SetTarget(Galaxy.SummonThisTurn)
 	e1:SetTargetRange(LOCATION_MZONE, LOCATION_MZONE)
+	e1:SetTarget(Galaxy.SummonThisTurn)
 	Duel.RegisterEffect(e1, 0)
-	--伤害步骤结束时处理降低怪兽生命
-	local e2 = Effect.CreateEffect(c)
-	e2:SetType(EFFECT_TYPE_FIELD + EFFECT_TYPE_CONTINUOUS)
-	e2:SetCode(EVENT_DAMAGE_STEP_END)
-	e2:SetProperty(property)
-	e2:SetCondition(Galaxy.ReduceHP)
+	--禁止战斗破坏
+	local e2 = e1:Clone()
+	e2:SetCode(EFFECT_INDESTRUCTABLE_BATTLE)
 	Duel.RegisterEffect(e2, 0)
-	--不造成战斗伤害
+	--伤害步骤结束时处理降低怪兽生命
 	local e3 = Effect.CreateEffect(c)
-	e3:SetType(EFFECT_TYPE_FIELD)
-	e3:SetCode(EFFECT_CHANGE_DAMAGE)
-	e3:SetProperty(property + EFFECT_FLAG_PLAYER_TARGET)
-	e3:SetTargetRange(1, 1)
-	e3:SetValue(Galaxy.ChangeBattleDamage)
+	e3:SetType(EFFECT_TYPE_FIELD + EFFECT_TYPE_CONTINUOUS)
+	e3:SetCode(EVENT_DAMAGE_STEP_END)
+	e3:SetProperty(property)
+	e3:SetCondition(Galaxy.ReduceHP)
 	Duel.RegisterEffect(e3, 0)
-	--优先选择有保护的单位攻击
+	--生命为 0 时自动破坏
 	local e4 = Effect.CreateEffect(c)
-	e4:SetType(EFFECT_TYPE_FIELD)
-	e4:SetCode(EFFECT_CANNOT_SELECT_BATTLE_TARGET)
-	e4:SetTargetRange(LOCATION_MZONE, LOCATION_MZONE)
-	e4:SetValue(Galaxy.ProtectAttackLimit)
-	Duel.RegisterEffect(e4, 0)
+	e4:SetType(EFFECT_TYPE_SINGLE)
+	e4:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
+	e4:SetRange(LOCATION_MZONE)
+	e4:SetCode(EFFECT_SELF_DESTROY)
+	e4:SetCondition(Galaxy.SelfDestroy)
+	local e5 = Effect.CreateEffect(c)
+	e5:SetType(EFFECT_TYPE_FIELD + EFFECT_TYPE_GRANT)
+	e5:SetTargetRange(LOCATION_MZONE, LOCATION_MZONE)
+	e5:SetProperty(property + EFFECT_FLAG_IGNORE_IMMUNE)
+	e5:SetLabelObject(e4)
+	Duel.RegisterEffect(e5, 0)
+	--不造成战斗伤害
+	local e6 = Effect.CreateEffect(c)
+	e6:SetType(EFFECT_TYPE_FIELD)
+	e6:SetCode(EFFECT_CHANGE_DAMAGE)
+	e6:SetProperty(property + EFFECT_FLAG_PLAYER_TARGET)
+	e6:SetTargetRange(1, 1)
+	e6:SetValue(Galaxy.ChangeBattleDamage)
+	Duel.RegisterEffect(e6, 0)
+	--优先选择有保护的单位攻击
+	local e7 = Effect.CreateEffect(c)
+	e7:SetType(EFFECT_TYPE_FIELD)
+	e7:SetCode(EFFECT_CANNOT_SELECT_BATTLE_TARGET)
+	e7:SetTargetRange(LOCATION_MZONE, LOCATION_MZONE)
+	e7:SetValue(Galaxy.ProtectAttackLimit)
+	Duel.RegisterEffect(e7, 0)
 end
 
 --在本回合召唤
@@ -2124,13 +2115,17 @@ function Galaxy.ReduceHP(e,tp,eg,ep,ev,re,r,rp)
 	e1:SetType(EFFECT_TYPE_SINGLE)
 	e1:SetCode(EFFECT_UPDATE_DEFENSE)
 	e1:SetValue(-defer:GetAttack())
-	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
 	e1:SetReset(RESET_EVENT+RESETS_STANDARD)
 	atker:RegisterEffect(e1)
 	local e2 = e1:Clone()
 	e2:SetValue(-atker:GetAttack())
 	defer:RegisterEffect(e2)
 	return false
+end
+
+--守备力为0时的自动破坏条件
+function Galaxy.SelfDestroy(e)
+	return e:GetHandler():GetDefense() <= 0
 end
 
 --不造成战斗伤害（如果有攻击目标，说明非直接攻击玩家，阻止伤害）
@@ -2150,7 +2145,17 @@ function Galaxy.ProtectAttackLimit(e,c)
 	return Duel.IsExistingMatchingCard(Card.IsHasEffect,tp,LOCATION_MZONE,0,1,nil,EFFECT_PROTECT)
 end
 
---战术规则
+--禁止盖放支援/战术卡
+function Galaxy.CannotSetST(c)
+	local e1 = Effect.CreateEffect(c)
+	e1:SetType(EFFECT_TYPE_FIELD)
+	e1:SetCode(EFFECT_CANNOT_SSET)
+	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE + EFFECT_FLAG_UNCOPYABLE + EFFECT_FLAG_PLAYER_TARGET)
+	e1:SetTargetRange(1, 1)
+	Duel.RegisterEffect(e1, 0)
+end
+
+--战术卡通用
 function Galaxy.TacticsRule(c)
 	local property = EFFECT_FLAG_CANNOT_DISABLE + EFFECT_FLAG_UNCOPYABLE
 	--可以从手卡发动
@@ -2173,6 +2178,43 @@ end
 --战术卡只能在对方回合发动
 function Galaxy.TacticsOppoOnly(e,c)
 	return c:IsType(GALAXY_TYPE_TACTICS) and Duel.GetTurnPlayer() == c:GetControler()
+end
+
+--对局开始后攻玩家抽完卡后给后攻玩家手牌中创建Token
+function Galaxy.FirstTurnToken(c)
+	local e1=Effect.CreateEffect(c)
+	e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
+	e1:SetCode(EVENT_ADJUST)
+	e1:SetCondition(Galaxy.FirstTurnTokenCondition)
+	e1:SetOperation(Galaxy.FirstTurnTokenOperation)
+	Duel.RegisterEffect(e1,0)
+end
+
+function Galaxy.FirstTurnTokenCondition(e,tp,eg,ep,ev,re,r,rp)
+	--检查是否为对局开始的第一个调整时点，且后攻玩家手牌中没有Token
+	return Duel.GetTurnCount()==1 and Duel.GetCurrentPhase()==PHASE_DRAW
+		and not Duel.IsExistingMatchingCard(Card.IsCode,1,LOCATION_HAND,0,1,nil,99999999)
+end
+
+function Galaxy.FirstTurnTokenOperation(e,tp,eg,ep,ev,re,r,rp)
+	--为后攻玩家(1)在手牌中创建Token(99999999)
+	local token=Duel.CreateToken(1,99999999)
+	if token then
+		Duel.SendtoHand(token,1,REASON_RULE)
+		Duel.ConfirmCards(0,token)
+
+		--添加离场后除外效果（已移至c99999999.lua中实现）
+		--local e1=Effect.CreateEffect(e:GetHandler())
+		--e1:SetDescription(3300)
+		--e1:SetType(EFFECT_TYPE_SINGLE)
+		--e1:SetCode(EFFECT_LEAVE_FIELD_REDIRECT)
+		--e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
+		--e1:SetReset(RESET_EVENT+0x47e0000)
+		--e1:SetValue(LOCATION_REMOVED)
+		--token:RegisterEffect(e1)
+	end
+	--重置效果，避免重复触发
+	e:Reset()
 end
 
 --==============================================
