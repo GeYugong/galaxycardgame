@@ -20,13 +20,13 @@ function s.initial(c)
 	e3:SetOperation(s.spop)
 	c:RegisterEffect(e3)
 
-	--在场上可以被视为任意类别
+	--在场上可以被视为指定类别
 	local e4=Effect.CreateEffect(c)
 	e4:SetType(EFFECT_TYPE_SINGLE)
 	e4:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
 	e4:SetCode(EFFECT_ADD_RACE)
 	e4:SetRange(GALAXY_LOCATION_UNIT_ZONE)
-	e4:SetValue(0xffffff) -- 所有种族
+	e4:SetValue(GALAXY_CATEGORY_HUMAN+GALAXY_CATEGORY_MAMMAL+GALAXY_CATEGORY_REPTILE+GALAXY_CATEGORY_AVIAN+GALAXY_CATEGORY_ARTHROPOD+GALAXY_CATEGORY_MOLLUSK+GALAXY_CATEGORY_FUNGAL+GALAXY_CATEGORY_UNDEAD) -- 种族
 	c:RegisterEffect(e4)
 end
 
