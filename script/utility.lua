@@ -2161,8 +2161,9 @@ function Galaxy.ReduceHPDestroy(e,tp,eg,ep,ev,re,r,rp)
 		Duel.Destroy(atker, REASON_RULE)
 	end
 	if defer and defer:IsHpBelow(0) then
-		Duel.Destroy(defer, REASON_RULE)
+		Duel.Destroy(defer, REASON_RULE)	
 	end
+	--记录战斗的双方卡片 （用于后续效果，如亡语破坏杀死这张卡的单位等）
 end
 
 --不造成战斗伤害（如果有攻击目标，说明非直接攻击玩家，阻止伤害）
