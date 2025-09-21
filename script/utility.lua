@@ -2111,6 +2111,7 @@ function Galaxy.BattleRule(c)
 	e2:SetCode(EVENT_DAMAGE_STEP_END)
 	e2:SetProperty(property)
 	e2:SetCondition(Galaxy.ReduceHP)
+	e2:SetOperation(Galaxy.ReduceHPDestroy)
 	Duel.RegisterEffect(e2, 0)
 	--不造成战斗伤害
 	local e3 = Effect.CreateEffect(c)
@@ -2150,7 +2151,18 @@ function Galaxy.ReduceHP(e,tp,eg,ep,ev,re,r,rp)
 	local e2 = e1:Clone()
 	e2:SetValue(-atker:GetAttack())
 	defer:RegisterEffect(e2)
-	return false
+	return true
+end
+
+function Galaxy.ReduceHPDestroy(e,tp,eg,ep,ev,re,r,rp)
+	local atker = Duel.GetAttacker()
+	local defer = Duel.GetAttackTarget()
+	if atker and atker:IsHpBelow(0) then
+		Duel.Destroy(atker, REASON_RULE)
+	end
+	if defer and defer:IsHpBelow(0) then
+		Duel.Destroy(defer, REASON_RULE)
+	end
 end
 
 --不造成战斗伤害（如果有攻击目标，说明非直接攻击玩家，阻止伤害）
