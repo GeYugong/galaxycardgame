@@ -2136,6 +2136,27 @@ function Galaxy.SummonThisTurn(e,c)
 		or c:IsStatus(STATUS_FLIP_SUMMON_TURN) or c:IsStatus(STATUS_SPSUMMON_TURN))
 end
 
+--护盾效果显示管理
+function Galaxy.AddShieldDisplay(c)
+	if c:IsHasEffect(EFFECT_SHIELD) and not c:IsHasEffect(50000001) then
+		local e_hint=Effect.CreateEffect(c)
+		e_hint:SetDescription("免疫1次战斗伤害")
+		e_hint:SetType(EFFECT_TYPE_SINGLE)
+		e_hint:SetCode(50000001) --护盾显示标识码
+		e_hint:SetProperty(EFFECT_FLAG_SINGLE_RANGE+EFFECT_FLAG_CLIENT_HINT)
+		e_hint:SetRange(GALAXY_LOCATION_UNIT_ZONE)
+		c:RegisterEffect(e_hint)
+	end
+end
+
+--移除护盾显示
+function Galaxy.RemoveShieldDisplay(c)
+	local shield_display = c:IsHasEffect(50000001)
+	if shield_display then
+		shield_display:Reset()
+	end
+end
+
 --伤害步骤结束时处理守备力减少（仅怪兽对怪兽战斗时）
 function Galaxy.ReduceHP(e,tp,eg,ep,ev,re,r,rp)
 	local atker = Duel.GetAttacker()
@@ -2144,12 +2165,35 @@ function Galaxy.ReduceHP(e,tp,eg,ep,ev,re,r,rp)
 	local e1 = Effect.CreateEffect(atker)
 	e1:SetType(EFFECT_TYPE_SINGLE)
 	e1:SetCode(EFFECT_UPDATE_DEFENSE)
-	e1:SetValue(-defer:GetAttack())
+	-- 如果有护盾效果且攻击力大于0，则不减少生命值
+	if atker:IsHasEffect(EFFECT_SHIELD) and defer:GetAttack() > 0 then
+		e1:SetValue(0)
+		local shield_eff = atker:IsHasEffect(EFFECT_SHIELD)
+		shield_eff:Reset()
+		--显示护盾生效提示
+		Duel.Hint(HINT_CARD,0,atker:GetCode())
+		--移除护盾显示效果
+		Galaxy.RemoveShieldDisplay(atker)
+
+	else
+		e1:SetValue(-defer:GetAttack())
+	end
 	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
 	e1:SetReset(RESET_EVENT+RESETS_STANDARD)
 	atker:RegisterEffect(e1)
 	local e2 = e1:Clone()
-	e2:SetValue(-atker:GetAttack())
+	-- 如果有护盾效果且攻击力大于0，则不减少生命值
+	if defer:IsHasEffect(EFFECT_SHIELD) and atker:GetAttack() > 0 then
+		e2:SetValue(0)
+		local shield_eff = defer:IsHasEffect(EFFECT_SHIELD)
+		shield_eff:Reset()
+		--显示护盾生效提示
+		Duel.Hint(HINT_CARD,0,defer:GetCode())
+		--移除护盾显示效果
+		Galaxy.RemoveShieldDisplay(defer)
+	else
+		e2:SetValue(-atker:GetAttack())
+	end
 	defer:RegisterEffect(e2)
 	return true
 end
@@ -2161,7 +2205,7 @@ function Galaxy.ReduceHPDestroy(e,tp,eg,ep,ev,re,r,rp)
 		Duel.Destroy(atker, REASON_RULE)
 	end
 	if defer and defer:IsHpBelow(0) then
-		Duel.Destroy(defer, REASON_RULE)	
+		Duel.Destroy(defer, REASON_RULE)
 	end
 	--记录战斗的双方卡片 （用于后续效果，如亡语破坏杀死这张卡的单位等）
 end

@@ -25,6 +25,53 @@ SetCode(EVENT_DAMAGE_STEP_END)
 SetCondition(aux.dsercon)
 ```
 
+## GCG Specific Implementation
+
+### Galaxy Card Game Format
+```lua
+// ✅ Correct GCG format
+local s, id = Import()
+function s.initial(c)
+    -- Effects here
+end
+
+// ❌ Wrong: YGO format
+local s,id,o=GetID()
+function s.initial_effect(c)
+```
+
+### GCG Effect Values
+- Use exact values (`SetValue(1)` = +1, `SetValue(2)` = +2)
+- Never use 1000x multipliers unless specifically documented
+
+### Shield Effect Management
+```lua
+// ✅ Shield effect with display
+local e1=Effect.CreateEffect(c)
+e1:SetCode(EFFECT_SHIELD)
+c:RegisterEffect(e1)
+Galaxy.AddShieldDisplay(c)  -- Always add display
+
+// Shield removal handled automatically in utility.lua
+Galaxy.RemoveShieldDisplay(c)
+```
+
+### GCG API Constants
+- `GALAXY_LOCATION_UNIT_ZONE` not `LOCATION_MZONE`
+- `GALAXY_CATEGORY_MAMMAL` for categories
+- `GALAXY_PROPERTY_FLEET` for properties
+- `GALAXY_PHASE_SUPPLY` for supply phase
+- `TYPES_TOKEN_MONSTER` for tokens
+
+### Resource Management
+```lua
+// Supply cost
+function s.cost(e,tp,eg,ep,ev,re,r,rp,chk)
+    if chk==0 then return Duel.CheckSupplyCost(tp,2) end
+    Duel.PaySupplyCost(tp,2)
+end
+```
+
 ## Key Reference Cards & Patterns
 
 ### Essential Reference Cards
