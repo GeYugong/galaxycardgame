@@ -34,6 +34,9 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 			Duel.PaySupplyCost(tp,cost)
 		else
 			--补给不足，将单位变为0/1，下次补给阶段送往游戏外
+			--失去1影响力（失去1hp）
+			--Duel.PayLPCost(tp,1)
+			Duel.Damage(tp,1,REASON_EFFECT)
 			--变为0/1
 			local e1=Effect.CreateEffect(e:GetHandler())
 			e1:SetType(EFFECT_TYPE_SINGLE)
@@ -70,6 +73,12 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 			e5:SetCode(EFFECT_DISABLE_EFFECT)
 			e5:SetValue(RESET_TURN_SET)
 			tc:RegisterEffect(e5)
+			--不能攻击
+			local e6=Effect.CreateEffect(e:GetHandler())
+			e6:SetType(EFFECT_TYPE_SINGLE)
+			e6:SetCode(EFFECT_CANNOT_ATTACK)
+			e6:SetReset(RESET_EVENT+RESETS_STANDARD)
+			tc:RegisterEffect(e6)
 		end
 	end
 end
