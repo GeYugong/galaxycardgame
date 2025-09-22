@@ -30,14 +30,17 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 
 	local cost=tc:GetLevel()
 	--直接特殊召唤，不按融合处理
-	if Duel.SpecialSummon(tc,0,tp,tp,false,false,POS_FACEUP_ATTACK)~=0 then
-		--召唤成功后，检查并支付补给代价
-		if Duel.CheckSupplyCost(tp,cost) then
-			--补给足够，支付代价
-			Duel.PaySupplyCost(tp,cost)
-		else
-			--补给不足，将怪兽送往墓地
-			Duel.SendtoGrave(tc,REASON_EFFECT)
+	if Duel.CheckSupplyCost(tp,cost) then
+		--补给足够，支付代价
+		Duel.PaySupplyCost(tp,cost)
+		Duel.SpecialSummon(tc,0,tp,tp,false,false,POS_FACEUP_ATTACK)
+	else
+		--补给不足，将怪兽送往墓地
+		--消耗全部现有补给
+		local supply=Duel.GetSupply(tp)
+		if supply>0 then
+			Duel.PaySupplyCost(tp,supply)
 		end
+		Duel.SendtoGrave(tc,REASON_EFFECT)
 	end
 end
