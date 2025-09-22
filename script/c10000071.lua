@@ -38,7 +38,7 @@ end
 --防御力增加条件（战斗后）
 function s.defcon(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
-	return c==Duel.GetAttacker() or c==Duel.GetAttackTarget()
+	return (c==Duel.GetAttacker() or c==Duel.GetAttackTarget()) and c:IsRelateToBattle() and c:IsLocation(LOCATION_MZONE)
 end
 
 --防御力增加操作
