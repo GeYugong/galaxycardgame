@@ -2138,11 +2138,11 @@ end
 
 --护盾效果显示管理
 function Galaxy.AddShieldDisplay(c)
-	if c:IsHasEffect(EFFECT_SHIELD) and not c:IsHasEffect(50000001) then
+	if c:IsHasEffect(EFFECT_SHIELD) and not c:IsHasEffect(EFFECT_SHIELD_HINT) then
 		local e_hint=Effect.CreateEffect(c)
 		e_hint:SetDescription("免疫1次战斗伤害")
 		e_hint:SetType(EFFECT_TYPE_SINGLE)
-		e_hint:SetCode(50000001) --护盾显示标识码
+		e_hint:SetCode(EFFECT_SHIELD_HINT) --护盾显示标识码
 		e_hint:SetProperty(EFFECT_FLAG_SINGLE_RANGE+EFFECT_FLAG_CLIENT_HINT)
 		e_hint:SetRange(GALAXY_LOCATION_UNIT_ZONE)
 		c:RegisterEffect(e_hint)
@@ -2151,7 +2151,7 @@ end
 
 --移除护盾显示
 function Galaxy.RemoveShieldDisplay(c)
-	local shield_display = c:IsHasEffect(50000001)
+	local shield_display = c:IsHasEffect(EFFECT_SHIELD_HINT)
 	if shield_display then
 		shield_display:Reset()
 	end

@@ -657,6 +657,8 @@ EFFECT_FLAG_EFFECT	  =0x20000000 --标记类效果，即RegisterFlagEffect()创�
 
 EFFECT_RUSH = 500 --在部署的回合就可以攻击
 EFFECT_PROTECT = 501 -- 保护
+EFFECT_SHIELD = 502 -- 护盾
+EFFECT_SHIELD_HINT = 503 -- 护盾提示
 
 --下面是诱发效果的诱发事件、时点 （如果是TYPE_SINGLE则自己发生以下事件后触发，如果TYPE_FIELD则场上任何卡发生以下事件都触发）
 EVENT_STARTUP			   =1000   --N/A
