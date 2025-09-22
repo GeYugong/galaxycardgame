@@ -1,4 +1,4 @@
---支援卡消耗2点补给，制造1张补给3以下的攻击力和生命值相等的军团单位（从数据库中随机选择符合条件的卡然后通过Createtoken给玩家加入手卡）。
+--支援卡消耗1点补给，制造1张补给3以下的攻击力和生命值相等的军团单位（从数据库中随机选择符合条件的卡然后通过Createtoken给玩家加入手卡）。
 local s, id = Import()
 function s.initial(c)
 	--激活效果
@@ -34,10 +34,10 @@ function Galaxy.GetRandomLegionUnit(max_cost)
 	return nil
 end
 
---消耗2点补给
+--消耗1点补给
 function s.cost(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.CheckSupplyCost(tp,2) end
-	Duel.PaySupplyCost(tp,2)
+	if chk==0 then return Duel.CheckSupplyCost(tp,1) end
+	Duel.PaySupplyCost(tp,1)
 end
 
 --目标
