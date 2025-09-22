@@ -12418,5 +12418,16 @@
             "\tc:RegisterEffect(e1)",
             "end"
         ]
+    },
+    "QueryDatabase": {
+        "prefix": "QueryDatabase",
+        "description": "数据库查询API - 安全的只读SELECT查询",
+        "body": [
+            "local results = Duel.QueryDatabase(\"${1:SELECT id FROM datas WHERE level <= 4 ORDER BY RANDOM() LIMIT 1}\")",
+            "if results and not results.error and #results > 0 then",
+            "\t${2:-- 处理查询结果}",
+            "\tlocal card_id = results[1].id",
+            "end"
+        ]
     }
 }

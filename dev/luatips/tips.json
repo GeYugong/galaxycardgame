@@ -12601,5 +12601,14 @@
         "type": 2,
         "value": "0x100",
         "desc": "Galaxy类别：极光 (原雷族)"
+    },
+    "QueryDatabase": {
+        "function": [
+            {
+                "name": "Duel.QueryDatabase(string sql)",
+                "return": "table",
+                "desc": "执行SQL查询并返回结果表  \n安全限制：只能执行SELECT查询，禁止INSERT/UPDATE/DELETE等修改操作  \n返回格式：成功时返回结果数组，每行数据为子表；失败时返回{error=\"错误信息\"}  \n用法示例：local results = Duel.QueryDatabase(\"SELECT id FROM datas WHERE level <= 4 ORDER BY RANDOM() LIMIT 1\")  \n错误检查：if results and not results.error and #results > 0 then ... end  \n随机性：支持ORDER BY RANDOM()进行随机排序，使用SQLite PRNG  \n"
+            }
+        ]
     }
 }

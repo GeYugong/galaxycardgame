@@ -141,16 +141,16 @@ The project includes automated CI builds for Windows, Linux, and macOS via GitHu
 
 ### Lua Script Development
 - **Complete guide**: `dev/docs/lua_development_guide.md`
-- **API reference**: `ai/luatips/tips.json`
-- **Code snippets**: `ai/luatips/snippets.json`
-- **Example scripts**: `ai/examples/script/`
+- **API reference**: `dev/luatips/tips.json`
+- **Code snippets**: `dev/luatips/snippets.json`
+- **Example scripts**: `dev/examples/script/`
 
 ### Galaxy System
 - **Complete guide**: `dev/docs/galaxy_system_complete.md`
 - **System status**: 100% complete, stable, production-ready
 
 ### Key Development Resources
-- **Resource files**: `ai/luatips/` directory (tips.json, snippets.json)
+- **Resource files**: `dev/luatips/` directory (tips.json, snippets.json)
 - **Card database**: `cards.cdb` (SQLite format)
 - **Development docs**: `dev/docs/` directory
-- **Example implementations**: `ai/examples/script/` directory
+- **Example implementations**: `dev/examples/script/` directory
