@@ -2027,6 +2027,14 @@ function Galaxy.UnitRule(c)
 	e3:SetCode(EFFECT_INDESTRUCTABLE_BATTLE)
 	e3:SetValue(1)
 	c:RegisterEffect(e3)
+	--护盾效果显示管理
+	local e4 = Effect.CreateEffect(c)
+	e4:SetType(EFFECT_TYPE_FIELD + EFFECT_TYPE_CONTINUOUS)
+	e4:SetRange(LOCATION_MZONE)
+	e4:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
+	e4:SetCode(EVENT_SPSUMMON_SUCCESS)
+	e4:SetCondition(Galaxy.AddShieldDisplay)
+	c:RegisterEffect(e4)
 end
 
 --特殊召唤条件：检查场地和代价是否足够
@@ -2137,16 +2145,22 @@ function Galaxy.SummonThisTurn(e,c)
 end
 
 --护盾效果显示管理
-function Galaxy.AddShieldDisplay(c)
-	if c:IsHasEffect(EFFECT_SHIELD) and not c:IsHasEffect(EFFECT_SHIELD_HINT) then
-		local e_hint=Effect.CreateEffect(c)
-		e_hint:SetDescription("免疫1次战斗伤害")
-		e_hint:SetType(EFFECT_TYPE_SINGLE)
-		e_hint:SetCode(EFFECT_SHIELD_HINT) --护盾显示标识码
-		e_hint:SetProperty(EFFECT_FLAG_SINGLE_RANGE+EFFECT_FLAG_CLIENT_HINT)
-		e_hint:SetRange(GALAXY_LOCATION_UNIT_ZONE)
-		c:RegisterEffect(e_hint)
-	end
+function Galaxy.AddShieldDisplay(e,tp,eg,ep,ev,re,r,rp,c)
+	local c = e:GetHandler()
+	if c:IsLocation(LOCATION_MZONE) and c:IsHasEffect(EFFECT_SHIELD) and not c:IsHasEffect(EFFECT_SHIELD_HINT)	then
+		if c then
+			--Debug.Message("AddShieldDisplay")
+			local e_hint=Effect.CreateEffect(c)
+			e_hint:SetDescription(aux.Stringid(10000077,2)) --护盾显示提示文本
+			e_hint:SetType(EFFECT_TYPE_SINGLE)
+			e_hint:SetCode(EFFECT_SHIELD_HINT) --护盾显示标识码
+			e_hint:SetProperty(EFFECT_FLAG_SINGLE_RANGE+EFFECT_FLAG_CLIENT_HINT)
+			e_hint:SetRange(GALAXY_LOCATION_UNIT_ZONE)
+			e_hint:SetReset(RESET_EVENT+RESETS_STANDARD)
+			c:RegisterEffect(e_hint)
+		end	
+		return true
+	else return false end
 end
 
 --移除护盾显示

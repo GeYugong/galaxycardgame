@@ -54,7 +54,6 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 			e2:SetCode(EFFECT_SHIELD)
 			e2:SetReset(RESET_EVENT+RESETS_STANDARD)
 			token:RegisterEffect(e2,true)
-			Galaxy.AddShieldDisplay(token)
 
 			--显示保护效果提示
 			local e3=Effect.CreateEffect(e:GetHandler())
@@ -64,6 +63,15 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 			e3:SetRange(GALAXY_LOCATION_UNIT_ZONE)
 			e3:SetReset(RESET_EVENT+RESETS_STANDARD)
 			token:RegisterEffect(e3,true)
+			--显示护盾效果提示
+			local e4=Effect.CreateEffect(e:GetHandler())
+			e4:SetDescription(aux.Stringid(id,2))
+			e4:SetType(EFFECT_TYPE_SINGLE)
+			e4:SetProperty(EFFECT_FLAG_SINGLE_RANGE+EFFECT_FLAG_CLIENT_HINT)
+			e4:SetRange(GALAXY_LOCATION_UNIT_ZONE)
+			e4:SetReset(RESET_EVENT+RESETS_STANDARD)
+			e4:SetCode(EFFECT_SHIELD_HINT) --护盾显示标识码
+			token:RegisterEffect(e4,true)
 
 		end
 	end

@@ -8,7 +8,6 @@ function s.initial(c)
 	e1:SetType(EFFECT_TYPE_SINGLE)
 	e1:SetCode(EFFECT_SHIELD)
 	c:RegisterEffect(e1)
-	Galaxy.AddShieldDisplay(c)
 	--部署时特殊召唤护卫无人机
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,0))
