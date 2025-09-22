@@ -72,6 +72,31 @@ function s.cost(e,tp,eg,ep,ev,re,r,rp,chk)
 end
 ```
 
+### Database Access API
+```lua
+// ✅ Direct SQLite query access
+local results = Duel.QueryDatabase("SELECT id FROM datas WHERE atk = def")
+-- Returns: array of row objects with column names as keys
+
+// Example: Find Legion units (Earth monsters, ATK=DEF, Level≤3)
+local sql = string.format([[
+    SELECT id FROM datas
+    WHERE atk = def
+    AND attribute = %d
+    AND level <= %d
+    AND type & %d != 0
+    ORDER BY RANDOM()
+    LIMIT 1
+]], ATTRIBUTE_EARTH, 3, TYPE_MONSTER)
+local results = Duel.QueryDatabase(sql)
+```
+
+### Game System Mappings
+- **Supply Cost** = Monster Level (`level` field)
+- **Legion Units** = Earth Attribute (`ATTRIBUTE_EARTH`)
+- **HP/Life** = Defense Points (`def` field)
+- **Monster Cards** = `type & TYPE_MONSTER != 0`
+
 ## Key Reference Cards & Patterns
 
 ### Essential Reference Cards
@@ -505,3 +530,10 @@ e1:SetReset(RESET_EVENT+RESETS_STANDARD-RESET_TOFIELD+RESET_PHASE+PHASE_END)
 
 ### High-Energy Counter Ecosystem Complete
 Nine-card synergy system spanning generation, consumption, and strategic effects.
+
+### Database Query API
+- **Function**: `Duel.QueryDatabase(sql)` - Query cards.cdb database
+- **Security**: Read-only SELECT queries, returns `{error = "message"}` for violations
+- **Randomness**: `ORDER BY RANDOM()` uses SQLite PRNG (sufficient for game fairness)
+- **Usage**: `local results = Duel.QueryDatabase("SELECT id FROM datas WHERE...")`
+- **Reference**: c10000081 - Random legion unit generation via database query

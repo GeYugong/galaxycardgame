@@ -659,6 +659,7 @@ EFFECT_RUSH = 500 --在部署的回合就可以攻击
 EFFECT_PROTECT = 501 -- 保护
 EFFECT_SHIELD = 502 -- 护盾
 EFFECT_SHIELD_HINT = 503 -- 护盾提示
+EFFECT_FREE_DEPLOY = 504 -- 可以免费部署
 
 --下面是诱发效果的诱发事件、时点 （如果是TYPE_SINGLE则自己发生以下事件后触发，如果TYPE_FIELD则场上任何卡发生以下事件都触发）
 EVENT_STARTUP			   =1000   --N/A

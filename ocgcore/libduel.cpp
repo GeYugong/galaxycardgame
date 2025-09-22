@@ -12,6 +12,10 @@
 #include "effect.h"
 #include "group.h"
 #include "ocgapi.h"
+#include "../sqlite3/sqlite3.h"
+#include <string>
+#include <algorithm>
+#include <cctype>
 
 int32_t scriptlib::duel_get_master_rule(lua_State * L) {
 	duel* pduel = interpreter::get_duel_info(L);
@@ -84,6 +88,102 @@ int32_t scriptlib::duel_read_card(lua_State *L) {
 		}
 	}
 	return args;
+}
+int32_t scriptlib::duel_query_database(lua_State *L) {
+	check_param_count(L, 1);
+	check_param(L, PARAM_TYPE_STRING, 1);
+
+	const char* sql = lua_tostring(L, 1);
+
+	// 增强安全检查：只允许单个 SELECT 查询
+	const char* sql_trimmed = sql;
+	while(*sql_trimmed == ' ' || *sql_trimmed == '\t' || *sql_trimmed == '\n' || *sql_trimmed == '\r') sql_trimmed++;
+
+	// 检查是否以SELECT开头(跨平台兼容)
+	std::string sql_upper(sql_trimmed);
+	std::transform(sql_upper.begin(), sql_upper.end(), sql_upper.begin(), ::toupper);
+	if(sql_upper.substr(0, 6) != "SELECT") {
+		lua_newtable(L);
+		lua_pushstring(L, "error");
+		lua_pushstring(L, "Only SELECT queries are allowed");
+		lua_settable(L, -3);
+		return 1;
+	}
+
+	// 检查是否包含多语句分隔符或危险关键字
+	const char* dangerous_patterns[] = {
+		";", "INSERT", "UPDATE", "DELETE", "DROP", "CREATE", "ALTER",
+		"PRAGMA", "ATTACH", "DETACH", "REPLACE", "EXEC", "--", "/*"
+	};
+
+	for(int i = 0; i < sizeof(dangerous_patterns) / sizeof(dangerous_patterns[0]); i++) {
+		if(sql_upper.find(dangerous_patterns[i]) != std::string::npos) {
+			lua_newtable(L);
+			lua_pushstring(L, "error");
+			lua_pushstring(L, "Query contains prohibited keywords or patterns");
+			lua_settable(L, -3);
+			return 1;
+		}
+	}
+
+	duel* pduel = interpreter::get_duel_info(L);
+
+	// 以只读模式打开数据库
+	sqlite3* db = nullptr;
+	int32_t result = sqlite3_open_v2("./cards.cdb", &db, SQLITE_OPEN_READONLY, nullptr);
+	if(result != SQLITE_OK) {
+		lua_pushnil(L);
+		return 1;
+	}
+
+	sqlite3_stmt* stmt;
+	result = sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr);
+	if(result != SQLITE_OK) {
+		sqlite3_close(db);
+		lua_pushnil(L);
+		return 1;
+	}
+
+	lua_newtable(L);
+	int32_t row_count = 0;
+
+	while((result = sqlite3_step(stmt)) == SQLITE_ROW) {
+		int32_t col_count = sqlite3_column_count(stmt);
+		lua_newtable(L);
+
+		for(int32_t i = 0; i < col_count; ++i) {
+			const char* col_name = sqlite3_column_name(stmt, i);
+			int32_t col_type = sqlite3_column_type(stmt, i);
+
+			lua_pushstring(L, col_name);
+
+			switch(col_type) {
+				case SQLITE_INTEGER:
+					lua_pushinteger(L, sqlite3_column_int64(stmt, i));
+					break;
+				case SQLITE_FLOAT:
+					lua_pushnumber(L, sqlite3_column_double(stmt, i));
+					break;
+				case SQLITE_TEXT:
+					lua_pushstring(L, (const char*)sqlite3_column_text(stmt, i));
+					break;
+				case SQLITE_BLOB:
+				case SQLITE_NULL:
+				default:
+					lua_pushnil(L);
+					break;
+			}
+
+			lua_settable(L, -3);
+		}
+
+		lua_rawseti(L, -2, ++row_count);
+	}
+
+	sqlite3_finalize(stmt);
+	sqlite3_close(db);
+
+	return 1;
 }
 int32_t scriptlib::duel_exile(lua_State *L) {
 	check_action_permission(L);
@@ -5765,6 +5865,7 @@ static const struct luaL_Reg duellib[] = {
 	{ "HasChainMetaValue", scriptlib::duel_has_chain_meta_value },
 	{ "ClearChainMeta", scriptlib::duel_clear_chain_meta },
 	{ "GetChainMetaKeys", scriptlib::duel_get_chain_meta_keys },
+	{ "QueryDatabase", scriptlib::duel_query_database },
 	{ nullptr, nullptr }
 };
 void scriptlib::open_duellib(lua_State *L) {

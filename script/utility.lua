@@ -2041,12 +2041,13 @@ end
 function Galaxy.SummonCondition(e,c)
 	if c == nil then return true end
 	local tp = c:GetControler()
-	return Duel.GetLocationCount(tp, LOCATION_MZONE) > 0 and Duel.CheckSupplyCost(tp, c:GetSupplyCost())
+	return Duel.GetLocationCount(tp, LOCATION_MZONE) > 0 and (Duel.CheckSupplyCost(tp, c:GetSupplyCost()) or c:IsHasEffect(EFFECT_FREE_DEPLOY))
 end
 
 --特殊召唤操作：在召唤过程中支付代价
 function Galaxy.SummonOperation(e,tp,eg,ep,ev,re,r,rp,c)
 	local cost = c:GetSupplyCost()
+	if c:IsHasEffect(EFFECT_FREE_DEPLOY) then cost = 0 end
 	if cost > 0 then Duel.PaySupplyCost(tp, cost) end
 	return true
 end

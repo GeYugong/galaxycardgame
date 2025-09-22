@@ -42,6 +42,7 @@ public:
 	static int32_t effect_get_count_limit(lua_State *L);
 	static int32_t duel_get_master_rule(lua_State *L);
 	static int32_t duel_read_card(lua_State *L);
+	static int32_t duel_query_database(lua_State *L);
 	static int32_t duel_exile(lua_State *L);
 	static int32_t duel_disable_action_check(lua_State *L);
 	static int32_t duel_setmetatable(lua_State *L);
