@@ -35,10 +35,10 @@ function s.drawop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Draw(p,d,REASON_EFFECT)
 end
 
---防御力增加条件（战斗后）
+--防御力增加条件（战斗后没死）
 function s.defcon(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
-	return (c==Duel.GetAttacker() or c==Duel.GetAttackTarget()) and c:IsRelateToBattle() and c:IsLocation(LOCATION_MZONE)
+	return (c==Duel.GetAttacker() or c==Duel.GetAttackTarget()) and c:IsRelateToBattle() and c:IsLocation(LOCATION_MZONE) and c:IsFaceup() and c:GetHp()>0
 end
 
 --防御力增加操作
