@@ -56,7 +56,6 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 		local token = Duel.CreateToken(tp, card_id)
 		if token then
 			Duel.SendtoHand(token,nil,REASON_EFFECT)
-			Duel.ConfirmCards(1-tp,token)
 		end
 	end
 end

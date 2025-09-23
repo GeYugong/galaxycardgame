@@ -73,7 +73,6 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 	if selected_card then
 		--将选择的卡片加入手卡
 		Duel.SendtoHand(selected_card, nil, REASON_EFFECT)
-		Duel.ConfirmCards(1-tp, selected_card)
 
 		--给选中的卡片添加免补给部署效果
 		local e1 = Effect.CreateEffect(e:GetHandler())
