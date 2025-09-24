@@ -1,0 +1,155 @@
+name: Sync GCG Content to Server Branch
+
+on:
+  push:
+    branches: [ master ]
+    paths:
+      - 'ocgcore/**'
+      - 'script/**'
+      - 'cards.cdb'
+      - 'lflist.conf'
+      - 'strings.conf'
+      - 'system.conf'
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  sync-to-server:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Sync GCG content to server branch
+      run: |
+        set -e  # 遇到错误时退出
+
+        echo "🚀 开始同步GCG内容到server分支..."
+
+        # 配置Git
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+        # 要同步的文件列表
+        FILES_TO_SYNC=("ocgcore" "script" "cards.cdb" "lflist.conf" "strings.conf" "system.conf")
+
+        # 检查server分支是否存在
+        if git show-ref --verify --quiet refs/heads/server; then
+          echo "✅ server分支已存在"
+          git checkout server
+          git pull origin server || echo "⚠️  无法pull server分支，使用本地版本"
+        else
+          echo "⚠️  server分支不存在，基于upstream创建..."
+          git remote add upstream https://github.com/purerosefallen/ygopro.git || true
+          git fetch upstream server
+          git checkout -b server upstream/server --no-track
+          git push -u origin server
+        fi
+
+        # 创建临时分支进行同步
+        TEMP_BRANCH="temp-sync-$(date +%Y%m%d-%H%M%S)"
+        git checkout -b "$TEMP_BRANCH"
+
+        echo "📋 同步以下文件和目录:"
+        SYNCED_FILES=()
+        FAILED_FILES=()
+
+        # 从master分支复制文件
+        for file in "${FILES_TO_SYNC[@]}"; do
+          echo "🔄 同步: $file"
+          if git checkout master -- "$file" 2>/dev/null; then
+            SYNCED_FILES+=("$file")
+            echo "  ✅ $file"
+          else
+            FAILED_FILES+=("$file")
+            echo "  ❌ $file (文件不存在)"
+          fi
+        done
+
+        # 检查是否有变更
+        if git diff --cached --quiet && git diff --quiet; then
+          echo "ℹ️  没有文件需要同步"
+          git checkout server
+          git branch -D "$TEMP_BRANCH"
+          echo "✅ 同步完成 (无变更)"
+          exit 0
+        fi
+
+        # 提交变更
+        echo "💾 提交变更..."
+        git add -A
+
+        # 获取master分支信息
+        MASTER_COMMIT=$(git rev-parse master)
+        MASTER_MSG=$(git log -1 --pretty=%B master | head -n1)
+
+        # 生成提交信息
+        COMMIT_MESSAGE="Sync GCG content from master
+
+        Synced files:"
+        for file in "${SYNCED_FILES[@]}"; do
+          COMMIT_MESSAGE="$COMMIT_MESSAGE
+        - $file"
+        done
+
+        if [ ${#FAILED_FILES[@]} -gt 0 ]; then
+          COMMIT_MESSAGE="$COMMIT_MESSAGE
+
+        Failed files:"
+          for file in "${FAILED_FILES[@]}"; do
+            COMMIT_MESSAGE="$COMMIT_MESSAGE
+        - $file (not found)"
+          done
+        fi
+
+        COMMIT_MESSAGE="$COMMIT_MESSAGE
+
+        Source commit: ${MASTER_COMMIT}
+        Source message: ${MASTER_MSG}
+
+        🤖 Auto-sync by GitHub Actions
+        Co-Authored-By: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>"
+
+        git commit -m "$COMMIT_MESSAGE"
+
+        # 合并到server分支
+        echo "🔀 合并到server分支..."
+        git checkout server
+        git merge "$TEMP_BRANCH" --no-ff -m "Merge GCG content sync from master"
+
+        # 推送server分支
+        echo "📤 推送到远程server分支..."
+        git push origin server
+
+        # 清理临时分支
+        git branch -d "$TEMP_BRANCH"
+
+        # 输出同步摘要
+        echo ""
+        echo "✅ 同步完成!"
+        echo "📊 同步摘要:"
+        echo "  - 源分支: master"
+        echo "  - 目标分支: server"
+        echo "  - 成功同步: ${#SYNCED_FILES[@]} 个文件/目录"
+        echo "  - 失败: ${#FAILED_FILES[@]} 个文件/目录"
+        echo ""
+
+        if [ ${#SYNCED_FILES[@]} -gt 0 ]; then
+          echo "✅ 成功同步的文件:"
+          for file in "${SYNCED_FILES[@]}"; do
+            echo "  - $file"
+          done
+        fi
+
+        if [ ${#FAILED_FILES[@]} -gt 0 ]; then
+          echo "❌ 未找到的文件:"
+          for file in "${FAILED_FILES[@]}"; do
+            echo "  - $file"
+          done
+        fi
+
+        echo ""
+        echo "🚀 server分支已更新并推送到远程仓库"
