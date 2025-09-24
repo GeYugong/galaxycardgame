@@ -515,6 +515,12 @@ e1:SetReset(RESET_EVENT+RESETS_STANDARD-RESET_TOFIELD+RESET_PHASE+PHASE_END)
 - **Reference originals**: Always base on existing card patterns
 - **Avoid innovation**: Use verified API combinations
 
+### Support Card Patterns
+- **Condition vs Target**: Use `SetCondition()` for activation requirements, `SetTarget()` for target selection
+- **Field requirement**: Check both players' field zones: `LOCATION_FZONE, LOCATION_FZONE`
+- **Token creation**: Use `Duel.CreateToken()` for temporary card selection interfaces
+- **Player interaction**: Always provide `Duel.Hint(HINT_SELECTMSG, tp, HINTMSG_*)` before selection
+
 ## Key Development Notes
 
 ### Counter System Best Practices
@@ -536,4 +542,7 @@ Nine-card synergy system spanning generation, consumption, and strategic effects
 - **Security**: Read-only SELECT queries, returns `{error = "message"}` for violations
 - **Randomness**: `ORDER BY RANDOM()` uses SQLite PRNG (sufficient for game fairness)
 - **Usage**: `local results = Duel.QueryDatabase("SELECT id FROM datas WHERE...")`
-- **Reference**: c10000081 - Random legion unit generation via database query
+- **References**:
+  - c10000081 - Random legion unit generation via database query
+  - c10000082 - Support card with 3 random legion units + free deploy effect
+  - c10000083 - Field card search with opponent deck interaction
