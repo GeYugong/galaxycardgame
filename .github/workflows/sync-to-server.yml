@@ -6,7 +6,7 @@ on:
     paths:
       - 'ocgcore/**'
       - 'script/**'
-      - 'gframe/**'
+      # Exclude gframe/** from auto-sync as server branch contains merged gaming features
       - 'cards.cdb'
       - 'lflist.conf'
       - 'strings.conf'
@@ -28,14 +28,14 @@ jobs:
       run: |
         set -e  # 遇到错误时退出
 
-        echo "🚀 开始同步GCG内容到server分支..."
+        echo "🚀 开始同步GCG内容到server分支 (排除gframe以保护游戏机制合并)..."
 
         # 配置Git
         git config user.name "github-actions[bot]"
         git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-        # 要同步的文件列表
-        FILES_TO_SYNC=("gframe" "ocgcore" "script" "cards.cdb" "lflist.conf" "strings.conf" "system.conf")
+        # 要同步的文件列表 (排除gframe，因为server分支包含特殊的游戏机制合并)
+        FILES_TO_SYNC=("ocgcore" "script" "cards.cdb" "lflist.conf" "strings.conf" "system.conf")
 
         # 切换到server分支
         echo "🔄 切换到server分支..."
@@ -86,7 +86,9 @@ jobs:
         MASTER_MSG=$(git log -1 --pretty=%B master | head -n1)
 
         # 生成提交信息
-        COMMIT_MESSAGE="Sync GCG content from master
+        COMMIT_MESSAGE="Sync GCG content from master (excluding gframe)
+
+        🎮 gframe directory excluded to preserve server's merged gaming features
 
         Synced files:"
         for file in "${SYNCED_FILES[@]}"; do
