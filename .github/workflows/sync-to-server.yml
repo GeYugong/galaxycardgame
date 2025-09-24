@@ -6,6 +6,7 @@ on:
     paths:
       - 'ocgcore/**'
       - 'script/**'
+      - 'gframe/**'
       - 'cards.cdb'
       - 'lflist.conf'
       - 'strings.conf'
@@ -34,7 +35,7 @@ jobs:
         git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
         # 要同步的文件列表
-        FILES_TO_SYNC=("ocgcore" "script" "cards.cdb" "lflist.conf" "strings.conf" "system.conf")
+        FILES_TO_SYNC=("gframe" "ocgcore" "script" "cards.cdb" "lflist.conf" "strings.conf" "system.conf")
 
         # 切换到server分支
         echo "🔄 切换到server分支..."
