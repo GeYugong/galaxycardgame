@@ -24,13 +24,13 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 	local g = Group.CreateGroup()
 	for i = 1, 8 do
 		-- 假设幼体寄生虫的ID是10000087，如果没有则需要先创建
-		local token = Duel.CreateToken(tp, 10000087)
+		local token = Duel.CreateToken(1-tp, 10000087)
 		g:AddCard(token)
 	end
 
 	if #g > 0 then
 		--将token加入对方卡组并洗切
-		Duel.ConfirmCards(tp, g)
+		Duel.ConfirmCards(1-tp, g)
 		Duel.SendtoDeck(g, 1-tp, 2, REASON_EFFECT)
 	end
 end
