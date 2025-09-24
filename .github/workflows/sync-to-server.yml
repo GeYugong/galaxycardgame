@@ -36,17 +36,15 @@ jobs:
         # 要同步的文件列表
         FILES_TO_SYNC=("ocgcore" "script" "cards.cdb" "lflist.conf" "strings.conf" "system.conf")
 
-        # 检查server分支是否存在
+        # 切换到server分支
+        echo "🔄 切换到server分支..."
         if git show-ref --verify --quiet refs/heads/server; then
-          echo "✅ server分支已存在"
+          echo "✅ 本地server分支已存在"
           git checkout server
-          git pull origin server || echo "⚠️  无法pull server分支，使用本地版本"
+          git pull origin server || echo "⚠️  无法pull，使用本地版本"
         else
-          echo "⚠️  server分支不存在，基于upstream创建..."
-          git remote add upstream https://github.com/purerosefallen/ygopro.git || true
-          git fetch upstream server
-          git checkout -b server upstream/server --no-track
-          git push -u origin server
+          echo "🔄 检出远程server分支..."
+          git checkout -b server origin/server
         fi
 
         # 创建临时分支进行同步
