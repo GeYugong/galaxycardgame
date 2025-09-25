@@ -5,6 +5,7 @@ project "YGOPro"
     kind "WindowedApp"
     rtti "Off"
     openmp "On"
+    targetname "GCG"
 
     files { "*.cpp", "*.h", "CGUISkinSystem/*.cpp", "CGUISkinSystem/*.h", "CXMLRegistry/*.cpp", "CXMLRegistry/*.h" }
     includedirs { "../ocgcore" }
