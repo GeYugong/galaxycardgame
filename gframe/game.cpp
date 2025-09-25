@@ -37,10 +37,10 @@ void DuelInfo::Clear() {
 	lp[0] = 0;
 	lp[1] = 0;
 	start_lp = 0;
-	supply[0] = 1;      // 初始补给为1
-	supply[1] = 1;
-	max_supply[0] = 1;  // 初始最大补给为1
-	max_supply[1] = 1;
+	supply[0] = 0;      // 初始补给为0 第一个补给阶段才增长为1
+	supply[1] = 0;
+	max_supply[0] = 0;  // 初始最大补给为0 第一个补给阶段才增长1
+	max_supply[1] = 0;
 	duel_rule = 0;
 	turn = 0;
 	curMsg = 0;
