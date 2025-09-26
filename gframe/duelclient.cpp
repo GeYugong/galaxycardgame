@@ -12,6 +12,7 @@
 #include <Windns.h>
 #endif
 #include <thread>
+#include <algorithm>
 
 namespace ygo {
 
@@ -2370,6 +2371,17 @@ bool DuelClient::ClientAnalyze(unsigned char* msg, int len) {
 		/*int player = */mainGame->LocalPlayer(BufferIO::Read<uint8_t>(pbuf));
 		int skip_panel = BufferIO::Read<uint8_t>(pbuf);
 		int count = BufferIO::Read<uint8_t>(pbuf);
+		int remaining = len - static_cast<int>(pbuf - msg);
+		if(remaining < count * 7) {
+			// Legacy packets omit the skip_panel byte, fallback gracefully
+			count = skip_panel;
+			skip_panel = 0;
+			--pbuf; // rewind so the next read starts at the first code byte
+			remaining = len - static_cast<int>(pbuf - msg);
+			if(count * 7 > remaining && remaining >= 0) {
+				count = std::min(count, remaining / 7);
+			}
+		}
 		int c, s;
 		unsigned int code, l;
 		std::vector<ClientCard*> field_confirm;
@@ -2390,9 +2402,17 @@ bool DuelClient::ClientAnalyze(unsigned char* msg, int len) {
 			if (l == 0) {
 				pcard = new ClientCard();
 				mainGame->dField.limbo_temp.push_back(pcard);
-			} else
+			} else {
 				pcard = mainGame->dField.GetCard(c, l, s);
-			if (code != 0)
+				if(!pcard) {
+					pcard = new ClientCard();
+					pcard->controler = c;
+					pcard->location = l;
+					pcard->sequence = s;
+					mainGame->dField.limbo_temp.push_back(pcard);
+				}
+			}
+			if (pcard && code != 0)
 				pcard->SetCode(code);
 			mainGame->gMutex.lock();
 			myswprintf(textBuffer, L"*[%ls]", dataManager.GetName(code));
