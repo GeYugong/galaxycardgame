@@ -1,5 +1,4 @@
 name: Sync GCG Content to Server Branch
-permissions: contents: write
 
 on:
   push:
