@@ -655,15 +655,15 @@ EFFECT_RITUAL_LEVEL_EX  =374  --支持使用没有等级的怪兽作为仪式素
 EFFECT_DOUBLE_XMATERIAL   =375   --召唤需3只以上作素材的超量怪兽时可以作为2只数量的素材
 EFFECT_FLAG_EFFECT	=0x20000000 --标记类效果，即RegisterFlagEffect()创建的效果
 
+FLAG_ADD_HP_IMMEDIATELY_EFFECT = 498 --效果立刻增减生命力
+FLAG_ADD_HP_IMMEDIATELY_BATTLE = 499 --战斗立刻增减生命力
+
 EFFECT_RUSH = 500 --在部署的回合就可以攻击
 EFFECT_PROTECT = 501 -- 保护
 EFFECT_SHIELD = 502 -- 护盾
 EFFECT_SHIELD_HINT = 503 -- 护盾提示
 EFFECT_FREE_DEPLOY = 504 -- 可以免费部署
 EFFECT_UPDATE_HP = 505 --持续影响的增减生命力
-
-FLAG_ADD_HP_IMMEDIATELY_BATTLE = 499 --战斗立刻增减生命力
-FLAG_ADD_HP_IMMEDIATELY_EFFECT = 498 --效果立刻增减生命力
 
 --下面是诱发效果的诱发事件、时点 （如果是TYPE_SINGLE则自己发生以下事件后触发，如果TYPE_FIELD则场上任何卡发生以下事件都触发）
 EVENT_STARTUP			  =1000   --N/A

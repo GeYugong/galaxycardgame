@@ -2345,8 +2345,13 @@ function Galaxy.RemoveShieldDisplay(c)
 end
 
 --立刻增减生命力
-function Duel.AddHp(c, hp, reason)
-	if aux.GetValueType(c) ~= "Card" then error("parameter 1 should be card", 2) end
+function Duel.AddHp(g_c, hp, reason)
+	local typ = aux.GetValueType(g_c)
+	if typ == "Card" then
+		g_c = Group.FromCards(g_c)
+	elseif typ ~= "Group" then
+		error("parameter 1 should be Card or Group", 2)
+	end
 	if aux.GetValueType(hp) ~= "number" then error("parameter 2 should be number", 2) end
 	local flag = 0
 	if aux.GetValueType(reason) ~= "number" then
@@ -2358,7 +2363,9 @@ function Duel.AddHp(c, hp, reason)
 	else
 		error("parameter 3 should be REASON_BATTLE or REASON_EFFECT", 2)
 	end
-	c:RegisterFlagEffect(flag, 0, EFFECT_FLAG_CANNOT_DISABLE, 1, hp)
+	for c in aux.Next(g_c) do
+		c:RegisterFlagEffect(flag, 0, EFFECT_FLAG_CANNOT_DISABLE, 1, hp)
+	end
 end
 --[[
 --==============================================
