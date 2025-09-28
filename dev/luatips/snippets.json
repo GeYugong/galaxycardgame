@@ -4594,6 +4594,11 @@
         "description": "•Card.GetBaseHp(Card c) [Galaxy别名]\n返回卡片 c 的基础生命值(原本守备力)\n等同于 Card.GetBaseDefense(c)",
         "body": "GetBaseHp"
     },
+    "GetMaxHp": {
+        "prefix": "GetMaxHp",
+        "description": "•Card.GetMaxHp(Card c) [Galaxy函数]\n返回卡片 c 的当前最大生命值\n包含所有EFFECT_UPDATE_HP效果影响的动态最大值",
+        "body": "GetMaxHp"
+    },
     "GetSupplyCost": {
         "prefix": "GetSupplyCost",
         "description": "•Card.GetSupplyCost(Card c) [Galaxy别名]\n返回卡片 c 的补给代价(等级)\n等同于 Card.GetLevel(c)",
@@ -12339,6 +12344,71 @@
         "description": "•Galaxy.PayCost(int tp, int cost)\n让玩家 tp 支付 cost 点补给代价  \nGalaxy规则简化API，内部调用 Duel.PaySupplyCost  \n定义在 script/utility.lua 中，用于召唤怪兽和激活效果的代价支付  \n",
         "body": "Galaxy.PayCost(${1:tp}, ${2:cost})"
     },
+    "Galaxy.RaiseHpEvent": {
+        "prefix": "Galaxy.RaiseHpEvent",
+        "description": "•Galaxy.RaiseHpEvent(Card c, number hp_change, boolean is_effect_change, int reason, int effect_player)\n触发Galaxy HP事件的统一API  \n传入正数表示恢复，负数表示伤害；is_effect_change为true时用于EFFECT_UPDATE_HP事件  \n",
+        "body": "Galaxy.RaiseHpEvent(${1:c}, ${2:hp_change}, ${3:is_effect_change}, ${4:reason}, ${5:effect_player})"
+    },
+    "galaxy_hp_damage_listener": {
+        "prefix": "galaxy_hp_damage_listener",
+        "description": "Galaxy HP伤害事件监听模板  \n用于响应单位受到的立即伤害  \n",
+        "body": [
+            "-- 监听己方单位受到的Galaxy伤害事件",
+            "local e1=Effect.CreateEffect(c)",
+            "e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)",
+            "e1:SetCode(GALAXY_EVENT_HP_DAMAGE)",
+            "e1:SetRange(LOCATION_MZONE)",
+            "e1:SetCondition(function(e,tp,eg,ep,ev,re,r,rp)",
+            "\treturn eg:IsExists(Card.IsControler,1,nil,tp)",
+            "end)",
+            "e1:SetOperation(function(e,tp,eg,ep,ev,re,r,rp)",
+            "\tlocal dmg=ev -- 伤害量为正整数",
+            "\t-- TODO: 在这里处理伤害，例如累积统计或触发补偿效果",
+            "\tDuel.AddSupply(tp,1)",
+            "end)",
+            "c:RegisterEffect(e1)"
+        ]
+    },
+    "galaxy_hp_recover_listener": {
+        "prefix": "galaxy_hp_recover_listener",
+        "description": "Galaxy HP恢复事件监听模板  \n用于对己方单位的治疗进行额外处理  \n",
+        "body": [
+            "-- 监听己方单位立即恢复HP",
+            "local e2=Effect.CreateEffect(c)",
+            "e2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)",
+            "e2:SetCode(GALAXY_EVENT_HP_RECOVER)",
+            "e2:SetRange(LOCATION_MZONE)",
+            "e2:SetCondition(function(e,tp,eg,ep,ev,re,r,rp)",
+            "\treturn eg:IsExists(Card.IsControler,1,nil,tp) and r & REASON_EFFECT > 0",
+            "end)",
+            "e2:SetOperation(function(e,tp,eg,ep,ev,re,r,rp)",
+            "\tfor tc in aux.Next(eg:Filter(Card.IsControler,nil,tp)) do",
+            "\t\t-- TODO: 追加治疗或触发连锁效果",
+            "\t\tDuel.AddHp(tc, ev, REASON_EFFECT)",
+            "\tend",
+            "end)",
+            "c:RegisterEffect(e2)"
+        ]
+    },
+    "galaxy_hp_effect_monitor": {
+        "prefix": "galaxy_hp_effect_monitor",
+        "description": "Galaxy HP效果变化监听模板  \n用于跟踪EFFECT_UPDATE_HP增益或减益  \n",
+        "body": [
+            "-- 监听所有单位的HP效果增减 (EFFECT_UPDATE_HP)",
+            "local e3=Effect.CreateEffect(c)",
+            "e3:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)",
+            "e3:SetCode(GALAXY_EVENT_HP_EFFECT_CHANGE)",
+            "e3:SetRange(LOCATION_MZONE)",
+            "e3:SetOperation(function(e,tp,eg,ep,ev,re,r,rp)",
+            "\tfor tc in aux.Next(eg) do",
+            "\t\tlocal magnitude=ev -- 变化量绝对值",
+            "\t\t-- TODO: 根据需要记录增益/减益，可比较tc:GetHp()确定方向",
+            "\t\tDuel.Hint(HINT_CARD,0,tc:GetCode())",
+            "\tend",
+            "end)",
+            "c:RegisterEffect(e3)"
+        ]
+    },
     "supply_check_condition": {
         "prefix": "supply_check_condition",
         "description": "Galaxy补给代价检查条件模板  \n用于特殊召唤条件检查  \n",
@@ -12428,6 +12498,112 @@
             "\t${2:-- 处理查询结果}",
             "\tlocal card_id = results[1].id",
             "end"
+        ]
+    },
+    "AddHp": {
+        "prefix": "AddHp",
+        "description": "对单位进行即时伤害/治疗（会触发Galaxy HP事件；伤害可被护盾抵消）",
+        "body": [
+            "-- 立即对目标单位造成伤害或治疗（负数=伤害，正数=治疗）",
+            "Duel.AddHp(${1:target}, ${2:-1}, ${3:REASON_EFFECT})"
+        ]
+    },
+    "hp_damage_now": {
+        "prefix": "hp_damage_now",
+        "description": "立即对选定单位造成伤害（尊重护盾）",
+        "body": [
+            "-- 选择一个对方单位并造成${1:1}点伤害",
+            "Duel.Hint(HINT_SELECTMSG, tp, HINTMSG_FACEUP)",
+            "local g=Duel.SelectMatchingCard(tp, Card.IsFaceup, tp, 0, LOCATION_MZONE, 1, 1, nil)",
+            "if #g>0 then",
+            "\tDuel.AddHp(g:GetFirst(), -${1:1}, REASON_EFFECT)",
+            "end"
+        ]
+    },
+    "hp_heal_now": {
+        "prefix": "hp_heal_now",
+        "description": "立即为选定单位恢复生命值（不会触发护盾）",
+        "body": [
+            "-- 选择一个己方单位并恢复${1:1}点生命值",
+            "Duel.Hint(HINT_SELECTMSG, tp, HINTMSG_FACEUP)",
+            "local g=Duel.SelectMatchingCard(tp, Card.IsFaceup, tp, LOCATION_MZONE, 0, 1, 1, nil)",
+            "if #g>0 then",
+            "\tDuel.AddHp(g:GetFirst(), ${1:1}, REASON_EFFECT)",
+            "end"
+        ]
+    },
+    "effect_update_hp_basic": {
+        "prefix": "effect_update_hp_basic",
+        "description": "为本卡赋予持续HP修正（EFFECT_UPDATE_HP）",
+        "body": [
+            "-- 本卡在场时，最大与当前HP${1:+1}（正数增益，负数减益）",
+            "local e=Effect.CreateEffect(c)",
+            "e:SetType(EFFECT_TYPE_SINGLE)",
+            "e:SetCode(EFFECT_UPDATE_HP)",
+            "e:SetValue(${1:1})",
+            "c:RegisterEffect(e)"
+        ]
+    },
+    "effect_rush_basic": {
+        "prefix": "effect_rush_basic",
+        "description": "赋予本卡疾驰（部署回合即可攻击）",
+        "body": [
+            "local e=Effect.CreateEffect(c)",
+            "e:SetType(EFFECT_TYPE_SINGLE)",
+            "e:SetCode(EFFECT_RUSH)",
+            "c:RegisterEffect(e)"
+        ]
+    },
+    "effect_protect_basic": {
+        "prefix": "effect_protect_basic",
+        "description": "赋予本卡保护（对手需优先攻击本卡）",
+        "body": [
+            "local e=Effect.CreateEffect(c)",
+            "e:SetType(EFFECT_TYPE_SINGLE)",
+            "e:SetCode(EFFECT_PROTECT)",
+            "c:RegisterEffect(e)"
+        ]
+    },
+    "effect_shield_basic": {
+        "prefix": "effect_shield_basic",
+        "description": "为本卡添加一次性护盾（抵消一次伤害并显示提示）",
+        "body": [
+            "-- 添加护盾",
+            "local e=Effect.CreateEffect(c)",
+            "e:SetType(EFFECT_TYPE_SINGLE)",
+            "e:SetCode(EFFECT_SHIELD)",
+            "c:RegisterEffect(e)",
+            "-- 护盾显示提示由系统实用函数自动管理（参见 Galaxy.AddShieldDisplay/Galaxy.RemoveShieldDisplay）"
+        ]
+    },
+    "effect_free_deploy_basic": {
+        "prefix": "effect_free_deploy_basic",
+        "description": "赋予本卡免费部署（不消耗补给）",
+        "body": [
+            "local e=Effect.CreateEffect(c)",
+            "e:SetType(EFFECT_TYPE_SINGLE)",
+            "e:SetCode(EFFECT_FREE_DEPLOY)",
+            "c:RegisterEffect(e)"
+        ]
+    },
+    "effect_lethal_basic": {
+        "prefix": "effect_lethal_basic",
+        "description": "赋予本卡致命（战斗后击杀无护盾目标）",
+        "body": [
+            "local e=Effect.CreateEffect(c)",
+            "e:SetType(EFFECT_TYPE_SINGLE)",
+            "e:SetCode(EFFECT_LETHAL)",
+            "c:RegisterEffect(e)"
+        ]
+    },
+    "effect_stealth_basic": {
+        "prefix": "effect_stealth_basic",
+        "description": "赋予本卡潜行（不能成为攻击和效果的对象，攻击后移除）",
+        "body": [
+            "local e=Effect.CreateEffect(c)",
+            "e:SetType(EFFECT_TYPE_SINGLE)",
+            "e:SetCode(EFFECT_STEALTH)",
+            "c:RegisterEffect(e)"
         ]
     }
 }

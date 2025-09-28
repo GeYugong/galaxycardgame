@@ -135,6 +135,36 @@ end
   -- Overrides global summon turn attack restriction
   ```
 
+#### 11. Lethal System
+- **Mechanics**: Units with lethal effect destroy any target they damage in battle (similar to Hearthstone's Poisonous)
+- **Shield Interaction**: Shield completely blocks lethal effect
+- **Implementation**:
+  ```lua
+  -- Mark unit with lethal
+  local e1=Effect.CreateEffect(c)
+  e1:SetType(EFFECT_TYPE_SINGLE)
+  e1:SetCode(EFFECT_LETHAL) -- Custom effect code 506
+  c:RegisterEffect(e1)
+
+  -- Damage calculation: attack + target's current HP (ensures kill)
+  -- Processed through Galaxy.ReduceHP battle system
+  ```
+
+#### 12. Stealth System
+- **Mechanics**: Units with stealth cannot be targeted by attacks or effects (similar to Hearthstone)
+- **Attack Reveal**: Stealth is removed after the unit attacks
+- **Implementation**:
+  ```lua
+  -- Mark unit with stealth
+  local e1=Effect.CreateEffect(c)
+  e1:SetType(EFFECT_TYPE_SINGLE)
+  e1:SetCode(EFFECT_STEALTH) -- Custom effect code 507
+  c:RegisterEffect(e1)
+
+  -- System handles: CANNOT_SELECT_BATTLE_TARGET + CANNOT_BE_EFFECT_TARGET
+  -- Auto-removal on EVENT_ATTACK_ANNOUNCE
+  ```
+
 ### Usage Pattern
 ```lua
 local s, id = Import()
@@ -222,12 +252,13 @@ Galaxy provides semantic aliases for YGO Lua functions to better match the game 
 
 ### Card HP System (Defense → HP)
 ```lua
+card:GetMaxHp()
 -- Original YGO functions → Galaxy aliases
 card:GetDefense()       → card:GetHp()          -- Current HP
-card:GetBaseDefense()   → card:GetMaxHp()       -- Max HP
+card:GetBaseDefense()   → card:GetBaseHp()       -- Base HP
 card:SetDefense(val)    → card:SetHp(val)       -- Set HP
 card:IsDefense(val)     → card:IsHp(val)        -- Check HP
-card:GetOriginalDefense() → card:GetOriginalHp() -- Original max HP
+card:GetTextDefense() → card:GetOriginalHp() -- Original max HP
 ```
 
 ### Card Supply Cost System (Level → Cost)
@@ -362,11 +393,144 @@ function c12345678.target(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 end
 ```
 
+## Galaxy HP Event System
+
+### Overview
+The Galaxy HP Event System provides a standardized way to monitor and respond to HP changes in Galaxy Card Game monsters. This system enables cards to react to damage, healing, and effect applications/removals.
+
+### Event Types
+
+#### GALAXY_EVENT_HP_DAMAGE
+- **Trigger**: When a monster receives immediate damage (AddHp with negative value)
+- **Use Case**: Monitor damage from spells, battle, or abilities
+- **Blocked by**: Shield effects
+- **Event Code**: `EVENT_CUSTOM + 99000001`
+
+#### GALAXY_EVENT_HP_RECOVER
+- **Trigger**: When a monster immediately recovers HP (AddHp with positive value)
+- **Use Case**: Monitor healing effects
+- **Blocked by**: Nothing (healing always works)
+- **Event Code**: `EVENT_CUSTOM + 99000002`
+
+#### GALAXY_EVENT_HP_EFFECT_CHANGE
+- **Trigger**: When HP effects are applied or removed (EFFECT_UPDATE_HP changes)
+- **Use Case**: Monitor equipment, buffs, debuffs
+- **Blocked by**: Nothing (effects bypass shields)
+- **Event Code**: `EVENT_CUSTOM + 99000003`
+
+### Implementation Pattern
+
+```lua
+-- Monitor damage to opponent monsters
+local e1 = Effect.CreateEffect(c)
+e1:SetType(EFFECT_TYPE_FIELD + EFFECT_TYPE_TRIGGER_O)
+e1:SetCode(GALAXY_EVENT_HP_DAMAGE)
+e1:SetRange(LOCATION_MZONE)
+e1:SetCondition(function(e, tp, eg, ep, ev, re, r, rp)
+    return eg:IsExists(Card.IsControler, 1, nil, 1-tp)
+end)
+e1:SetOperation(function(e, tp, eg, ep, ev, re, r, rp)
+    -- React to opponent taking damage
+    Duel.AddSupply(tp, 1)
+end)
+c:RegisterEffect(e1)
+```
+
+### Event Parameters
+- **eg**: Group of monsters that experienced HP changes
+- **ep**: Event player (usually same as rp)
+- **ev**: Absolute value of HP change (always positive)
+- **re**: Source effect (may be nil)
+- **r**: Reason type (REASON_BATTLE or REASON_EFFECT)
+- **rp**: Responsible player
+
+### Key Distinctions
+
+#### AddHp vs EFFECT_UPDATE_HP
+- **AddHp Events** (`DAMAGE`/`RECOVER`): Immediate, permanent changes
+  - Cannot be dispelled
+  - Can be blocked by shields (damage only)
+  - Trigger immediately when HP actually changes
+
+- **Effect Events** (`EFFECT_CHANGE`): Continuous effect modifications
+  - Can be dispelled/removed
+  - Not blocked by shields
+  - Trigger when buffs/debuffs are applied or removed
+
+#### Shield Interaction
+- Shield effects only block `GALAXY_EVENT_HP_DAMAGE` events
+- When damage is blocked by shield, no damage event is triggered
+- Shields do not affect `GALAXY_EVENT_HP_EFFECT_CHANGE` events
+- Healing (`GALAXY_EVENT_HP_RECOVER`) is never blocked
+
+### Usage Examples
+
+#### Damage Counter
+```lua
+-- Count damage taken by your monsters
+local e1 = Effect.CreateEffect(c)
+e1:SetType(EFFECT_TYPE_FIELD + EFFECT_TYPE_TRIGGER_F)
+e1:SetCode(GALAXY_EVENT_HP_DAMAGE)
+e1:SetRange(LOCATION_MZONE)
+e1:SetCondition(function(e, tp, eg, ep, ev, re, r, rp)
+    return eg:IsExists(Card.IsControler, 1, nil, tp)
+end)
+e1:SetOperation(function(e, tp, eg, ep, ev, re, r, rp)
+    e:GetHandler():AddCounter(0x1, ev)  -- Add damage counters
+end)
+c:RegisterEffect(e1)
+```
+
+#### Healing Amplifier
+```lua
+-- Double healing effects on your monsters
+local e2 = Effect.CreateEffect(c)
+e2:SetType(EFFECT_TYPE_FIELD + EFFECT_TYPE_TRIGGER_O)
+e2:SetCode(GALAXY_EVENT_HP_RECOVER)
+e2:SetRange(LOCATION_MZONE)
+e2:SetCondition(function(e, tp, eg, ep, ev, re, r, rp)
+    return eg:IsExists(Card.IsControler, 1, nil, tp) and r & REASON_EFFECT > 0
+end)
+e2:SetOperation(function(e, tp, eg, ep, ev, re, r, rp)
+    for tc in aux.Next(eg:Filter(Card.IsControler, nil, tp)) do
+        Duel.AddHp(tc, ev, REASON_EFFECT)  -- Additional healing
+    end
+end)
+c:RegisterEffect(e2)
+```
+
+#### Buff/Debuff Monitor
+```lua
+-- React to equipment/aura changes
+local e3 = Effect.CreateEffect(c)
+e3:SetType(EFFECT_TYPE_FIELD + EFFECT_TYPE_TRIGGER_O)
+e3:SetCode(GALAXY_EVENT_HP_EFFECT_CHANGE)
+e3:SetRange(LOCATION_MZONE)
+e3:SetOperation(function(e, tp, eg, ep, ev, re, r, rp)
+    if ev > 0 then
+        -- Gained HP effect - draw card
+        Duel.Draw(tp, 1, REASON_EFFECT)
+    else
+        -- Lost HP effect - gain supply
+        Duel.AddSupply(tp, 1)
+    end
+end)
+c:RegisterEffect(e3)
+```
+
+### Technical Implementation
+The HP event system is integrated into the core Galaxy HP calculation functions:
+- `Galaxy.CalculateAddHpImmediately()`: Triggers AddHp events
+- `Galaxy.CalculateHp()`: Triggers EFFECT_UPDATE_HP events
+- Events are raised immediately when HP changes occur
+- Unified event function: `Galaxy.RaiseHpEvent(card, change, is_effect, reason, player)`
+
 ## System Status
 - **Completion**: 100% - All core features implemented and tested
+- **HP Event System**: ✅ Fully integrated with comprehensive event monitoring
 - **Stability**: Production ready, no known crashes
 - **Compatibility**: Fully backward compatible
-- **Performance**: More efficient than LP system
+- **Performance**: More efficient than LP system, optimized event handling
 - **Network**: Full multiplayer/replay support
 
 ## Key Reference Cards

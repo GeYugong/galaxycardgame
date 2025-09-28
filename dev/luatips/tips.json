@@ -654,6 +654,15 @@
             }
         ]
     },
+    "GetMaxHp": {
+        "function": [
+            {
+                "name": "Card.GetMaxHp(Card c)",
+                "return": "int",
+                "desc": "Galaxy函数：返回卡片 c 的当前最大生命值  \n包含所有EFFECT_UPDATE_HP效果影响的动态最大值  \n如果没有HP计算系统则返回基础生命值  \n"
+            }
+        ]
+    },
     "IsHp": {
         "function": [
             {
@@ -3667,6 +3676,15 @@
                 "name": "Galaxy.PayCost(int tp, int cost)",
                 "return": "bool",
                 "desc": "让玩家 tp 支付 cost 点补给代价  \nGalaxy规则简化API，内部调用 Duel.PaySupplyCost  \n定义在 script/utility.lua 中，用于召唤怪兽和激活效果的代价支付  \n返回值总是true  \n"
+            }
+        ]
+    },
+    "Galaxy.RaiseHpEvent": {
+        "function": [
+            {
+                "name": "Galaxy.RaiseHpEvent(Card c, number hp_change, bool is_effect_change, int reason, int effect_player)",
+                "return": "void",
+                "desc": "Galaxy HP事件触发器，统一发送伤害/恢复/效果变化事件  \\n参数说明：c 为单位卡；hp_change 为实际变化量（正=恢复，负=伤害）；is_effect_change 为 true 时触发 GALAXY_EVENT_HP_EFFECT_CHANGE；reason 传入 REASON_BATTLE 或 REASON_EFFECT；effect_player 为负责此次变化的玩家编号  \\n定义于 script/utility.lua，内部根据参数自动选择 GALAXY_EVENT_HP_* 常量并调用 Duel.RaiseEvent  \\n"
             }
         ]
     },
@@ -12602,12 +12620,75 @@
         "value": "0x100",
         "desc": "Galaxy类别：极光 (原雷族)"
     },
+    "EFFECT_RUSH": {
+        "name": "EFFECT_RUSH",
+        "type": 2,
+        "value": "500",
+        "desc": "在部署的回合就可以攻击（疾驰）。给单位注册单体效果：e:SetType(EFFECT_TYPE_SINGLE); e:SetCode(EFFECT_RUSH) 即可。"
+    },
+    "EFFECT_PROTECT": {
+        "name": "EFFECT_PROTECT",
+        "type": 2,
+        "value": "501",
+        "desc": "保护标记：对手在选择攻击目标时必须优先攻击具有该标记的单位。系统级逻辑由 Galaxy.ProtectAttackLimit 全局处理，卡片只需标记该效果码。"
+    },
+    "EFFECT_SHIELD": {
+        "name": "EFFECT_SHIELD",
+        "type": 2,
+        "value": "502",
+        "desc": "护盾：抵消下一次对该单位造成的立即伤害（AddHp 负值），随后护盾被移除。建议同时添加显示提示（EFFECT_SHIELD_HINT），显示由实用函数自动管理。"
+    },
+    "EFFECT_SHIELD_HINT": {
+        "name": "EFFECT_SHIELD_HINT",
+        "type": 2,
+        "value": "503",
+        "desc": "护盾显示提示用效果码，仅用于在客户端显示护盾图标与提示文本，不影响规则结算。通常由 Galaxy.AddShieldDisplay/Galaxy.RemoveShieldDisplay 自动添加/移除。"
+    },
+    "EFFECT_UPDATE_HP": {
+        "name": "EFFECT_UPDATE_HP",
+        "type": 2,
+        "value": "505",
+        "desc": "持续增减生命力：为单位提供正/负的生命力修正（正数=增益，负数=减益）。影响当前与最大HP；当效果移除时，修正回退。与 Duel.AddHp 的即时伤害/治疗不同。"
+    },
+    "EFFECT_FREE_DEPLOY": {
+        "name": "EFFECT_FREE_DEPLOY",
+        "type": 2,
+        "value": "504",
+        "desc": "免费部署：拥有此效果的单位可以不消耗补给进行部署。在召唤条件和代价检查中，Galaxy.CheckCost 和 Galaxy.PayCost 函数会检查此效果并将代价设为0。"
+    },
+    "EFFECT_LETHAL": {
+        "name": "EFFECT_LETHAL",
+        "type": 2,
+        "value": "506",
+        "desc": "致命：战斗后若目标单位无护盾则必定击杀目标。类似炉石传说的剧毒或影之诗的必破。护盾可以完全阻挡致命效果。双方都有致命时会互相击杀（除非有护盾保护）。"
+    },
+    "EFFECT_STEALTH": {
+        "name": "EFFECT_STEALTH",
+        "type": 2,
+        "value": "507",
+        "desc": "潜行：单位不能成为攻击和效果的对象。类似炉石传说的潜行机制。在该单位攻击后，潜行效果会被自动移除。潜行单位可以主动攻击，但攻击后失去潜行保护。"
+    },
+    "EFFECT_STEALTH_HINT": {
+        "name": "EFFECT_STEALTH_HINT",
+        "type": 2,
+        "value": "508",
+        "desc": "潜行显示提示用效果码，仅用于在客户端显示潜行图标与提示文本，不影响规则结算。通常由 Galaxy.AddStealthDisplay/Galaxy.RemoveStealthDisplay 自动添加/移除。"
+    },
     "QueryDatabase": {
         "function": [
             {
                 "name": "Duel.QueryDatabase(string sql)",
                 "return": "table",
                 "desc": "执行SQL查询并返回结果表  \n安全限制：只能执行SELECT查询，禁止INSERT/UPDATE/DELETE等修改操作  \n返回格式：成功时返回结果数组，每行数据为子表；失败时返回{error=\"错误信息\"}  \n用法示例：local results = Duel.QueryDatabase(\"SELECT id FROM datas WHERE level <= 4 ORDER BY RANDOM() LIMIT 1\")  \n错误检查：if results and not results.error and #results > 0 then ... end  \n随机性：支持ORDER BY RANDOM()进行随机排序，使用SQLite PRNG  \n"
+            }
+        ]
+    },
+    "AddHp": {
+        "function": [
+            {
+                "name": "Duel.AddHp(Card c, number hp, int reason)",
+                "return": "void",
+                "desc": "对单位c进行即时生命值变化：hp>0为治疗，hp<0为伤害。会触发Galaxy HP事件（GALAXY_EVENT_HP_RECOVER/HP_DAMAGE）；伤害会被护盾(EFFECT_SHIELD)抵消一次并移除护盾；治疗不触发护盾。内部自动限制不超过当前上限，不低于0。reason建议使用REASON_EFFECT或REASON_BATTLE。"
             }
         ]
     }
