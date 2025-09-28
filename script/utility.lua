@@ -2029,6 +2029,13 @@ function Galaxy.UnitRule(c)
 	local e4 = e3:Clone()
 	e4:SetCondition(Galaxy.InitializeHp)
 	c:RegisterEffect(e4)
+	--限制特殊召唤表示：只能以攻击表示进入场上
+	local e5 = Effect.CreateEffect(c)
+	e5:SetType(EFFECT_TYPE_SINGLE)
+	e5:SetCode(EFFECT_LIMIT_SPECIAL_SUMMON_POSITION)
+	e5:SetProperty(property)
+	e5:SetValue(Galaxy.SummonPositionLimit)
+	c:RegisterEffect(e5)
 end
 
 --特殊召唤条件：检查场地和代价是否足够
@@ -2044,6 +2051,11 @@ function Galaxy.SummonOperation(e,tp,eg,ep,ev,re,r,rp,c)
 	local cost = c:GetSupplyCost()
 	if c:IsHasEffect(EFFECT_FREE_DEPLOY) then cost = 0 end
 	if cost > 0 then Duel.PaySupplyCost(tp, cost) end
+end
+
+--特殊召唤表示限制：禁止以守备表示召唤
+function Galaxy.SummonPositionLimit(e,c,sump,sumtype,sumpos,targetp)
+	return bit.band(sumpos,POS_FACEUP_DEFENSE+POS_FACEDOWN_DEFENSE)~=0
 end
 
 --护盾效果显示管理
@@ -2095,7 +2107,7 @@ function Galaxy.CalculateHp(e,tp,eg,ep,ev,re,r,rp)
 	local val = c:GetFlagEffectLabel(FLAG_ADD_HP_IMMEDIATELY_BATTLE)
 	if val then
 		now_hp = Galaxy.CalculateAddHpImmediately(c, val, now_hp, hp_max_now)
-		if now_hp == 0 then
+		if now_hp <= 0 then
 			Duel.Destroy(c, REASON_RULE)
 			return
 		end
@@ -2106,7 +2118,7 @@ function Galaxy.CalculateHp(e,tp,eg,ep,ev,re,r,rp)
 	if val then
 		if rev then val = -val end
 		now_hp = Galaxy.CalculateAddHpImmediately(c, val, now_hp, hp_max_now)
-		if now_hp == 0 then
+		if now_hp <= 0 then
 			Duel.Destroy(c, REASON_RULE)
 			return
 		end
