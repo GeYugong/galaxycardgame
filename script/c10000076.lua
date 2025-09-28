@@ -26,7 +26,7 @@ function s.defop(e,tp,eg,ep,ev,re,r,rp)
 	while tc do
 		local e1=Effect.CreateEffect(e:GetHandler())
 		e1:SetType(EFFECT_TYPE_SINGLE)
-		e1:SetCode(EFFECT_UPDATE_DEFENSE)
+		e1:SetCode(EFFECT_UPDATE_HP)
 		e1:SetValue(-1)
 		e1:SetReset(RESET_EVENT+RESETS_STANDARD)
 		tc:RegisterEffect(e1)

@@ -45,7 +45,7 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 					--对选中的敌方单位造成3点伤害（减少3点防御力）
 					local e1=Effect.CreateEffect(e:GetHandler())
 					e1:SetType(EFFECT_TYPE_SINGLE)
-					e1:SetCode(EFFECT_UPDATE_DEFENSE)
+					e1:SetCode(EFFECT_UPDATE_HP)
 					e1:SetValue(-3)
 					e1:SetReset(RESET_EVENT+RESETS_STANDARD)
 					tc:RegisterEffect(e1)
