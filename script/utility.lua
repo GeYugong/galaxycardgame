@@ -2129,10 +2129,10 @@ function Galaxy.CalculateHp(e,tp,eg,ep,ev,re,r,rp)
 		if add_total ~= 0 then
 			hp_max_now = hp_max_now + add_total
 			e:SetLabel(hp_max_ori, hp_max_now)
-			if now_hp + add_total > 0 then
-				now_hp = now_hp + add_total
-			end
-			if now_hp > hp_max_now then
+			now_hp = now_hp + add_total
+			if now_hp < 0 then
+				now_hp = 0
+			elseif now_hp > hp_max_now then
 				now_hp = hp_max_now
 			end
 		end
