@@ -2147,7 +2147,7 @@ end
 --计算护盾
 function Galaxy.CalculateAddHpImmediately(c, val, hp, hp_max)
 	local shield = c:IsHasEffect(EFFECT_SHIELD)
-	if val > 0 and shield then
+	if val < 0 and shield then
 		shield:Reset()
 		Duel.Hint(HINT_CARD, 0, c:GetCode())
 		Galaxy.RemoveShieldDisplay(c)
