@@ -534,6 +534,125 @@ e1:SetReset(RESET_EVENT+RESETS_STANDARD-RESET_TOFIELD+RESET_PHASE+PHASE_END)
 - Use `CATEGORY_DEFCHANGE` for life changes, not `CATEGORY_RECOVER`
 - Use `GetLocationCountFromEx` for Extra Deck fusion monsters
 
+## HP System Development Guide
+
+### HP Modification Methods
+
+#### EFFECT_UPDATE_HP vs AddHp
+
+**Use EFFECT_UPDATE_HP for:**
+- Continuous HP modifications (buffs/debuffs)
+- Equipment and enchantment effects
+- Conditional HP bonuses
+- Effects that can be dispelled/disabled
+
+**Use AddHp for:**
+- Immediate damage/healing
+- Battle damage
+- Cost payments
+- Permanent HP changes that cannot be negated
+
+#### Implementation Examples
+
+```lua
+// ✅ Continuous buff effect (Equipment/Enhancement)
+local e1=Effect.CreateEffect(c)
+e1:SetType(EFFECT_TYPE_SINGLE)
+e1:SetCode(EFFECT_UPDATE_HP)
+e1:SetValue(2)  -- +2 max HP
+e1:SetReset(RESET_EVENT+RESETS_STANDARD)
+c:RegisterEffect(e1)
+
+// ✅ Immediate damage (Spell/Ability)
+Duel.AddHp(target, -3, REASON_EFFECT)
+
+// ✅ Battle damage
+Duel.AddHp(attacker, -defender_attack, REASON_BATTLE)
+Duel.AddHp(defender, -attacker_attack, REASON_BATTLE)
+```
+
+### HP Limit System
+
+#### Dynamic HP Limits
+- `hp_max_ori`: Original base HP limit
+- `hp_max_now`: Current HP limit (modified by effects)
+- EFFECT_UPDATE_HP effects modify both current and maximum HP
+- When effects expire, current HP is capped at new maximum
+
+#### Limit Enforcement
+```lua
+// AddHp respects HP limits
+if hp > hp_max then
+    hp = hp_max  -- Cannot exceed maximum
+end
+```
+
+### Shield System
+
+#### Shield Interaction
+```lua
+// Shield blocks damage only
+if val < 0 and shield then  -- Damage (negative value)
+    shield:Reset()
+    Galaxy.RemoveShieldDisplay(c)
+    return hp  -- No damage taken
+end
+```
+
+#### Shield Display Management
+```lua
+// Add shield display on summon
+local e3=Effect.CreateEffect(c)
+e3:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_CONTINUOUS)
+e3:SetCode(EVENT_SPSUMMON_SUCCESS)
+e3:SetCondition(Galaxy.AddShieldDisplay)
+c:RegisterEffect(e3)
+```
+
+### Common HP Patterns
+
+#### Equipment Effects
+```lua
+// Permanent HP bonus while equipped
+local e1=Effect.CreateEffect(c)
+e1:SetType(EFFECT_TYPE_SINGLE)
+e1:SetCode(EFFECT_UPDATE_HP)
+e1:SetValue(hp_bonus)
+e1:SetReset(RESET_EVENT+RESETS_STANDARD)
+target:RegisterEffect(e1)
+```
+
+#### Spell Damage
+```lua
+// Direct damage spell
+local g=Duel.GetMatchingGroup(Card.IsFaceup,tp,0,LOCATION_MZONE,nil)
+for tc in aux.Next(g) do
+    Duel.AddHp(tc, -damage_amount, REASON_EFFECT)
+end
+```
+
+#### Healing Effects
+```lua
+// Healing spell (respects HP limits)
+Duel.AddHp(target, heal_amount, REASON_EFFECT)
+```
+
+### HP Processing Flow
+
+1. **AddHp Call** → Sets FLAG_ADD_HP_IMMEDIATELY_*
+2. **EVENT_ADJUST** → Galaxy.CalculateHp() processes flags
+3. **Shield Check** → Galaxy.CalculateAddHpImmediately() handles shields
+4. **Limit Check** → Enforces hp_max constraints
+5. **HP Update** → Updates display value
+
+### Critical HP Rules
+
+- **Never exceed HP limits**: AddHp automatically caps at maximum
+- **Shield blocks damage only**: Positive values don't trigger shields
+- **EFFECT_UPDATE_HP is dispellable**: Can be removed by silence effects
+- **AddHp is permanent**: Cannot be negated once processed
+- **Battle damage uses REASON_BATTLE**: Effect damage uses REASON_EFFECT
+
 ### High-Energy Counter Ecosystem Complete
 Nine-card synergy system spanning generation, consumption, and strategic effects.
 
