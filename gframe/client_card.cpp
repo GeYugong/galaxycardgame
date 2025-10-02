@@ -70,14 +70,14 @@ void ClientCard::UpdateInfo(unsigned char* buf) {
 		int pdata = BufferIO::Read<int32_t>(buf);
 		if(level != (unsigned int)pdata) {
 			level = pdata;
-			myswprintf(lvstring, L"L%d", level);
+			myswprintf(lvstring, L"%d", level);
 		}
 	}
 	if(flag & QUERY_RANK) {
 		int pdata = BufferIO::Read<int32_t>(buf);
 		if(pdata && rank != (unsigned int)pdata) {
 			rank = pdata;
-			myswprintf(lvstring, L"R%d", rank);
+			myswprintf(lvstring, L"%d", rank);
 		}
 	}
 	if(flag & QUERY_ATTRIBUTE)

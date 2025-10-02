@@ -336,6 +336,7 @@ public:
 
 	bool is_building{};
 	bool is_siding{};
+	bool is_in_damage_step{}; // 标记是否在战斗伤害步骤中
 
 	irr::core::dimension2d<irr::u32> window_size;
 	float xScale{ 1.0f };

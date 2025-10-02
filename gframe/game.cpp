@@ -209,7 +209,7 @@ bool Game::Initialize() {
 		ErrorLog("Failed to load font(s)!");
 		return false;
 	}
-	adFont = irr::gui::CGUITTFont::createTTFont(env, gameConf.numfont, 12);
+	adFont = irr::gui::CGUITTFont::createTTFont(env, gameConf.numfont, 16);
 	lpcFont = irr::gui::CGUITTFont::createTTFont(env, gameConf.numfont, 48);
 	guiFont = irr::gui::CGUITTFont::createTTFont(env, gameConf.textfont, gameConf.textfontsize);
 	smgr = device->getSceneManager();
@@ -2312,7 +2312,7 @@ void Game::OnResize() {
 	irr::gui::CGUITTFont* old_lpcFont = lpcFont;
 	irr::gui::CGUITTFont* old_textFont = textFont;
 	numFont = irr::gui::CGUITTFont::createTTFont(env, gameConf.numfont, (yScale > 0.5 ? 16 * yScale : 8));
-	adFont = irr::gui::CGUITTFont::createTTFont(env, gameConf.numfont, (yScale > 0.75 ? 12 * yScale : 9));
+	adFont = irr::gui::CGUITTFont::createTTFont(env, gameConf.numfont, (yScale > 0.75 ? 16 * yScale : 12));
 	lpcFont = irr::gui::CGUITTFont::createTTFont(env, gameConf.numfont, 48 * yScale);
 	textFont = irr::gui::CGUITTFont::createTTFont(env, gameConf.textfont, (yScale > 0.642 ? gameConf.textfontsize * yScale : 9));
 	old_numFont->drop();

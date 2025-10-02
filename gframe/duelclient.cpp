@@ -1278,10 +1278,13 @@ bool DuelClient::ClientAnalyze(unsigned char* msg, int len) {
 			break;
 		}
 		case HINT_CARD: {
-			mainGame->showcardcode = data;
-			mainGame->showcarddif = 0;
-			mainGame->showcard = 1;
-			mainGame->WaitFrameSignal(30);
+			// 在战斗伤害步骤中屏蔽HINT_CARD显示（免疫战斗破坏等提示）
+			if(!mainGame->is_in_damage_step) {
+				mainGame->showcardcode = data;
+				mainGame->showcarddif = 0;
+				mainGame->showcard = 1;
+				mainGame->WaitFrameSignal(30);
+			}
 			break;
 		}
 		case HINT_ZONE: {
@@ -3825,9 +3828,11 @@ bool DuelClient::ClientAnalyze(unsigned char* msg, int len) {
 		return true;
 	}
 	case MSG_DAMAGE_STEP_START: {
+		mainGame->is_in_damage_step = true;
 		return true;
 	}
 	case MSG_DAMAGE_STEP_END: {
+		mainGame->is_in_damage_step = false;
 		return true;
 	}
 	case MSG_MISSED_EFFECT: {
