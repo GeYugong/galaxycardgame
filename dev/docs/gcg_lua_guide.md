@@ -63,12 +63,26 @@
 - 不需要手动调用 `Galaxy.AddShieldDisplay` / `Galaxy.AddStealthDisplay`，系统会在单位入场时处理。
 
 ### 3.3 战斗与生命系统
-- HP=守备力；所有扣血请使用 `Duel.AddHp(card, -数值, 原因)`，治疗用正数。
-- `Duel.AddHp` 会：
-  1. 自动处理护盾（首次伤害改为移除护盾）。
-  2. 对隐身单位造成伤害时移除隐身。
-  3. 触发 HP 事件（见下）。
-- HP 事件常量（位于 `script/constant.lua`）：
+- **HP=守备力**；单位的当前生命值通过守备力系统实现。
+- **常用 API**：
+  ```lua
+  Duel.AddHp(card, value, reason)  -- 增减当前HP（会触发事件）
+  Duel.SetHp(card, value)          -- 直接设置当前HP（不触发事件）
+  Card.GetHp()                     -- 获取当前HP
+  Card.GetMaxHp()                  -- 获取最大HP（含EFFECT_UPDATE_HP效果）
+  ```
+- **`Duel.AddHp(card, value, reason)`** 用于战斗/效果伤害或治疗：
+  - `value`：HP变化量（负数为伤害，正数为治疗）。
+  - `reason`：必须为 `REASON_BATTLE` 或 `REASON_EFFECT`。
+  - 会自动处理护盾（首次伤害改为移除护盾）。
+  - 对隐身单位造成伤害时移除隐身。
+  - **触发 HP 事件**（见下）。
+- **`Duel.SetHp(card, value)`** 用于直接设置HP（如复活、初始化）：
+  - `value`：要设置的HP值（必须 ≥ 0）。
+  - **不触发 HP 事件**，不处理护盾/隐身。
+  - 自动钳制到最大HP范围。
+  - 适用场景：复活效果、变身效果、初始化状态。
+- **HP 事件常量**（位于 `script/constant.lua`）：
   - `GALAXY_EVENT_HP_DAMAGE`：立即伤害事件（ev 为绝对值）。
   - `GALAXY_EVENT_HP_RECOVER`：立即治疗事件。
   - `GALAXY_EVENT_HP_EFFECT_CHANGE`：EFFECT_UPDATE_HP 造成的数值改变。
@@ -96,7 +110,7 @@
 | `EFFECT_STEALTH_HINT (508)` | 隐身 UI 标记 | **勿**手动注册 |
 
 语义化别名（在 `Card` 对象上）：
-- HP 相关：`GetHp()`、`GetMaxHp()`、`GetBaseHp()`、`SetHp(val)`。
+- HP 相关：`GetHp()`、`GetMaxHp()`、`GetBaseHp()`。
 - 补给成本：`GetSupplyCost()`、`IsSupplyCostAbove(n)`。
 - 特性与类别：`IsGalaxyProperty(prop)`、`IsGalaxyCategory(cat)`。
 
@@ -143,7 +157,26 @@ function s.op(e,tp)
 end
 ```
 
-### 5.2 HP 事件监听
+### 5.2 HP 操作示例
+```lua
+-- 示例1: 使用 Duel.AddHp 造成伤害（会触发HP事件）
+function s.damage_op(e,tp,eg,ep,ev,re,r,rp)
+    local tc = Duel.GetFirstTarget()
+    if tc and tc:IsRelateToEffect(e) then
+        Duel.AddHp(tc, -3, REASON_EFFECT)  -- 造成3点伤害，触发事件
+    end
+end
+
+-- 示例2: 使用 Duel.SetHp 复活（不触发HP事件）
+function s.revive_op(e,tp,eg,ep,ev,re,r,rp)
+    local c = e:GetHandler()
+    if Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP_ATTACK)>0 then
+        Duel.SetHp(c, 1)  -- 直接设置HP为1，不触发伤害事件
+    end
+end
+```
+
+### 5.3 HP 事件监听
 ```lua
 -- 当对手单位扣血时，我方加1补给
 local e=Effect.CreateEffect(c)
@@ -159,16 +192,16 @@ end)
 c:RegisterEffect(e)
 ```
 
-### 5.3 支援/战术卡建议
+### 5.4 支援/战术卡建议
 - 激活前先判断目标是否存在。例如：
   ```lua
   function s.condition(e,tp)
       return Duel.IsExistingMatchingCard(s.filter,tp,GALAXY_LOCATION_UNIT_ZONE,0,1,nil,tp)
   end
   ```
-- 激活后若需要给满血单位加最大生命值，请使用 `EFFECT_UPDATE_DEFENSE`（=HP）并设置合适的 reset（常见 `RESET_EVENT+RESETS_STANDARD_DISABLE`）。
+- 激活后若需要给满血单位加最大生命值，请使用 `EFFECT_UPDATE_HP` 并设置合适的 reset（常见 `RESET_EVENT+RESETS_STANDARD`）。
 
-### 5.4 禁止使用的旧模式
+### 5.5 禁止使用的旧模式
 - `Duel.CheckLPCost` / `Duel.PayLPCost`：请改用补给接口。
 - 手动 `Galaxy.CheckCost` / `Galaxy.PayCost`：相关函数已在代码中注释掉。
 - 直接调用 `Galaxy.AddShieldDisplay(c)`/`Galaxy.RemoveShieldDisplay(c)`：真实签名为事件回调，且系统会自动处理 UI，手动调用会引发脚本错误。
@@ -214,4 +247,4 @@ end
 - Galaxy 框架实现：`script/utility.lua`
 - 示例卡脚本：`script/c10000000.lua` ~ `c10000102.lua`
 
-> 版本说明：本指南最后更新于 `2025-09-30`（请在提交时确认实际日期）。
+
