@@ -2365,10 +2365,10 @@ function Galaxy.BattleRule(c)
 	e1:SetTarget(Galaxy.SummonThisTurn)
 	e1:SetTargetRange(LOCATION_MZONE, LOCATION_MZONE)
 	Duel.RegisterEffect(e1, 0)
-	--伤害步骤结束时处理降低怪兽生命
+	--战斗结束时处理降低怪兽生命
 	local e2 = Effect.CreateEffect(c)
 	e2:SetType(EFFECT_TYPE_FIELD + EFFECT_TYPE_CONTINUOUS)
-	e2:SetCode(EVENT_DAMAGE_STEP_END)
+	e2:SetCode(EVENT_BATTLED)
 	e2:SetProperty(property)
 	e2:SetCondition(Galaxy.ReduceHP)
 	Duel.RegisterEffect(e2, 0)
