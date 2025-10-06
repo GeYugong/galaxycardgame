@@ -340,42 +340,49 @@ void Game::CheckMutual(ClientCard* pcard, int mark) {
 	}
 }
 void Game::DrawCards() {
+	std::vector<ClientCard*> cards_to_draw;
+	cards_to_draw.reserve(100);
+
 	for(int p = 0; p < 2; ++p) {
 		for(auto it = dField.mzone[p].begin(); it != dField.mzone[p].end(); ++it)
 			if(*it)
-				DrawCard(*it);
+				cards_to_draw.push_back(*it);
 		for(auto it = dField.szone[p].begin(); it != dField.szone[p].end(); ++it)
 			if(*it) {
 				// 在大师规则2中隐藏灵摆区域（sequence 6和7）
 				if(dInfo.duel_rule == 2 && ((*it)->sequence == 6 || (*it)->sequence == 7))
 					continue;
-				DrawCard(*it);
+				cards_to_draw.push_back(*it);
 			}
 		for(auto it = dField.deck[p].begin(); it != dField.deck[p].end(); ++it)
-			DrawCard(*it);
+			cards_to_draw.push_back(*it);
 		for(auto it = dField.hand[p].begin(); it != dField.hand[p].end(); ++it)
-			DrawCard(*it);
+			cards_to_draw.push_back(*it);
 		for(auto it = dField.grave[p].begin(); it != dField.grave[p].end(); ++it)
-			DrawCard(*it);
+			cards_to_draw.push_back(*it);
 		for(auto it = dField.remove[p].begin(); it != dField.remove[p].end(); ++it)
-			DrawCard(*it);
+			cards_to_draw.push_back(*it);
 		for(auto it = dField.extra[p].begin(); it != dField.extra[p].end(); ++it)
-			DrawCard(*it);
+			cards_to_draw.push_back(*it);
 	}
 	for (auto cit = dField.overlay_cards.begin(); cit != dField.overlay_cards.end(); ++cit) {
 		auto pcard = (*cit);
 		auto olcard = pcard->overlayTarget;
 		if (pcard->aniFrame) {
-			DrawCard(pcard);
+			cards_to_draw.push_back(pcard);
 		}
 		else if (olcard && olcard->location == LOCATION_MZONE) {
 			if (pcard->sequence < MAX_LAYER_COUNT) {
-				DrawCard(pcard);
+				cards_to_draw.push_back(pcard);
 			}
 		}
 		else {
-			DrawCard(pcard);
+			cards_to_draw.push_back(pcard);
 		}
+	}
+
+	for (ClientCard* pcard : cards_to_draw) {
+		DrawCard(pcard);
 	}
 }
 void Game::DrawCard(ClientCard* pcard) {
@@ -543,24 +550,28 @@ void Game::DrawMisc() {
 		driver->drawVertexPrimitiveList(matManager.vActivate, 4, matManager.iRectangle, 2);
 	}
 	if(dField.chains.size() > 1 || mainGame->gameConf.draw_single_chain) {
+		matManager.mTRTexture.setTexture(0, imageManager.tChain);
+		matManager.mTRTexture.AmbientColor = 0xffffff00;
+		driver->setMaterial(matManager.mTRTexture);
 		for(size_t i = 0; i < dField.chains.size(); ++i) {
 			if(dField.chains[i].solved)
 				break;
-			matManager.mTRTexture.setTexture(0, imageManager.tChain);
-			matManager.mTRTexture.AmbientColor = 0xffffff00;
 			ic.setRotationRadians(act_rot);
 			ic.setTranslation(dField.chains[i].chain_pos);
-			driver->setMaterial(matManager.mTRTexture);
 			driver->setTransform(irr::video::ETS_WORLD, ic);
 			driver->drawVertexPrimitiveList(matManager.vSymbol, 4, matManager.iRectangle, 2);
+		}
+		matManager.mTRTexture.setTexture(0, imageManager.tNumber);
+		driver->setMaterial(matManager.mTRTexture);
+		for(size_t i = 0; i < dField.chains.size(); ++i) {
+			if(dField.chains[i].solved)
+				break;
 			it.setScale(0.6f);
 			it.setTranslation(dField.chains[i].chain_pos);
-			matManager.mTRTexture.setTexture(0, imageManager.tNumber);
 			matManager.vChainNum[0].TCoords = irr::core::vector2df(0.19375f * (i % 5), 0.2421875f * (i / 5));
 			matManager.vChainNum[1].TCoords = irr::core::vector2df(0.19375f * (i % 5 + 1), 0.2421875f * (i / 5));
 			matManager.vChainNum[2].TCoords = irr::core::vector2df(0.19375f * (i % 5), 0.2421875f * (i / 5 + 1));
 			matManager.vChainNum[3].TCoords = irr::core::vector2df(0.19375f * (i % 5 + 1), 0.2421875f * (i / 5 + 1));
-			driver->setMaterial(matManager.mTRTexture);
 			driver->setTransform(irr::video::ETS_WORLD, it);
 			driver->drawVertexPrimitiveList(matManager.vChainNum, 4, matManager.iRectangle, 2);
 		}
@@ -1286,7 +1297,7 @@ void Game::DrawThumb(code_pointer cp, irr::core::vector2di pos, const LFList* lf
 	}
 }
 void Game::DrawDeckBd() {
-	wchar_t textBuffer[64];
+	std::wstringstream textBuffer;
 	//main deck
 	int mainsize = deckManager.current_deck.main.size();
 	driver->draw2DRectangle(Resize(310, 137, 410, 157), 0x400000ff, 0x400000ff, 0x40000000, 0x40000000);
@@ -1439,44 +1450,50 @@ void Game::DrawDeckBd() {
 		else if ((ptr->second.ot & AVAIL_CUSTOM) == AVAIL_CUSTOM)
 			availBuffer = L" [Custom]";
 		if(ptr->second.type & TYPE_MONSTER) {
-			myswprintf(textBuffer, L"%ls", dataManager.GetName(ptr->first));
-			DrawShadowText(textFont, textBuffer, Resize(860, 165 + i * 66, 955, 185 + i * 66), Resize(1, 1, 0, 0));
+			textBuffer.str(L"");
+			textBuffer << dataManager.GetName(ptr->first);
+			DrawShadowText(textFont, textBuffer.str().c_str(), Resize(860, 165 + i * 66, 955, 185 + i * 66), Resize(1, 1, 0, 0));
 			const wchar_t* form = L"补给";
-			wchar_t adBuffer[32]{};
-			wchar_t scaleBuffer[16]{};
+			std::wstringstream adBuffer;
+			std::wstringstream scaleBuffer;
 			if(!(ptr->second.type & TYPE_LINK)) {
 				if(ptr->second.type & TYPE_XYZ)
 					form = L"阶级";
 				if(ptr->second.attack < 0 && ptr->second.defense < 0)
-					myswprintf(adBuffer, L"?/?");
+					adBuffer << L"?/?";
 				else if(ptr->second.attack < 0)
-					myswprintf(adBuffer, L"?/%d", ptr->second.defense);
+					adBuffer << L"?/" << ptr->second.defense;
 				else if(ptr->second.defense < 0)
-					myswprintf(adBuffer, L"%d/?", ptr->second.attack);
+					adBuffer << ptr->second.attack << L"/?";
 				else
-					myswprintf(adBuffer, L"%d/%d", ptr->second.attack, ptr->second.defense);
+					adBuffer << ptr->second.attack << L"/" << ptr->second.defense;
 			} else {
 				form = L"LINK-";
 				if(ptr->second.attack < 0)
-					myswprintf(adBuffer, L"?/-");
+					adBuffer << L"?/-";
 				else
-					myswprintf(adBuffer, L"%d/-", ptr->second.attack);
+					adBuffer << ptr->second.attack << L"/-";
 			}
-			myswprintf(textBuffer, L"%ls/%ls %ls%d", dataManager.FormatAttribute(ptr->second.attribute).c_str(), dataManager.FormatRace(ptr->second.race).c_str(),
-				form, ptr->second.level);
-			DrawShadowText(textFont, textBuffer, Resize(860, 187 + i * 66, 955, 207 + i * 66), Resize(1, 1, 0, 0));
+			textBuffer.str(L"");
+			textBuffer << dataManager.FormatAttribute(ptr->second.attribute).c_str() << L"/" << dataManager.FormatRace(ptr->second.race).c_str()
+				<< L" " << form << ptr->second.level;
+			DrawShadowText(textFont, textBuffer.str().c_str(), Resize(860, 187 + i * 66, 955, 207 + i * 66), Resize(1, 1, 0, 0));
 			if(ptr->second.type & TYPE_PENDULUM) {
-				myswprintf(scaleBuffer, L" %d/%d", ptr->second.lscale, ptr->second.rscale);
+				scaleBuffer << L" " << ptr->second.lscale << L"/" << ptr->second.rscale;
 			}
-			myswprintf(textBuffer, L"%ls%ls%ls", adBuffer, scaleBuffer, availBuffer);
-			DrawShadowText(textFont, textBuffer, Resize(860, 209 + i * 66, 955, 229 + i * 66), Resize(1, 1, 0, 0));
+			textBuffer.str(L"");
+			textBuffer << adBuffer.str() << scaleBuffer.str() << availBuffer;
+			DrawShadowText(textFont, textBuffer.str().c_str(), Resize(860, 209 + i * 66, 955, 229 + i * 66), Resize(1, 1, 0, 0));
 		} else {
-			myswprintf(textBuffer, L"%ls", dataManager.GetName(ptr->first));
-			DrawShadowText(textFont, textBuffer, Resize(860, 165 + i * 66, 955, 185 + i * 66), Resize(1, 1, 0, 0));
-			myswprintf(textBuffer, L"%ls", dataManager.FormatType(ptr->second.type).c_str());
-			DrawShadowText(textFont, textBuffer, Resize(860, 187 + i * 66, 955, 207 + i * 66), Resize(1, 1, 0, 0));
-			myswprintf(textBuffer, L"%ls", availBuffer);
-			DrawShadowText(textFont, textBuffer, Resize(860, 209 + i * 66, 955, 229 + i * 66), Resize(1, 1, 0, 0));
+			textBuffer.str(L"");
+			textBuffer << dataManager.GetName(ptr->first);
+			DrawShadowText(textFont, textBuffer.str().c_str(), Resize(860, 165 + i * 66, 955, 185 + i * 66), Resize(1, 1, 0, 0));
+			textBuffer.str(L"");
+			textBuffer << dataManager.FormatType(ptr->second.type).c_str();
+			DrawShadowText(textFont, textBuffer.str().c_str(), Resize(860, 187 + i * 66, 955, 207 + i * 66), Resize(1, 1, 0, 0));
+			textBuffer.str(L"");
+			textBuffer << availBuffer;
+			DrawShadowText(textFont, textBuffer.str().c_str(), Resize(860, 209 + i * 66, 955, 229 + i * 66), Resize(1, 1, 0, 0));
 		}
 	}
 	if(deckBuilder.is_draging) {

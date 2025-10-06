@@ -10,6 +10,8 @@
 namespace ygo {
 
 class ImageManager {
+private:
+	bool FindImageFile(int code, const char* subdir, char* out_path);
 public:
 	std::vector<std::wstring> ImageList[7];
 	int saved_image_id[7];
