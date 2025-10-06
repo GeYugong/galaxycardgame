@@ -17,6 +17,75 @@
 
 namespace ygo {
 
+void MenuHandler::ShowReplayWindow() {
+	if (!wReplay) {
+		irr::gui::IGUIEnvironment* env = mainGame->env;
+		wReplay = env->addWindow(mainGame->ResizeWin(220, 100, 800, 520), false, dataManager.GetSysString(1202));
+		wReplay->getCloseButton()->setVisible(false);
+		lstReplayList = env->addListBox(mainGame->Resize(10, 30, 350, 400), wReplay, LISTBOX_REPLAY_LIST, true);
+		lstReplayList->setItemHeight(18);
+		btnLoadReplay = env->addButton(mainGame->Resize(470, 355, 570, 380), wReplay, BUTTON_LOAD_REPLAY, dataManager.GetSysString(1348));
+		btnDeleteReplay = env->addButton(mainGame->Resize(360, 355, 460, 380), wReplay, BUTTON_DELETE_REPLAY, dataManager.GetSysString(1361));
+		btnRenameReplay = env->addButton(mainGame->Resize(360, 385, 460, 410), wReplay, BUTTON_RENAME_REPLAY, dataManager.GetSysString(1362));
+		btnReplayCancel = env->addButton(mainGame->Resize(470, 385, 570, 410), wReplay, BUTTON_CANCEL_REPLAY, dataManager.GetSysString(1347));
+		btnExportDeck = env->addButton(mainGame->Resize(470, 325, 570, 350), wReplay, BUTTON_EXPORT_DECK, dataManager.GetSysString(1369));
+		env->addStaticText(dataManager.GetSysString(1349), mainGame->Resize(360, 30, 570, 50), false, true, wReplay);
+		stReplayInfo = env->addStaticText(L"", mainGame->Resize(360, 60, 570, 320), false, true, wReplay);
+		env->addStaticText(dataManager.GetSysString(1353), mainGame->Resize(360, 275, 570, 295), false, true, wReplay);
+		ebRepStartTurn = env->addEditBox(L"", mainGame->Resize(360, 300, 460, 320), true, wReplay, -1);
+		ebRepStartTurn->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
+		mainGame->editbox_list.push_back(ebRepStartTurn);
+	}
+	mainGame->RefreshReplay();
+	mainGame->PopupElement(wReplay);
+}
+void MenuHandler::ShowSinglePlayWindow() {
+	if (!wSinglePlay) {
+		irr::gui::IGUIEnvironment* env = mainGame->env;
+		wSinglePlay = env->addWindow(mainGame->ResizeWin(220, 100, 800, 520), false, dataManager.GetSysString(1201));
+		wSinglePlay->getCloseButton()->setVisible(false);
+		irr::gui::IGUITabControl* wSingle = env->addTabControl(mainGame->Resize(0, 20, 579, 419), wSinglePlay, true);
+		if(mainGame->gameConf.enable_bot_mode) {
+			irr::gui::IGUITab* tabBot = wSingle->addTab(dataManager.GetSysString(1380));
+			lstBotList = env->addListBox(mainGame->Resize(10, 10, 350, 350), tabBot, LISTBOX_BOT_LIST, true);
+			lstBotList->setItemHeight(18);
+			btnStartBot = env->addButton(mainGame->Resize(459, 301, 569, 326), tabBot, BUTTON_BOT_START, dataManager.GetSysString(1211));
+			btnBotCancel = env->addButton(mainGame->Resize(459, 331, 569, 356), tabBot, BUTTON_CANCEL_SINGLEPLAY, dataManager.GetSysString(1210));
+			env->addStaticText(dataManager.GetSysString(1382), mainGame->Resize(360, 10, 550, 30), false, true, tabBot);
+			stBotInfo = env->addStaticText(L"", mainGame->Resize(360, 40, 560, 160), false, true, tabBot);
+			cbBotDeckCategory = env->addComboBox(mainGame->Resize(360, 95, 560, 120), tabBot, COMBOBOX_BOT_DECKCATEGORY);
+			cbBotDeckCategory->setMaxSelectionRows(6);
+			cbBotDeckCategory->setVisible(false);
+			cbBotDeck = env->addComboBox(mainGame->Resize(360, 130, 560, 155), tabBot);
+			cbBotDeck->setMaxSelectionRows(6);
+			cbBotDeck->setVisible(false);
+			cbBotRule = env->addComboBox(mainGame->Resize(360, 165, 560, 190), tabBot, COMBOBOX_BOT_RULE);
+			cbBotRule->addItem(dataManager.GetSysString(1262));
+			cbBotRule->addItem(dataManager.GetSysString(1263));
+			cbBotRule->addItem(dataManager.GetSysString(1264));
+			cbBotRule->setSelected(mainGame->gameConf.default_rule - 3);
+			chkBotHand = env->addCheckBox(false, mainGame->Resize(360, 200, 560, 220), tabBot, -1, dataManager.GetSysString(1384));
+			chkBotNoCheckDeck = env->addCheckBox(false, mainGame->Resize(360, 230, 560, 250), tabBot, -1, dataManager.GetSysString(1229));
+			chkBotNoShuffleDeck = env->addCheckBox(false, mainGame->Resize(360, 260, 560, 280), tabBot, -1, dataManager.GetSysString(1230));
+		} else { // avoid null pointer
+			btnStartBot = env->addButton(mainGame->Resize(0, 0, 0, 0), wSinglePlay);
+			btnBotCancel = env->addButton(mainGame->Resize(0, 0, 0, 0), wSinglePlay);
+			btnStartBot->setVisible(false);
+			btnBotCancel->setVisible(false);
+		}
+		irr::gui::IGUITab* tabSingle = wSingle->addTab(dataManager.GetSysString(1381));
+		lstSinglePlayList = env->addListBox(mainGame->Resize(10, 10, 350, 350), tabSingle, LISTBOX_SINGLEPLAY_LIST, true);
+		lstSinglePlayList->setItemHeight(18);
+		btnLoadSinglePlay = env->addButton(mainGame->Resize(459, 301, 569, 326), tabSingle, BUTTON_LOAD_SINGLEPLAY, dataManager.GetSysString(1211));
+		btnSinglePlayCancel = env->addButton(mainGame->Resize(459, 331, 569, 356), tabSingle, BUTTON_CANCEL_SINGLEPLAY, dataManager.GetSysString(1210));
+		env->addStaticText(dataManager.GetSysString(1352), mainGame->Resize(360, 10, 550, 30), false, true, tabSingle);
+		stSinglePlayInfo = env->addStaticText(L"", mainGame->Resize(360, 40, 560, 160), false, true, tabSingle);
+		chkSinglePlayReturnDeckTop = env->addCheckBox(false, mainGame->Resize(360, 260, 560, 280), tabSingle, -1, dataManager.GetSysString(1238));
+	}
+	mainGame->RefreshSingleplay();
+	mainGame->RefreshBot();
+	mainGame->PopupElement(wSinglePlay);
+}
 void UpdateDeck() {
 	BufferIO::CopyWideString(mainGame->cbCategorySelect->getText(), mainGame->gameConf.lastcategory);
 	BufferIO::CopyWideString(mainGame->cbDeckSelect->getText(), mainGame->gameConf.lastdeck);
@@ -205,28 +274,11 @@ bool MenuHandler::OnEvent(const irr::SEvent& event) {
 				break;
 			}
 			case BUTTON_REPLAY_MODE: {
-				// 原有录像功能代码（已注释）
-				// mainGame->HideElement(mainGame->wMainMenu);
-				// mainGame->ShowElement(mainGame->wReplay);
-				// mainGame->ebRepStartTurn->setText(L"1");
-				// mainGame->stReplayInfo->setText(L"");
-				// mainGame->RefreshReplay();
-
-				// 新功能：打开官网 https://gcg.fog.moe/
-#ifdef _WIN32
-				ShellExecuteA(NULL, "open", "https://gcg.fog.moe/", NULL, NULL, SW_SHOWNORMAL);
-#elif defined(__APPLE__)
-				system("open https://gcg.fog.moe/");
-#else
-				system("xdg-open https://gcg.fog.moe/");
-#endif
+				ShowReplayWindow();
 				break;
 			}
 			case BUTTON_SINGLE_MODE: {
-				mainGame->HideElement(mainGame->wMainMenu);
-				mainGame->ShowElement(mainGame->wSinglePlay);
-				mainGame->RefreshSingleplay();
-				mainGame->RefreshBot();
+				ShowSinglePlayWindow();
 				break;
 			}
 			case BUTTON_LOAD_REPLAY: {
@@ -239,19 +291,19 @@ bool MenuHandler::OnEvent(const irr::SEvent& event) {
 						break;
 					}
 				} else {
-					auto selected = mainGame->lstReplayList->getSelected();
+					auto selected = lstReplayList->getSelected();
 					if(selected == -1)
 						break;
 					wchar_t replay_path[256]{};
-					myswprintf(replay_path, L"./replay/%ls", mainGame->lstReplayList->getListItem(selected));
+					myswprintf(replay_path, L"./replay/%ls", lstReplayList->getListItem(selected));
 					if (!ReplayMode::cur_replay.OpenReplay(replay_path))
 						break;
-					start_turn = std::wcstol(mainGame->ebRepStartTurn->getText(), nullptr, 10);
+					start_turn = std::wcstol(ebRepStartTurn->getText(), nullptr, 10);
 				}
 				mainGame->ClearCardInfo();
 				mainGame->wCardImg->setVisible(true);
 				mainGame->wInfos->setVisible(true);
-				mainGame->wReplay->setVisible(true);
+				wReplay->setVisible(true);
 				mainGame->wReplayControl->setVisible(true);
 				mainGame->btnReplayStart->setVisible(false);
 				mainGame->btnReplayPause->setVisible(true);
@@ -259,7 +311,7 @@ bool MenuHandler::OnEvent(const irr::SEvent& event) {
 				mainGame->btnReplayUndo->setVisible(false);
 				mainGame->wPhase->setVisible(true);
 				mainGame->dField.Clear();
-				mainGame->HideElement(mainGame->wReplay);
+				mainGame->HideElement(wReplay);
 				mainGame->device->setEventReceiver(&mainGame->dField);
 				if(start_turn == 1)
 					start_turn = 0;
@@ -267,12 +319,12 @@ bool MenuHandler::OnEvent(const irr::SEvent& event) {
 				break;
 			}
 			case BUTTON_DELETE_REPLAY: {
-				int sel = mainGame->lstReplayList->getSelected();
+				int sel = lstReplayList->getSelected();
 				if(sel == -1)
 					break;
 				mainGame->gMutex.lock();
 				wchar_t textBuffer[256];
-				myswprintf(textBuffer, L"%ls\n%ls", mainGame->lstReplayList->getListItem(sel), dataManager.GetSysString(1363));
+				myswprintf(textBuffer, L"%ls\n%ls", lstReplayList->getListItem(sel), dataManager.GetSysString(1363));
 				mainGame->SetStaticText(mainGame->stQMessage, 310, mainGame->guiFont, textBuffer);
 				mainGame->PopupElement(mainGame->wQuery);
 				mainGame->gMutex.unlock();
@@ -281,12 +333,12 @@ bool MenuHandler::OnEvent(const irr::SEvent& event) {
 				break;
 			}
 			case BUTTON_RENAME_REPLAY: {
-				int sel = mainGame->lstReplayList->getSelected();
+				int sel = lstReplayList->getSelected();
 				if(sel == -1)
 					break;
 				mainGame->gMutex.lock();
 				mainGame->wReplaySave->setText(dataManager.GetSysString(1364));
-				mainGame->ebRSName->setText(mainGame->lstReplayList->getListItem(sel));
+				mainGame->ebRSName->setText(lstReplayList->getListItem(sel));
 				mainGame->PopupElement(mainGame->wReplaySave);
 				mainGame->gMutex.unlock();
 				prev_operation = id;
@@ -294,12 +346,12 @@ bool MenuHandler::OnEvent(const irr::SEvent& event) {
 				break;
 			}
 			case BUTTON_CANCEL_REPLAY: {
-				mainGame->HideElement(mainGame->wReplay);
+				mainGame->HideElement(wReplay);
 				mainGame->ShowElement(mainGame->wMainMenu);
 				break;
 			}
 			case BUTTON_EXPORT_DECK: {
-				auto selected = mainGame->lstReplayList->getSelected();
+				auto selected = lstReplayList->getSelected();
 				if(selected == -1)
 					break;
 				Replay replay;
@@ -307,7 +359,7 @@ bool MenuHandler::OnEvent(const irr::SEvent& event) {
 				wchar_t namebuf[4][20]{};
 				wchar_t filename[256]{};
 				wchar_t replay_path[256]{};
-				BufferIO::CopyWideString(mainGame->lstReplayList->getListItem(selected), replay_filename);
+				BufferIO::CopyWideString(lstReplayList->getListItem(selected), replay_filename);
 				myswprintf(replay_path, L"./replay/%ls", replay_filename);
 				if (!replay.OpenReplay(replay_path))
 					break;

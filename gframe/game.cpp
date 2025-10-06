@@ -951,47 +951,6 @@ bool Game::Initialize() {
 	ebRepStartTurn = env->addEditBox(L"", irr::core::rect<irr::s32>(360, 300, 460, 320), true, wReplay, -1);
 	ebRepStartTurn->setTextAlignment(irr::gui::EGUIA_CENTER, irr::gui::EGUIA_CENTER);
 	editbox_list.push_back(ebRepStartTurn);
-	//single play window
-	wSinglePlay = env->addWindow(irr::core::rect<irr::s32>(220, 100, 800, 520), false, dataManager.GetSysString(1201));
-	wSinglePlay->getCloseButton()->setVisible(false);
-	wSinglePlay->setVisible(false);
-	irr::gui::IGUITabControl* wSingle = env->addTabControl(irr::core::rect<irr::s32>(0, 20, 579, 419), wSinglePlay, true);
-	if(gameConf.enable_bot_mode) {
-		irr::gui::IGUITab* tabBot = wSingle->addTab(dataManager.GetSysString(1380));
-		lstBotList = env->addListBox(irr::core::rect<irr::s32>(10, 10, 350, 350), tabBot, LISTBOX_BOT_LIST, true);
-		lstBotList->setItemHeight(18);
-		btnStartBot = env->addButton(irr::core::rect<irr::s32>(459, 301, 569, 326), tabBot, BUTTON_BOT_START, dataManager.GetSysString(1211));
-		btnBotCancel = env->addButton(irr::core::rect<irr::s32>(459, 331, 569, 356), tabBot, BUTTON_CANCEL_SINGLEPLAY, dataManager.GetSysString(1210));
-		env->addStaticText(dataManager.GetSysString(1382), irr::core::rect<irr::s32>(360, 10, 550, 30), false, true, tabBot);
-		stBotInfo = env->addStaticText(L"", irr::core::rect<irr::s32>(360, 40, 560, 160), false, true, tabBot);
-		cbBotDeckCategory = env->addComboBox(irr::core::rect<irr::s32>(360, 95, 560, 120), tabBot, COMBOBOX_BOT_DECKCATEGORY);
-		cbBotDeckCategory->setMaxSelectionRows(6);
-		cbBotDeckCategory->setVisible(false);
-		cbBotDeck = env->addComboBox(irr::core::rect<irr::s32>(360, 130, 560, 155), tabBot);
-		cbBotDeck->setMaxSelectionRows(6);
-		cbBotDeck->setVisible(false);
-		cbBotRule = env->addComboBox(irr::core::rect<irr::s32>(360, 165, 560, 190), tabBot, COMBOBOX_BOT_RULE);
-		cbBotRule->addItem(dataManager.GetSysString(1262));
-		cbBotRule->addItem(dataManager.GetSysString(1263));
-		cbBotRule->addItem(dataManager.GetSysString(1264));
-		cbBotRule->setSelected(gameConf.default_rule - 3);
-		chkBotHand = env->addCheckBox(false, irr::core::rect<irr::s32>(360, 200, 560, 220), tabBot, -1, dataManager.GetSysString(1384));
-		chkBotNoCheckDeck = env->addCheckBox(false, irr::core::rect<irr::s32>(360, 230, 560, 250), tabBot, -1, dataManager.GetSysString(1229));
-		chkBotNoShuffleDeck = env->addCheckBox(false, irr::core::rect<irr::s32>(360, 260, 560, 280), tabBot, -1, dataManager.GetSysString(1230));
-	} else { // avoid null pointer
-		btnStartBot = env->addButton(irr::core::rect<irr::s32>(0, 0, 0, 0), wSinglePlay);
-		btnBotCancel = env->addButton(irr::core::rect<irr::s32>(0, 0, 0, 0), wSinglePlay);
-		btnStartBot->setVisible(false);
-		btnBotCancel->setVisible(false);
-	}
-	irr::gui::IGUITab* tabSingle = wSingle->addTab(dataManager.GetSysString(1381));
-	lstSinglePlayList = env->addListBox(irr::core::rect<irr::s32>(10, 10, 350, 350), tabSingle, LISTBOX_SINGLEPLAY_LIST, true);
-	lstSinglePlayList->setItemHeight(18);
-	btnLoadSinglePlay = env->addButton(irr::core::rect<irr::s32>(459, 301, 569, 326), tabSingle, BUTTON_LOAD_SINGLEPLAY, dataManager.GetSysString(1211));
-	btnSinglePlayCancel = env->addButton(irr::core::rect<irr::s32>(459, 331, 569, 356), tabSingle, BUTTON_CANCEL_SINGLEPLAY, dataManager.GetSysString(1210));
-	env->addStaticText(dataManager.GetSysString(1352), irr::core::rect<irr::s32>(360, 10, 550, 30), false, true, tabSingle);
-	stSinglePlayInfo = env->addStaticText(L"", irr::core::rect<irr::s32>(360, 40, 560, 160), false, true, tabSingle);
-	chkSinglePlayReturnDeckTop = env->addCheckBox(false, irr::core::rect<irr::s32>(360, 260, 560, 280), tabSingle, -1, dataManager.GetSysString(1238));
 	//replay save
 	wReplaySave = env->addWindow(irr::core::rect<irr::s32>(510, 200, 820, 320), false, dataManager.GetSysString(1340));
 	wReplaySave->getCloseButton()->setVisible(false);
